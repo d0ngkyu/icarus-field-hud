@@ -378,6 +378,19 @@ local function scanLandmarks()
     each("ResourceDeposit", "d", function(a) return a.Type.RowName:ToString() end)
     each("BP_OilGeyser_C", "g", function() return "Oil" end)
     each("BP_EnzymeGeyser_C", "g", function() return "Enzyme" end)
+    -- world bosses: the game shares their spawn points with everyone (same as the in-game map)
+    for _, sp in ipairs(FindAllOf("WorldBossSpawner") or {}) do
+        pcall(function()
+            if not sp:IsValid() or string.find(sp:GetFullName(), "Default__", 1, true) then return end
+            local l = sp:K2_GetActorLocation()
+            if l.X == 0 and l.Y == 0 then return end
+            local row = sp.WorldBoss.RowName:ToString()
+            if not row or row == "" or row == "None" then return end
+            local dead = sp.bHasBossBeenKilled and 1 or 0
+            table.insert(out, string.format('["b:%s#%d",%.0f,%.0f,%.0f,%d]', row:gsub('[^%w_]', ''), sp.BossID or 0, l.X, l.Y, l.Z, dead))
+            sum = sum + math.floor(l.X / 1000) + dead * 7
+        end)
+    end
     local sig = #out .. ":" .. sum
     if sig == lastLm then return nil end
     lastLm = sig

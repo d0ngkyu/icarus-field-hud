@@ -455,9 +455,9 @@ body.app.mapmode #mapview{height:calc(100vh - 176px)}
 const $=id=>document.getElementById(id);
 const M=()=>{S.maps=S.maps||{};const w=S.world||'?';const m=S.maps[w]=S.maps[w]||{lm:{},ore:{},track:[],pins:[],paths:[],rings:[],notes:{}};if(!m.seen){m.seen={};for(const p of m.track)markSeen(m,p[0],p[1])}return m};
 const SEEN=10000;function markSeen(m,x,y){const i=Math.floor(x/SEEN),j=Math.floor(y/SEEN);for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++)m.seen[(i+a)+','+(j+b)]=1}
-S.mapv=Object.assign({x:0,y:0,s:0.25,rot:0,follow:true,flip:0,L:{terr:1,fog:0,grid:1,cave:1,exo:1,dep:1,gey:1,ore:1,box:1,home:1,pins:1,paths:1,track:1,me:1}},S.mapv||{});
-const V=S.mapv;if(V.L.terr===undefined)V.L.terr=1;if(V.L.exo===undefined)V.L.exo=1;if(V.L.fog===undefined)V.L.fog=0;if(!V.ori2){V.rot=1;V.ori2=1}V.flip=0;
-const LAYERS=[['terr','지형 (게임 지도)','#6b8a4a'],['fog','안 가 본 곳 가리기','#333'],['grid','격자','#2b3a44'],['cave','동굴 (크기별 · 전체 맵)','#4fc6c0'],['exo','엑조틱 지점','#b77bff'],['dep','심층 광맥','#e0a050'],['gey','간헐천','#7bd96a'],['ore','광석 노드 (F10)','#b9c2c8'],
+S.mapv=Object.assign({x:0,y:0,s:0.25,rot:0,follow:true,flip:0,L:{terr:1,fog:0,grid:1,cave:1,exo:1,boss:1,dep:1,gey:1,ore:1,box:1,home:1,pins:1,paths:1,track:1,me:1}},S.mapv||{});
+const V=S.mapv;if(V.L.terr===undefined)V.L.terr=1;if(V.L.exo===undefined)V.L.exo=1;if(V.L.boss===undefined)V.L.boss=1;if(V.L.fog===undefined)V.L.fog=0;if(!V.ori2){V.rot=1;V.ori2=1}V.flip=0;
+const LAYERS=[['terr','지형 (게임 지도)','#6b8a4a'],['fog','안 가 본 곳 가리기','#333'],['grid','격자','#2b3a44'],['cave','동굴 (크기별 · 전체 맵)','#4fc6c0'],['exo','엑조틱 지점','#b77bff'],['boss','월드 보스','#ff4a4a'],['dep','심층 광맥','#e0a050'],['gey','간헐천','#7bd96a'],['ore','광석 노드 (F10)','#b9c2c8'],
  ['box','보관함 (기억)','#f39b2b'],['home','기지','#ffffff'],['pins','내 핀','#ff6a55'],['paths','내 경로','#58b7e8'],['track','이동 기록','#58b7e8'],['me','내 위치','#4fd18b']];
 const ORECOL={Metal:'#c9cdd2',Iron:'#c9cdd2',Copper:'#e07b4a',Gold:'#f2d14b',Platinum:'#b9d3e8',Titanium:'#9fb0c2',Aluminium:'#d6dde4',Silica:'#f0ece0',Sulfur:'#e9e04a',
  Coal:'#555',Clay:'#b8774f',Obsidian:'#6b5b8f',Scoria:'#8e4a3a',Salt:'#f5f5f5',Oxite:'#7fd7ff',Exotic:'#d36bff',Ice:'#a8e6ff',Stone:'#8d8d8d',Cobalt:'#4a6fe0',Lead:'#7d8a96',Frozen:'#a8e6ff'};
@@ -470,7 +470,7 @@ window.__mapIngest=m=>{
  if(m.w&&m.w!=='?')S.world=m.w;
  const mp=M(),now=Date.now();
  const put=(store,a)=>{const t=a[0];if(!t)return;const k=t[0];if(k==='a')return;
-  const dst=(k==='v')?mp.ore:mp.lm;dst[keyOf(t,a[1],a[2])]=[t,Math.round(a[1]),Math.round(a[2]),Math.round(a[3]||0),now]};
+  const dst=(k==='v')?mp.ore:mp.lm;dst[k==='b'?t:keyOf(t,a[1],a[2])]=[t,Math.round(a[1]),Math.round(a[2]),Math.round(a[3]||0),now,a[4]||0]};
  if(m.lm)for(const a of m.lm)put(mp.lm,a);
  if(m.inv&&m.inv.ore){const p=m.p||S.pose;
   if(p){for(const k in mp.ore){const o=mp.ore[k];if(Math.hypot(o[1]-p[0],o[2]-p[1])<12000&&!m.inv.ore.some(a=>keyOf(a[0],a[1],a[2])===k))delete mp.ore[k]}}
@@ -528,6 +528,8 @@ function drawGameFog(mp){const fm=gameFogMask(mp);if(!fm)return false;const{c,g}
 // same squares as the in-game map: letters left to right, numbers top to bottom
 function gridName(x,y){const b=MAPB[S.world];if(!b)return'';const i=Math.floor((x-b[0])/50400),j=Math.floor((y-b[2])/50400);if(i<0||j<0||x>b[1]||y>b[3])return'';return String.fromCharCode(65+i)+(j+1)}
 // ---------- caves by size, memo labels ----------
+const BOSSN={SandWorm:'샌드웜',Scorpion:'거대 전갈',AlphaWolf:'검은 늑대 (알파)',LavaHunter:'용암 사냥꾼',HammerheadSlug:'망치머리 민달팽이',SandwyrmQueen:'샌드웜 여왕'};
+const bossName=t=>{const r=t.slice(2).split('#')[0];return BOSSN[r]||r};
 const CAVEB={CF:'숲',AC:'설원',DC:'사막',TU:'툰드라',GL:'초원',SW:'늪',LC:'화산',VO:'화산',RF:'열대',JN:'정글',CN:'협곡',RD:'붉은 협곡',AR:'설원',DS:'사막',EL:'엘리시움'};
 function caveInfo(id){const u=(id||'').toUpperCase();const size=/LRG|LARGE|_LG_|_L_/.test(u)?3:/MED|MEDIUM/.test(u)?2:/SML|SMALL|_SM_|_S_/.test(u)?1:0;
  const bio=CAVEB[u.split('_')[0]]||'';return{size,bio,label:['동굴','작은 동굴','중간 동굴','큰 동굴'][size],ent:/ENTRANCE/.test(u)}}
@@ -583,6 +585,11 @@ function drawMap(){if(!W)return;const mp=M();hits=[];
   if((t==='c'||t==='w')&&L.cave){if(t==='c'&&hideC[k])continue;const ci=t==='w'?caveInfo(o[0].slice(2)):{size:0,label:'동굴 입구',bio:''};const r=drawCave(a,b,ci.size,selKey===k);
    noteLabel(mp.notes[k],a,b-r*.3,'#bfefe9');hits.push({x:a,y:b,r:r+4,kind:'cave',ref:o,key:k,ci})}
   else if(t==='e'&&L.dep){ctx.strokeStyle='#e0a050';ctx.fillStyle='rgba(224,160,80,.25)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(a,b-7);ctx.lineTo(a+7,b);ctx.lineTo(a,b+7);ctx.lineTo(a-7,b);ctx.closePath();ctx.fill();ctx.stroke();noteLabel(mp.notes[k],a,b);hits.push({x:a,y:b,r:9,kind:'deep',ref:o,key:k})}
+  else if(t==='b'&&L.boss){const dead=!!o[5];ctx.save();ctx.translate(a,b);ctx.fillStyle=dead?'#5b5f63':'#e8433a';ctx.strokeStyle='#170404';ctx.lineWidth=2;
+   ctx.beginPath();ctx.moveTo(0,-12);ctx.lineTo(11,0);ctx.lineTo(0,12);ctx.lineTo(-11,0);ctx.closePath();ctx.fill();ctx.stroke();
+   ctx.fillStyle=dead?'#c9ccd0':'#fff3d6';ctx.font='bold 12px sans-serif';ctx.textAlign='center';ctx.fillText(dead?'✕':'☠',0,4);ctx.restore();
+   ctx.font='600 12px "Noto Sans KR"';ctx.fillStyle=dead?'#aab0b5':'#ffb3a8';ctx.shadowColor='#000';ctx.shadowBlur=3;ctx.fillText(bossName(o[0])+(dead?' (처치됨)':''),a+14,b+4);ctx.shadowBlur=0;
+   noteLabel(mp.notes[k],a,b-12);hits.push({x:a,y:b,r:13,kind:'boss',ref:o,key:k})}
   else if(t==='x'&&L.exo){ctx.fillStyle='#b77bff';ctx.strokeStyle='#14081f';ctx.lineWidth=2;ctx.beginPath();for(let i=0;i<10;i++){const ang=i*Math.PI/5-Math.PI/2,rr=i%2?3:7;ctx.lineTo(a+Math.cos(ang)*rr,b+Math.sin(ang)*rr)}ctx.closePath();ctx.stroke();ctx.fill();noteLabel(mp.notes[k],a,b);hits.push({x:a,y:b,r:9,kind:'exo',ref:o,key:k})}
   else if(t==='d'&&L.dep&&(!flt||flt.split(':')[1]===o[0].split(':')[1]||flt===o[0])){ctx.fillStyle=oreCol(o[0]);ctx.strokeStyle='#000';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(a,b-8);ctx.lineTo(a+8,b);ctx.lineTo(a,b+8);ctx.lineTo(a-8,b);ctx.closePath();ctx.stroke();ctx.fill();noteLabel(mp.notes[k],a,b);hits.push({x:a,y:b,r:10,kind:'dep',ref:o,key:k})}
   else if(t==='g'&&L.gey){const oil=o[0].indexOf('Oil')>=0;ctx.fillStyle=oil?'#2a2a2a':'#7bd96a';ctx.strokeStyle=oil?'#f2d14b':'#0b1a08';ctx.lineWidth=2;ctx.beginPath();ctx.arc(a,b,7,0,7);ctx.fill();ctx.stroke();noteLabel(mp.notes[k],a,b);hits.push({x:a,y:b,r:10,kind:'gey',ref:o,key:k})}}
@@ -639,6 +646,7 @@ function showInfo(h){const box=$('mapinfo'),mp=M();let t='',body='';selKey=h.key
  if(h.kind==='cave'){const ci=h.ci||{label:'동굴'};t=ci.label+(ci.bio?' ('+ci.bio+')':'');body=`<div class="bench">${cell([h.ref[1],h.ref[2]])}${ci.ent?' · 입구형':''}</div>${wpButton(h.ref[1],h.ref[2],h.ref[3],h.ref[0])}`}
  else if(h.kind==='wp'){t='나침반 목표';body=`<div class="bench">${cell([h.ref[0],h.ref[1]])}</div><div class="bt"><button class="mini" id="mwpclr">✕ 이 표시 지우기</button></div><div class="bench" style="margin-top:4px">게임 나침반의 표시까지 지우려면 게임에서 F7을 누르세요.</div>`}
  else if(h.kind==='deep'){t='심층 광맥 자리';body=`<div class="bench">${cell([h.ref[1],h.ref[2]])} · 가까이 가면 광석 종류가 표시됩니다</div>${wpButton(h.ref[1],h.ref[2],h.ref[3],h.ref[0])}`}
+ else if(h.kind==='boss'){t='월드 보스: '+bossName(h.ref[0]);body=`<div class="bench">${cell([h.ref[1],h.ref[2]])}${h.ref[5]?' · 처치됨 (다시 나타날 때까지 대기)':' · 살아 있음'}</div>${wpButton(h.ref[1],h.ref[2],h.ref[3])}`}
  else if(h.kind==='exo'){t='엑조틱 지점';body=`<div class="bench">${cell([h.ref[1],h.ref[2]])}</div>${wpButton(h.ref[1],h.ref[2],h.ref[3],h.ref[0])}`}
  else if(h.kind==='dep'){t='심층 광맥: '+rowItem(h.ref[0]);body=`<div class="bench">${fmtD([h.ref[1],h.ref[2]])} · 채굴기(드릴)를 설치하는 곳</div>${wpButton(h.ref[1],h.ref[2],h.ref[3],h.ref[0])}`}
  else if(h.kind==='gey'){t=h.ref[0].indexOf('Oil')>=0?'석유 간헐천':'효소 간헐천';body=`<div class="bench">${fmtD([h.ref[1],h.ref[2]])} · 추출기 설치 지점</div>${wpButton(h.ref[1],h.ref[2],h.ref[3],h.ref[0])}`}
@@ -671,7 +679,11 @@ $('mapinfo').addEventListener('pointerdown',e=>{const d=e.target.dataset;if(!d||
 let drag=null,moved=false;
 const hitAt=(x,y)=>{let best=null,bd=1e9;for(const h of hits){const d=Math.hypot(h.x-x,h.y-y);if(d<=h.r&&d<bd){best=h;bd=d}}return best};
 cv.addEventListener('pointerdown',e=>{if(e.button!==0)return;drag={x:e.offsetX,y:e.offsetY,vx:V.x,vy:V.y};moved=false;cv.setPointerCapture(e.pointerId)});
-cv.addEventListener('pointermove',e=>{const[wx,wy]=toW(e.offsetX,e.offsetY);$('mapcoord').textContent=`${gridName(wx,wy)?gridName(wx,wy)+' · ':''}X ${(wx/100).toFixed(0)}m · Y ${(wy/100).toFixed(0)}m${S.pose?' · 내 위치에서 '+fmtD([wx,wy]):''}`;
+const hitName=h=>{const mp=M(),n=h.key&&mp.notes[h.key];let t=h.kind==='cave'?(h.ci?h.ci.label+(h.ci.bio?' ('+h.ci.bio+')':''):'동굴'):h.kind==='deep'?'심층 광맥 자리':h.kind==='exo'?'엑조틱 지점':h.kind==='boss'?'월드 보스: '+bossName(h.ref[0])+(h.ref[5]?' (처치됨)':''):
+ h.kind==='dep'?'심층 광맥: '+rowItem(h.ref[0]):h.kind==='gey'?(h.ref[0].indexOf('Oil')>=0?'석유 간헐천':'효소 간헐천'):h.kind==='ore'?'광석: '+rowItem(h.ref[0]):h.kind==='box'?'보관함':h.kind==='home'?'기지':h.kind==='pin'?(h.ref.n||'핀'):h.kind==='path'?(h.ref.n||'경로'):h.kind==='wp'?'나침반 목표 (눌러서 지우기)':'';
+ return t+(n?' — '+n:'')+' · 눌러서 메모'};
+cv.addEventListener('pointerleave',()=>window.__hoverTip&&window.__hoverTip(null));
+cv.addEventListener('pointermove',e=>{const[wx,wy]=toW(e.offsetX,e.offsetY);if(window.__hoverTip){const h=drag?null:hitAt(e.offsetX,e.offsetY);window.__hoverTip(h?hitName(h):null,e.clientX,e.clientY)}$('mapcoord').textContent=`${gridName(wx,wy)?gridName(wx,wy)+' · ':''}X ${(wx/100).toFixed(0)}m · Y ${(wy/100).toFixed(0)}m${S.pose?' · 내 위치에서 '+fmtD([wx,wy]):''}`;
  if(!drag)return;const dx=e.offsetX-drag.x,dy=e.offsetY-drag.y;if(Math.abs(dx)+Math.abs(dy)>3){moved=true;cv.classList.add('drag');if(V.follow){V.follow=false;followBtn()}}
  if(moved){const[a,b]=irotv(dx,dy);V.x=drag.vx+b/V.s*100;V.y=drag.vy-a/V.s*100;requestDraw()}});
 cv.addEventListener('pointerup',e=>{cv.classList.remove('drag');const was=moved;drag=null;if(was){save();return}
@@ -841,6 +853,58 @@ setTimeout(()=>{const A=window.hudApp;const sec=$('updsec');if(!A||!A.info){if(s
   if(u.changed&&u.changed.length){const game=u.changed.some(p=>/\.lua$|\.dll$/.test(p)),page=u.changed.some(p=>/hud\//.test(p));
    toast('업데이트 '+u.version+' 적용 ('+u.changed.length+'개 파일)'+(game?' · 게임을 다시 켜면 반영됩니다':'')+(u.notes?' — '+u.notes:''),true);if(page)setTimeout(()=>location.reload(),4000)}
   else if(u.manual)toast('이미 최신 버전입니다 ('+u.version+')',true);show()})},300);
+// ---------- hover help: 0.3 s on anything shows what it is for ----------
+const TIPS={
+ '[data-tab=coach]':'성장 코치: 지금 내 레벨과 해금 상태를 보고, 다음에 할 일을 알려 줍니다',
+ '[data-tab=craft]':'제작: 아이템을 고르면 필요한 재료·하위 부품·작업대를 계산하고, 가진 만큼 빼 줍니다',
+ '[data-tab=nav]':'네비: 재료가 든 보관함, 광석, 동굴, 간헐천을 찾아 게임 나침반에 표시합니다',
+ '[data-tab=map]':'지도: 게임 지도 위에 내 위치·이동 기록·동굴·광맥·보스·핀·메모를 보여 줍니다',
+ '[data-tab=help]':'설정: 단축키 안내, 글자 크기, 알림, 업데이트, 반자동 기능, 기록 지우기',
+ '#tbtop':'HUD 창을 게임 위에 항상 띄워 둡니다','#tbcmp':'창을 작게 줄여 화면 구석에 둡니다','#tbmin':'작업 표시줄로 내립니다','#tbx':'창을 숨깁니다 (프로그램은 오른쪽 아래 트레이에 남아 있음)',
+ '#live':'게임과 연결 상태: LINKED면 게임 정보가 실시간으로 들어오는 중','#tbst':'게임과 연결 상태',
+ '#q':'만들고 싶은 아이템 이름을 입력하세요 (한글·영어 모두 가능)','#tg':'만들 개수','#clr':'만들 목록을 모두 비웁니다',
+ '#tree':'제작 트리: 이 아이템을 만들려면 무엇이 필요한지 아래 단계까지 펼쳐 보여 줍니다','#raw':'부족한 기본 재료: 가방에 있는 만큼 빼고 더 모아야 할 양',
+ '#mid':'만들어야 할 중간 부품','#bench':'필요한 작업대: 아직 없는 작업대를 먼저 알려 줍니다','#near':'근처 보관함에 있는 것도 보유량에 더합니다','#invclr':'기억해 둔 보유 정보를 지웁니다',
+ '#navon':'네비게이션을 켜고 끕니다','#sethome':'지금 서 있는 곳을 기지로 저장합니다 (지도에 🏠, 돌아갈 때 나침반 목표로 사용)','#memclr':'멀리서도 검색되도록 기억해 둔 보관함 내용을 지웁니다',
+ '#navq':'찾을 아이템 이름: 어느 상자에 있는지 알려 줍니다','#coachauto':'코치가 고른 다음 목표를 제작 목록에 넣습니다','#coachmore':'최근 기록을 더 보거나 접습니다','#coachreset':'코치 목표를 처음 추천으로 되돌립니다',
+ '#mapore':'고른 광석만 지도에 크게 표시합니다','#mapq':'아이템 이름을 쓰면 그 아이템이 든 보관함이 지도에서 반짝입니다',
+ '#mtme':'지도를 내 위치로 옮깁니다','#mtfollow':'켜 두면 내가 움직일 때 지도가 따라옵니다','#mtrot':'지도를 90도씩 돌립니다 (기본은 게임 지도와 같은 방향)',
+ '#mtwpclr':'지도에 남은 초록 십자(나침반 목표) 표시를 지웁니다','#mtpin':'지도를 눌러 핀을 찍습니다 (오른쪽 클릭으로도 가능)','#mtpath':'지도를 차례로 눌러 경로를 그리고, 두 번 눌러 끝냅니다',
+ '#mtring':'지도를 눌러 범위 원을 그립니다 (반지름은 아래 칸)','#mtringr':'범위 원의 반지름 (m)','#mttrackclr':'지금 맵의 이동 기록(점선)을 지웁니다','#mtringclr':'범위 원을 모두 지웁니다',
+ '#mzin':'확대 (마우스 휠도 됩니다)','#mzout':'축소','#mfogbtn':'안 가 본 곳을 가릴지 보일지 바꿉니다 (게임의 탐험 기록 기준)',
+ '#maplayers':'지도에 보일 것들을 고릅니다','#optToast':'오른쪽 아래에 잠깐 뜨는 알림을 켜고 끕니다','#optAuto':'게임에서 F8·F9를 누르면 제작 탭으로 자동 이동',
+ '#updbtn':'새 업데이트가 있는지 바로 확인합니다','#optMacro':'F3~F6 반자동 기능을 켜고 끕니다 (게임을 다시 켜야 적용)','#zm':'글자 작게','#zp':'글자 크게','#snd':'알림 소리 켜기/끄기','#unfold':'접어 둔 칸을 모두 펼칩니다',
+ '#sbgoal':'지금 코치 목표 (누르면 코치 탭)','#sbneed':'부족한 재료 요약 (누르면 제작 탭)','#sbwp':'게임 나침반에 표시 중인 목표',
+ '[data-ml=terr]':'게임 지도 그림을 배경으로 깝니다','[data-ml=fog]':'안 가 본 곳을 어둡게 가립니다','[data-ml=grid]':'게임 지도와 같은 칸(A1, G11…)을 그립니다',
+ '[data-ml=cave]':'동굴 위치 (작은/중간/큰 동굴은 아이콘 크기로 구분)','[data-ml=exo]':'엑조틱이 나오는 지점','[data-ml=boss]':'월드 보스가 나타나는 곳 (처치되면 회색)',
+ '[data-ml=dep]':'심층 광맥 자리 (드릴 설치 지점, 가까이 가면 광석 종류 표시)','[data-ml=gey]':'석유·효소 간헐천','[data-ml=ore]':'F10으로 읽은 근처 광석 덩어리',
+ '[data-ml=box]':'기억해 둔 보관함','[data-ml=home]':'저장한 기지 위치','[data-ml=pins]':'내가 찍은 핀','[data-ml=paths]':'내가 그린 경로','[data-ml=track]':'지금까지 다닌 길 (점선)','[data-ml=me]':'내 위치와 바라보는 방향',
+ '[data-clr=log]':'성장 코치 아래 최근 기록을 지웁니다','[data-clr=mem]':'기억해 둔 보관함 내용을 지웁니다','[data-clr=map]':'지금 맵의 지도 기록(동굴·핀·경로·메모)을 지웁니다','[data-clr=home]':'저장한 기지 위치를 지웁니다','[data-clr=built]':'"이미 있음"으로 표시한 작업대 기록을 지웁니다',
+ '[data-mwp]':'이 위치를 고릅니다. 게임에서 F7을 누르면 나침반에 표시됩니다','#minote':'메모를 바로 입력하세요. 치는 대로 저장되고, Enter나 바깥을 누르면 닫힙니다',
+};
+const TIPTEXT={'게임에 표시 (F7)':'이 위치를 고릅니다. 게임에서 F7을 누르면 나침반에 표시됩니다','보유':'이미 가지고 있다고 표시해 목록에서 뺍니다','보유 해제':'보유 표시를 취소합니다','이미 있음':'이미 지어 둔 작업대로 표시합니다',
+ '이걸로':'이 제작법(작업대)을 사용합니다','제작 목록에 넣기':'이 아이템을 만들 목록에 넣습니다','부품 대기열 복사':'작업대에서 F6을 누르면 이 부품들이 대기열에 들어갑니다','네비게이션으로 찾기':'부족한 재료를 네비 탭에서 찾습니다',
+ '제작 탭에서 자세히':'제작 탭으로 가서 재료를 자세히 봅니다','자동 추천으로':'코치 추천 목표로 되돌립니다','목록 비우기':'만들 목록을 비웁니다','모두 펼치기':'접힌 칸을 모두 펼칩니다','핀 삭제':'이 핀을 지웁니다','경로 삭제':'이 경로를 지웁니다','지금 위치를 기지로 저장':'지금 서 있는 곳을 기지로 저장합니다','✕':'닫기'};
+const H2TIP={'지금 할 일 (성장 코치)':'레벨·해금 상태를 보고 지금 가장 효율적인 다음 단계를 알려 줍니다','1. 아이템 검색':'만들 아이템을 찾아 목록에 넣습니다','제작 트리':'재료가 어떤 부품에서 나오는지 단계별로 보여 줍니다',
+ '부족한 재료 (보유분 차감)':'가진 것을 빼고 더 모아야 할 재료','레이어':'지도에 보일 것을 켜고 끕니다','광석 필터':'한 가지 광석만 골라 보기','아이템 위치 찾기':'어느 보관함에 있는지 찾기','도구':'핀·경로·범위 원·지도 이동',
+ '지금 모아야 할 것':'코치 목표를 위해 지금 모을 재료','업데이트 · 반자동 기능':'버전 확인과 F3~F6 기능 켜기','기록 관리':'저장된 기록을 지웁니다'};
+function applyTips(){
+ for(const sel in TIPS)document.querySelectorAll(sel).forEach(el=>{const t=el.closest('label')||el;if(!t.dataset.tip)t.dataset.tip=TIPS[sel]});
+ document.querySelectorAll('button:not([data-tip])').forEach(b=>{const k=b.textContent.trim();if(TIPTEXT[k])b.dataset.tip=TIPTEXT[k]});
+ document.querySelectorAll('h2:not([data-tip])').forEach(h=>{const k=h.textContent.replace(/[▾▸+−]/g,'').trim();if(H2TIP[k])h.dataset.tip=H2TIP[k]});
+ document.querySelectorAll('[title]').forEach(el=>{if(!el.dataset.tip)el.dataset.tip=el.title;el.removeAttribute('title')})}
+const tipEl=document.createElement('div');tipEl.id='hovtip';document.body.appendChild(tipEl);
+const tipCss=document.createElement('style');tipCss.textContent='#hovtip{position:fixed;z-index:9999;max-width:320px;padding:6px 10px;background:rgba(10,14,18,.96);border:1px solid rgba(243,155,43,.55);color:#f3e6d2;font-size:12.5px;line-height:1.5;pointer-events:none;display:none;box-shadow:0 4px 14px rgba(0,0,0,.5)}';document.head.appendChild(tipCss);
+let tipT=null,tipFor=null,tipX=0,tipY=0;
+const showTip=(txt)=>{tipEl.textContent=txt;tipEl.style.display='block';const r=tipEl.getBoundingClientRect();let x=tipX+14,y=tipY+18;if(x+r.width>innerWidth-6)x=innerWidth-r.width-6;if(y+r.height>innerHeight-6)y=tipY-r.height-10;tipEl.style.left=x+'px';tipEl.style.top=y+'px'};
+const hideTip=()=>{clearTimeout(tipT);tipT=null;tipFor=null;tipEl.style.display='none'};
+window.__hoverTip=(txt,x,y)=>{tipX=x;tipY=y;if(!txt){if(tipFor==='canvas')hideTip();return}if(tipFor==='canvas'&&tipEl.dataset.t===txt){if(tipEl.style.display==='block')showTip(txt);return}
+ hideTip();tipFor='canvas';tipEl.dataset.t=txt;tipT=setTimeout(()=>showTip(txt),300)};
+document.addEventListener('mousemove',e=>{tipX=e.clientX;tipY=e.clientY;if(tipFor==='canvas')return;const el=e.target.closest&&e.target.closest('[data-tip],[title]');
+ if(el&&el.title){el.dataset.tip=el.dataset.tip||el.title;el.removeAttribute('title')}
+ if(el!==tipFor){hideTip();if(el){tipFor=el;tipT=setTimeout(()=>showTip(el.dataset.tip),300)}}},true);
+document.addEventListener('mousedown',hideTip,true);document.addEventListener('wheel',hideTip,{passive:true,capture:true});window.addEventListener('blur',hideTip);
+applyTips();setInterval(applyTips,1500);
 // toasts
 function toast(msg,ok){if(S.optToast===false)return;const t=document.createElement('div');t.className='toast'+(ok?' ok':'');t.textContent=msg;$('toasts').appendChild(t);
  setTimeout(()=>t.classList.add('out'),4200);setTimeout(()=>t.remove(),4700);const all=$('toasts').children;if(all.length>4)all[0].remove()}

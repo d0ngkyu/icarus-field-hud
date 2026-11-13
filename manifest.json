@@ -1,6 +1,6 @@
 {
- "version": "2026.11.13.2",
- "notes": "지도 목표 표시 지우기, 동굴 찾기 개선",
+ "version": "2026.11.13.3",
+ "notes": "마우스 설명, 월드 보스 표시",
  "files": [
   {
    "p": "game/Icarus/Binaries/Win64/dwmapi.dll",
@@ -51,8 +51,8 @@
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/Scripts/main.lua",
-   "n": 54183,
-   "h": "8018481f5a898bfc1dbeb2d638abb5f09d9b72bf"
+   "n": 54972,
+   "h": "428a7074803959fe09c749218d412d9da26a9c52"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/Scripts/bp_names.lua",
@@ -61,8 +61,8 @@
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/index.html",
-   "n": 855041,
-   "h": "f0467f6180cd9edbb4d1f979f1d793735a9dce66"
+   "n": 866952,
+   "h": "e3a7498c66252fc56a34f373718e3aa9496a39bf"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/icons.webp",
