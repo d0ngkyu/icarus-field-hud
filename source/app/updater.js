@@ -8,7 +8,11 @@ const { execFileSync } = require('child_process');
 
 const sha1 = buf => crypto.createHash('sha1').update(buf).digest('hex');
 const exists = p => { try { return fs.existsSync(p); } catch (e) { return false; } };
-const isGame = d => d && exists(path.join(d, 'Icarus', 'Binaries', 'Win64', 'Icarus-Win64-Shipping.exe'));
+const isGame = d => {
+  if (typeof d !== 'string' || !d.trim()) return false;
+  try { return fs.statSync(path.join(d, 'Icarus', 'Binaries', 'Win64', 'Icarus-Win64-Shipping.exe')).isFile(); }
+  catch (e) { return false; }
+};
 
 // ---------- finding the game ----------
 function steamLibraries() {
@@ -33,7 +37,7 @@ function steamLibraries() {
 
 function findGame(cfg) {
   if (isGame(process.env.HUD_GAME_DIR)) return process.env.HUD_GAME_DIR;
-  if (isGame(cfg.game)) return cfg.game;
+  if (cfg && isGame(cfg.game)) return cfg.game;
   // the program may sit inside the game's mod folder (the original install)
   const up = path.resolve(path.dirname(process.execPath), '..', '..', '..', '..', '..', '..', '..');
   if (isGame(up)) return up;
@@ -58,9 +62,20 @@ function askGame(win) {
 // ---------- where each file goes ----------
 // manifest paths: "game/..." = inside the Icarus folder, "app/..." = next to this program's code
 function target(gameDir, p) {
-  if (p.startsWith('game/')) return path.join(gameDir, ...p.slice(5).split('/'));
-  if (p.startsWith('app/')) return path.join(__dirname, ...p.slice(4).split('/'));
-  return null;
+  if (typeof p !== 'string') throw new Error('업데이트 파일 경로가 올바르지 않습니다.');
+  const root = p.startsWith('game/') ? gameDir : p.startsWith('app/') ? __dirname : null;
+  if (!root) return null;
+  const parts = p.slice(p.indexOf('/') + 1).split('/');
+  // Apply Windows filename rules on build/test hosts too (including ADS and devices).
+  if (parts.some(s => !s || s === '.' || s === '..' || /[\\:<>"|?*\x00-\x1f]/.test(s) || /[. ]$/.test(s) || /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i.test(s))) {
+    throw new Error('허용되지 않는 업데이트 파일 경로입니다.');
+  }
+  const dst = path.resolve(root, ...parts);
+  const rel = path.relative(path.resolve(root), dst);
+  if (!rel || rel === '..' || rel.startsWith('..' + path.sep) || path.isAbsolute(rel)) {
+    throw new Error('업데이트 파일이 설치 폴더를 벗어납니다.');
+  }
+  return dst;
 }
 
 async function getJson(url) {
@@ -114,6 +129,9 @@ async function update(gameDir, baseUrl, log) {
 
 // a path the game's script can always open, even with Korean folder names (8.3 short form)
 function shortPath(p) {
+  // cmd expands percent variables even inside quotes. Fall back without invoking
+  // a shell for paths containing command syntax; do not interpolate those paths.
+  if (typeof p !== 'string' || /[%!^"&|<>\r\n\x00]/.test(p)) return p;
   try {
     const out = execFileSync('cmd', ['/d', '/c', 'for %I in ("' + p + '") do @echo %~sI'], { encoding: 'utf8', windowsHide: true, timeout: 4000 });
     const s = out.trim().split(/\r?\n/).pop();
@@ -128,7 +146,8 @@ function modDir(gameDir) { return path.join(gameDir, 'Icarus', 'Binaries', 'Win6
 function registerApp(gameDir) {
   const md = modDir(gameDir);
   if (!exists(md)) return;
-  const inside = path.resolve(process.execPath).toLowerCase().startsWith(md.toLowerCase());
+  // Lua's fallback launches this exact file, not every executable under md.
+  const inside = path.resolve(process.execPath).toLowerCase() === path.resolve(md, 'app', 'IcarusHUD.exe').toLowerCase();
   const f = path.join(md, 'app_path.txt');
   try {
     if (inside) { if (exists(f)) fs.unlinkSync(f); return; }

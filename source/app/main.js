@@ -42,22 +42,40 @@ function createWindow(hud) {
   win.loadFile(hud);
   // push game updates to the page: only a cheap file check here, no page polling
   const live = path.join(path.dirname(hud), 'live.js');
-  let lastSig = '', busy = false;
+  const liveWindow = win;
+  const { Script } = require('vm');
+  let lastSig = '', busy = false, loadGeneration = 0;
   const tick = () => {
-    if (busy || !win || win.isDestroyed()) return;
+    if (busy || liveWindow.isDestroyed()) return;
     busy = true;
+    const generation = loadGeneration;
     fs.stat(live, (err, st) => {
       if (err) { busy = false; return; }
       const sig = st.mtimeMs + ':' + st.size;
       if (sig === lastSig) { busy = false; return; }
-      lastSig = sig;
-      // the game was just started again (no news for 2 minutes): look for updates now
-      if (lastLiveAt && Date.now() - lastLiveAt > 120000) runUpdate(false);
-      lastLiveAt = Date.now();
-      fs.readFile(live, 'utf8', (e2, txt) => { busy = false; if (!e2 && txt && win && !win.isDestroyed()) win.webContents.send('live', txt); });
+      fs.readFile(live, 'utf8', (e2, txt) => {
+        if (e2 || !txt || !txt.trim()) { busy = false; return; }
+        // Lua overwrites this file in place. Do not consume a partial script.
+        try { new Script(txt); } catch (e) { busy = false; return; }
+        fs.stat(live, (e3, after) => {
+          busy = false;
+          if (e3 || generation !== loadGeneration || liveWindow.isDestroyed()) return;
+          if (sig !== after.mtimeMs + ':' + after.size) return;
+          try { liveWindow.webContents.send('live', txt); } catch (e) { return; }
+          lastSig = sig;
+          // Preserve the existing update trigger, but only after a successful read.
+          if (lastLiveAt && Date.now() - lastLiveAt > 120000) runUpdate(false);
+          lastLiveAt = Date.now();
+        });
+      });
     });
   };
   const timer = setInterval(tick, 200);
+  liveWindow.webContents.on('did-finish-load', () => {
+    loadGeneration++;
+    lastSig = '';
+    tick();
+  });
   // when an update replaced the page file, show the new page by itself
   let pageSig = '';
   try { const st = fs.statSync(hud); pageSig = st.mtimeMs + ':' + st.size; } catch (e) {}

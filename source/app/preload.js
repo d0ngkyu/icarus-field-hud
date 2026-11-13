@@ -1,6 +1,6 @@
 const { contextBridge, ipcRenderer } = require('electron');
-let onState = null, onLive = null, onUpd = null, pendingUpd = null, onDiag = null, pendingDiag = [];
-ipcRenderer.on('live', (_e, txt) => { if (onLive) onLive(txt); });
+let onState = null, onLive = null, onUpd = null, pendingUpd = null, onDiag = null, pendingDiag = [], pendingLive = null;
+ipcRenderer.on('live', (_e, txt) => { if (onLive) onLive(txt); else pendingLive = txt; });
 ipcRenderer.on('state', (_e, st) => { if (onState) onState(st); });
 ipcRenderer.on('upd', (_e, u) => { if (onUpd) onUpd(u); else pendingUpd = u; });
 ipcRenderer.on('diag', (_e, n) => { if (onDiag) onDiag(n); else pendingDiag.push(n); });
@@ -18,7 +18,11 @@ contextBridge.exposeInMainWorld('hudApp', {
   setSafe: on => ipcRenderer.invoke('setSafe', on),
   setModOn: on => ipcRenderer.invoke('setModOn', on),
   onState: fn => { onState = fn; },
-  onLive: fn => { onLive = fn; },
+  onLive: fn => {
+    if (typeof fn !== 'function') throw new TypeError('데이터를 받을 함수를 지정해 주세요.');
+    onLive = fn;
+    if (pendingLive !== null) { const txt = pendingLive; pendingLive = null; fn(txt); }
+  },
   onUpd: fn => { onUpd = fn; if (pendingUpd) { fn(pendingUpd); pendingUpd = null; } },
   onDiag: fn => { onDiag = fn; for (const n of pendingDiag) fn(n); pendingDiag = []; },
 });
