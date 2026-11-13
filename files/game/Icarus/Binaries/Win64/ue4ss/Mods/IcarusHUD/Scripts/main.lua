@@ -350,7 +350,9 @@ local function worldSettingsMarks()
             table.insert(out, string.format('["x:Exotic",%.0f,%.0f,%.0f]', t.X, t.Y, t.Z)) nx = nx + 1
         end)
     end)
-    if not wsNote or w ~= wsWorld then
+    local wsSum = nc .. "/" .. nd .. "/" .. nx
+    if wsSum ~= wsLastSum then
+        wsLastSum = wsSum
         log(string.format("whole-map marks: %d caves (%d without size) from %d of %d settings, %d deep veins, %d exotic spots", nc, unk, withCaves, cands, nd, nx))
         wsNote = true
     end

@@ -1,6 +1,6 @@
 {
- "version": "2026.11.14.2",
- "notes": "맵 파일 찾기 보완",
+ "version": "2026.11.14.3",
+ "notes": "기록 정리",
  "config": {},
  "files": [
   {
@@ -52,8 +52,8 @@
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/Scripts/main.lua",
-   "n": 55570,
-   "h": "d2518455eeb2c3043bd7ac63bad519961d751052"
+   "n": 55635,
+   "h": "2dbc9ce8ce51af21ff69b6c19b6ceb9353eb069f"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/Scripts/bp_names.lua",
@@ -63,7 +63,7 @@
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/index.html",
    "n": 872273,
-   "h": "ac4fe2d8747c0dca7979b55801e147566fca8b63"
+   "h": "f44a4e0571d9ca3991006f4b5fda469ac43b3c4a"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/icons.webp",
