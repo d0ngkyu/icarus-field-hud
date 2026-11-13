@@ -1,6 +1,6 @@
 {
- "version": "2026.11.14.3",
- "notes": "기록 정리",
+ "version": "2026.11.14.4",
+ "notes": "실시간 읽기·경로 검사 보강 (Codex)",
  "config": {},
  "files": [
   {
@@ -63,7 +63,7 @@
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/index.html",
    "n": 872273,
-   "h": "f44a4e0571d9ca3991006f4b5fda469ac43b3c4a"
+   "h": "6f70cc4b6dd3276672be4a8370d351e31c304656"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/icons.webp",
@@ -112,18 +112,18 @@
   },
   {
    "p": "app/main.js",
-   "n": 13461,
-   "h": "b6a37d9513a175655f74cb1ae6b170e5919bcff8"
+   "n": 14137,
+   "h": "ad7e54e4113cee02443f4b737d32da4393d8c5cf"
   },
   {
    "p": "app/updater.js",
-   "n": 6033,
-   "h": "042a52927a0848087007cee2aa25a26ac730e331"
+   "n": 7383,
+   "h": "230a094ea2c6acad4bf9a58fea01de9e3d14a96a"
   },
   {
    "p": "app/preload.js",
-   "n": 1375,
-   "h": "c60258ad101ec459b8291a46969752b5d44d6bcf"
+   "n": 1622,
+   "h": "f7f07b24ac9d44c55c9e396c5a537549df2fcd28"
   },
   {
    "p": "app/extract.js",

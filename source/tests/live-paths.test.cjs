@@ -159,5 +159,7 @@ test('update writes a valid payload, skips unchanged/once files, rejects a bad c
   manifest.files = [{ p: 'game/bad.txt', n: 1, h: 'bad' }]; r = await u.update(dir, 'https://mock.invalid');
   assert.equal(r.skipped.length, 1); assert.equal(fs.existsSync(path.join(dir, 'bad.txt')), false);
   manifest.files = [{ p: 'game/../escaped.txt' }]; const before = downloads;
-  await assert.rejects(u.update(dir, 'https://mock.invalid')); assert.equal(downloads, before);
+  // a bad path is skipped (the rest of the update still goes ahead), never downloaded or written
+  r = await u.update(dir, 'https://mock.invalid'); assert.equal(r.skipped.length, 1); assert.equal(downloads, before);
+  assert.equal(fs.existsSync(path.join(path.dirname(dir), 'escaped.txt')), false);
 });

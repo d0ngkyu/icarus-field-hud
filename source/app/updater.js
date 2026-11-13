@@ -106,7 +106,9 @@ async function update(gameDir, baseUrl, log) {
   const man = await getJson(baseUrl + '/manifest.json');
   const res = { changed: [], skipped: [], appChanged: false, version: man.version, notes: man.notes || '', config: man.config || {} };
   for (const f of man.files) {
-    const dst = target(gameDir, f.p);
+    // one bad entry must not stop the rest of the update
+    let dst = null;
+    try { dst = target(gameDir, f.p); } catch (e) { res.skipped.push(String(f.p) + ' (' + e.message + ')'); continue; }
     if (!dst) continue;
     let cur = null;
     try { cur = fs.readFileSync(dst); } catch (e) {}
