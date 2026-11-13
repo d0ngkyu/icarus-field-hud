@@ -1,1 +1,15 @@
-# icarus-field-hud
+# Icarus Field HUD
+
+이카루스(Icarus)를 두 번째 모니터에서 도와주는 팬 제작 HUD입니다.
+제작 재료 계산, 보관함·광석 네비게이션, 게임 지도(동굴·탐험 기록·메모), 성장 코치를 제공합니다.
+
+## 받기
+[Releases](../../releases/latest)에서 `IcarusHUD.zip`을 받아 압축을 풀고 `IcarusHUD.exe`를 실행하세요.
+처음 실행하면 Icarus 폴더를 찾아 모드를 설치하고, 그다음부터는 자동으로 업데이트됩니다.
+자세한 사용법은 압축 파일 안의 `사용법.txt`를 보세요.
+
+## 알림
+- 비공식 팬 도구입니다. 게임 데이터·아이콘·지도 그림은 RocketWerkz의 것입니다.
+- 아이템 한글 이름은 한글 패치 제작자의 허락을 받아 사용했습니다.
+- 모드 로더로 [UE4SS](https://github.com/UE4SS-RE/RE-UE4SS) (MIT)를 사용합니다.
+- 이 저장소의 `manifest.json`과 `files/`는 프로그램이 자동 업데이트에 쓰는 파일입니다.
