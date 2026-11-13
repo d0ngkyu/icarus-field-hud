@@ -9,7 +9,14 @@ fs.mkdirSync(outDir, { recursive: true });
 const log = t => { try { fs.appendFileSync(logF, new Date().toISOString() + ' ' + t + '\n'); } catch (e) {} };
 try {
   log('start');
-  const n = extractRaw(pakDir, outDir, (d, f) => /Content\/Maps\/[A-Za-z0-9_]+\/$/.test(d) && /^(Terrain|Outpost)_\d+\.(umap|uexp)$/i.test(f), log);
+  // write down where the map level files sit, so the pattern can be checked later
+  const seen = [];
+  const want = (d, f) => {
+    if (/\.umap$/i.test(f) && /Maps\//i.test(d) && seen.length < 400) seen.push(d + f);
+    return /Maps\//i.test(d) && /^(Terrain|Outpost)_\d+(_[A-Za-z0-9]+)?\.(umap|uexp)$/i.test(f);
+  };
+  const n = extractRaw(pakDir, outDir, want, log);
+  try { fs.writeFileSync(path.join(outDir, 'levels.txt'), seen.join('\n')); } catch (e) {}
   fs.writeFileSync(path.join(outDir, 'done.txt'), String(n));
   log('done ' + n);
 } catch (e) { log('error ' + (e && e.stack || e)); }
