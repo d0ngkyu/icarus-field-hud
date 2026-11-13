@@ -8,3 +8,7 @@
 | 11-14 | 월드 보스 표시 확인 | Claude | ✅ 사용자 확인 완료 (11-14 00:27) | |
 | 11-14 | 모드 `os.execute`에서 `%`가 든 경로 처리 점검 | Claude | 📝 할 일 | Codex 검토에서 나온 지적 |
 | 11-14 | 나머지 맵 그림(프로메테우스·엘리시움·022·아웃포스트) 배포 | Claude | 📝 할 일 | 원본은 사용자 PC 모드 폴더 `mapraw_*`에 있음 |
+
+## 2026-11-14 01:05 · Claude
+- PR #1 (Codex, 중앙 협업 저장소 연결) 검토 후 병합: 29933d7. 문서만 변경.
+- 막힘: Claude는 비공개 `d0ngkyu/ai-collaboration`에 아직 접근 불가 (Claude GitHub 앱 권한에 저장소 미추가). 사용자가 권한 추가 후 Claude가 읽고 확인 예정. 그전까지 Claude는 이 저장소의 COLLAB-COMMON.md·COLLAB.md·TASKS.md 기준으로 작업.
