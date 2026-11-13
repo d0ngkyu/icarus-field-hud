@@ -1,6 +1,6 @@
 {
- "version": "2026.11.13.6",
- "notes": "지도 데이터 준비",
+ "version": "2026.11.13.7",
+ "notes": "버전 표시·업데이트 버튼 위로",
  "files": [
   {
    "p": "game/Icarus/Binaries/Win64/dwmapi.dll",
@@ -61,8 +61,8 @@
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/index.html",
-   "n": 867995,
-   "h": "4fe74281862515ea844d150829c8fc9fa47e3a78"
+   "n": 869034,
+   "h": "b9e11bcbe2538ae9060bfa3a5fa87dae102ee419"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/icons.webp",
