@@ -1,5 +1,5 @@
 // Icarus Field HUD - desktop shell around the HUD page in the mod folder
-const { app, BrowserWindow, ipcMain, Tray, Menu, nativeImage, screen, dialog, shell } = require('electron');
+const { net, app, BrowserWindow, ipcMain, Tray, Menu, nativeImage, screen, dialog, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
@@ -114,7 +114,9 @@ ipcMain.handle('toggleTop', () => toggleTop());
 ipcMain.handle('toggleCompact', () => toggleCompact());
 ipcMain.handle('minimize', () => win.minimize());
 ipcMain.handle('hide', () => win.hide());
-ipcMain.handle('info', () => ({ version: (lastUpd && lastUpd.version) || PKG.contentVersion || '', app: app.getVersion(), game: gameDir, macros: gameDir ? UPD.macrosOn(gameDir) : false, last: lastUpd && { at: lastUpd.at, changed: lastUpd.changed.length } }));
+ipcMain.handle('info', () => ({ version: (lastUpd && lastUpd.version) || PKG.contentVersion || '', app: app.getVersion(), game: gameDir, macros: gameDir ? UPD.macrosOn(gameDir) : false, presence: !!presenceUrl() && cfg.presence !== false, presenceAvail: !!presenceUrl(), last: lastUpd && { at: lastUpd.at, changed: lastUpd.changed.length } }));
+ipcMain.handle('online', () => onlineN);
+ipcMain.handle('setPresence', (_e, on) => { cfg.presence = !!on; saveCfg(); if (on) presenceTick(); else { presenceLeave(); onlineN = null; } return cfg.presence; });
 ipcMain.handle('setMacros', (_e, on) => (gameDir ? UPD.setMacros(gameDir, !!on) : false));
 ipcMain.handle('checkUpdate', () => runUpdate(true).then(r => !!r));
 
@@ -127,6 +129,8 @@ async function runUpdate(manual) {
   try {
     const r = await UPD.update(gameDir, UPDATE_URL, ulog);
     lastUpd = { ...r, at: Date.now() };
+    // settings the update site hands out (for now: where the online counter lives)
+    if (r.config && typeof r.config.presenceUrl === 'string' && r.config.presenceUrl !== (cfg.presenceUrl || '')) { cfg.presenceUrl = r.config.presenceUrl; saveCfg(); setTimeout(presenceTick, 1000); }
     ulog('update ' + r.version + ': ' + r.changed.length + ' changed, ' + r.skipped.length + ' skipped');
     UPD.registerApp(gameDir);
     if (win && !win.isDestroyed()) win.webContents.send('upd', { version: r.version, changed: r.changed, skipped: r.skipped, notes: r.notes, manual: !!manual });
@@ -180,7 +184,30 @@ async function start() {
   } catch (e) {}
   setInterval(() => runUpdate(false), 30 * 60 * 1000);
 }
-app.whenReady().then(start);
+// ---------- how many people have the HUD open right now (anonymous: a random id and a time) ----------
+const presenceUrl = () => (process.env.HUD_PRESENCE_URL || cfg.presenceUrl || PKG.presenceUrl || '').replace(/\/+$/, '');
+let onlineN = null;
+async function presenceTick() {
+  if (!presenceUrl() || cfg.presence === false) return;
+  try {
+    if (!cfg.pid) { cfg.pid = require('crypto').randomBytes(9).toString('hex'); saveCfg(); }
+    const now = Date.now();
+    await net.fetch(presenceUrl() + '/presence/' + cfg.pid + '.json', { method: 'PUT', body: JSON.stringify({ t: now }), headers: { 'Content-Type': 'application/json' } });
+    const r = await net.fetch(presenceUrl() + '/presence.json?orderBy=%22t%22&startAt=' + (now - 4 * 60 * 1000), { cache: 'no-store' });
+    if (r.ok) { const d = await r.json(); onlineN = d ? Object.keys(d).length : 0; }
+  } catch (e) { onlineN = null; }
+  if (win && !win.isDestroyed()) win.webContents.send('online', onlineN);
+}
+async function presenceLeave() {
+  if (!presenceUrl() || !cfg.pid) return;
+  try { await net.fetch(presenceUrl() + '/presence/' + cfg.pid + '.json', { method: 'DELETE' }); } catch (e) {}
+}
+app.on('before-quit', e => {
+  if (presenceLeave.done || !presenceUrl() || !cfg.pid) return;
+  e.preventDefault(); presenceLeave.done = true;
+  Promise.race([presenceLeave(), new Promise(r => setTimeout(r, 1500))]).then(() => app.quit());
+});
+app.whenReady().then(start).then(() => { setTimeout(presenceTick, 3000); setInterval(presenceTick, 60 * 1000); });
 
 
 // development check: HUD_SHOT=<png> captures the window and quits

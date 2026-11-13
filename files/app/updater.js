@@ -89,7 +89,7 @@ function writeSafe(dst, buf) {
 // Installs or updates. Returns { changed:[...], skipped:[...], appChanged, version, notes }.
 async function update(gameDir, baseUrl, log) {
   const man = await getJson(baseUrl + '/manifest.json');
-  const res = { changed: [], skipped: [], appChanged: false, version: man.version, notes: man.notes || '' };
+  const res = { changed: [], skipped: [], appChanged: false, version: man.version, notes: man.notes || '', config: man.config || {} };
   for (const f of man.files) {
     const dst = target(gameDir, f.p);
     if (!dst) continue;

@@ -1,6 +1,7 @@
 {
- "version": "2026.11.13.7",
- "notes": "버전 표시·업데이트 버튼 위로",
+ "version": "2026.11.13.8",
+ "notes": "접속자 수 기능 준비",
+ "config": {},
  "files": [
   {
    "p": "game/Icarus/Binaries/Win64/dwmapi.dll",
@@ -61,8 +62,8 @@
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/index.html",
-   "n": 869034,
-   "h": "b9e11bcbe2538ae9060bfa3a5fa87dae102ee419"
+   "n": 870033,
+   "h": "5016ff02fdae1f575bf5bec97e796689425ebb2d"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/icons.webp",
@@ -111,18 +112,18 @@
   },
   {
    "p": "app/main.js",
-   "n": 11583,
-   "h": "d22152aef4c45b783d7feb16ce515267eb1f6835"
+   "n": 13653,
+   "h": "585a0f52b25fdef43a55d676e57d52bb361effaa"
   },
   {
    "p": "app/updater.js",
-   "n": 6007,
-   "h": "433e7843541fef74cc3a69d3c2d9a19739eb0dc1"
+   "n": 6033,
+   "h": "042a52927a0848087007cee2aa25a26ac730e331"
   },
   {
    "p": "app/preload.js",
-   "n": 951,
-   "h": "36b9af4d70a9edbe06a775199f5a7dc79b2a8746"
+   "n": 1181,
+   "h": "9e016d5f64c66ddee79dd650ada070f50c858eb2"
   },
   {
    "p": "app/extract.js",
