@@ -316,21 +316,6 @@ local function worldSettingsMarks()
             end
         end)
     end
-    -- caves already placed in the loaded world (their prefab name tells the size)
-    for _, cp in ipairs(FindAllOf("CavePrefab") or {}) do
-        pcall(function()
-            if not cp:IsValid() or string.find(cp:GetFullName(), "Default__", 1, true) then return end
-            local l = cp:K2_GetActorLocation()
-            local key = math.floor(l.X / 500) .. ":" .. math.floor(l.Y / 500)
-            if seenCave[key] or (l.X == 0 and l.Y == 0) then return end
-            seenCave[key] = true
-            local pn = ""
-            pcall(function() pn = cp.PrefabAsset:GetFullName() end)
-            local id = pn:match("CAVE_([%w_]+)")
-            table.insert(out, string.format('["w:%s",%.0f,%.0f,%.0f]', (id or "Cave"):gsub('[^%w_]', ''), l.X, l.Y, l.Z))
-            nc = nc + 1
-        end)
-    end
     if not ws then
         if not wsNote then log("whole-map marks: no world settings found") wsNote = true end
         return out
@@ -379,7 +364,7 @@ local function scanLandmarks()
     each("BP_OilGeyser_C", "g", function() return "Oil" end)
     each("BP_EnzymeGeyser_C", "g", function() return "Enzyme" end)
     -- world bosses: the game shares their spawn points with everyone (same as the in-game map)
-    for _, sp in ipairs(FindAllOf("WorldBossSpawner") or {}) do
+    for _, sp in ipairs(WORLD_READY and FindAllOf("WorldBossSpawner") or {}) do
         pcall(function()
             if not sp:IsValid() or string.find(sp:GetFullName(), "Default__", 1, true) then return end
             local l = sp:K2_GetActorLocation()
@@ -573,9 +558,12 @@ end
 local lastFogSig, fogAt = nil, -1000
 fogNow = false
 local function readFog(force)
-    local mm = FindFirstOf("MapManager_C")
-    if not mm or not mm:IsValid() then mm = FindFirstOf("MapManagerBase") end
-    if not mm or not mm:IsValid() then return nil end
+    if not lastPose then return nil end
+    local mm = nil
+    for _, c in ipairs(FindAllOf("MapManager_C") or {}) do
+        if c:IsValid() and not string.find(c:GetFullName(), "Default__", 1, true) then mm = c break end
+    end
+    if not mm then return nil end
     local t0 = os.clock()
     local ts = mm.TileSize
     local tr = mm.MapCorner.Translation
@@ -624,6 +612,7 @@ local function readFog(force)
     return string.format('{"cx":%.0f,"cy":%.0f,"ts":%.0f,"o":%d,"r":["%s"]}', cx, cy, ts, o, table.concat(out, '","'))
 end
 
+WORLD_READY = false
 local function autoTick()
     local t0 = os.clock()
     tick = tick + 1
@@ -631,6 +620,7 @@ local function autoTick()
     if tick % 2 == 0 then bagChanged = scanBag() end
     local pose = poseJson()
     local poseChanged = pose ~= nil and pose ~= lastPose
+    WORLD_READY = pose ~= nil and tick > 60
     local dt = (os.clock() - t0) * 1000
     if dt > autoMax + 5 then autoMax = dt log(string.format("tick took %.0f ms", dt)) end
     local withInv = bagChanged or (tick % 20 == 0)
@@ -645,8 +635,8 @@ local function autoTick()
         if okO and type(list) == "table" and #list > 0 then oreJ = "[" .. table.concat(list, ",") .. "]" end
     end
     local fogJ = nil
-    if tick % 80 == 13 or fogNow then
-        local okF, fj = pcall(readFog, tick < 100 or fogNow)
+    if (tick > 60 and tick % 80 == 13) or (fogNow and tick > 20) then
+        local okF, fj = pcall(readFog, tick < 160 or fogNow)
         fogNow = false
         if okF then fogJ = fj else log("map fog read failed: " .. tostring(fj)) end
     end
@@ -1217,11 +1207,7 @@ local function mapRaw(doneName, wantDir, wantFile, tag)
 end
 if DEVMODE then
     local function jobs()
-        -- the main level of each map: its settings hold the whole-map cave list
-        pcall(mapRaw, "mapraw_done3.txt",
-            function(dn) return dn:find("Content/Maps/", 1, true) ~= nil and (dn:match("/Maps/[%w_]+/$") ~= nil) end,
-            function(fn) return fn:match("^Terrain_%d+%.u") ~= nil or fn:match("^Outpost_%d+%.u") ~= nil end,
-            function(dn) return "lvl" end)
+        -- (nothing to copy right now)
     end
     if ExecuteAsync then ExecuteAsync(function() local ok, e = pcall(jobs) if not ok then log("map copy error: " .. tostring(e)) end end)
     else ExecuteWithDelay(15000, function() pcall(jobs) end) end

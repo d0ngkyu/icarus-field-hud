@@ -1,6 +1,6 @@
 {
- "version": "2026.11.13.3",
- "notes": "마우스 설명, 월드 보스 표시",
+ "version": "2026.11.13.4",
+ "notes": "게임 튕김 수정",
  "files": [
   {
    "p": "game/Icarus/Binaries/Win64/dwmapi.dll",
@@ -51,8 +51,8 @@
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/Scripts/main.lua",
-   "n": 54972,
-   "h": "428a7074803959fe09c749218d412d9da26a9c52"
+   "n": 54009,
+   "h": "ab812f68367f11635165830751e89897fcb4494e"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/Scripts/bp_names.lua",
@@ -111,8 +111,8 @@
   },
   {
    "p": "app/main.js",
-   "n": 10158,
-   "h": "075eef9c571190331b33811eee64d4869a0452e0"
+   "n": 10936,
+   "h": "bfec297d28bdc7fec01fd6736c2e88a6d580bc1f"
   },
   {
    "p": "app/updater.js",

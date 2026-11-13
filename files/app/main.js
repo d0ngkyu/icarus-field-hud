@@ -15,7 +15,7 @@ const saveCfg = () => { try { fs.mkdirSync(path.dirname(cfgFile()), { recursive:
 const UPD = require('./updater.js');
 const PKG = (() => { try { return require('./package.json'); } catch (e) { return {}; } })();
 const UPDATE_URL = process.env.HUD_UPDATE_URL || PKG.updateUrl || '';
-let gameDir = null, lastUpd = null;
+let gameDir = null, lastUpd = null, lastLiveAt = 0;
 const hudFile = () => gameDir && path.join(UPD.modDir(gameDir), 'hud', 'index.html');
 const logFile = () => path.join(app.getPath('userData'), 'update.log');
 const ulog = t => { try { fs.appendFileSync(logFile(), new Date().toISOString() + ' ' + t + '\n'); } catch (e) {} };
@@ -50,10 +50,24 @@ function createWindow(hud) {
       const sig = st.mtimeMs + ':' + st.size;
       if (sig === lastSig) { busy = false; return; }
       lastSig = sig;
+      // the game was just started again (no news for 2 minutes): look for updates now
+      if (lastLiveAt && Date.now() - lastLiveAt > 120000) runUpdate(false);
+      lastLiveAt = Date.now();
       fs.readFile(live, 'utf8', (e2, txt) => { busy = false; if (!e2 && txt && win && !win.isDestroyed()) win.webContents.send('live', txt); });
     });
   };
   const timer = setInterval(tick, 200);
+  // when an update replaced the page file, show the new page by itself
+  let pageSig = '';
+  try { const st = fs.statSync(hud); pageSig = st.mtimeMs + ':' + st.size; } catch (e) {}
+  const pageTimer = setInterval(() => {
+    fs.stat(hud, (err, st) => {
+      if (err || !win || win.isDestroyed()) return;
+      const sig = st.mtimeMs + ':' + st.size;
+      if (sig !== pageSig) { pageSig = sig; setTimeout(() => { if (win && !win.isDestroyed()) win.webContents.reloadIgnoringCache(); }, 1500); }
+    });
+  }, 3000);
+  win.on('closed', () => clearInterval(pageTimer));
   win.on('closed', () => clearInterval(timer));
   win.once('ready-to-show', () => win.show());
   let t = null;
@@ -156,7 +170,7 @@ async function start() {
     setTimeout(() => runUpdate(false), 5000);
   }
   createWindow(hudFile()); buildTray();
-  setInterval(() => runUpdate(false), 3 * 3600 * 1000);
+  setInterval(() => runUpdate(false), 30 * 60 * 1000);
 }
 app.whenReady().then(start);
 
