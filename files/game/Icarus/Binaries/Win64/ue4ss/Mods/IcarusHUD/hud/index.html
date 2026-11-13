@@ -453,7 +453,7 @@ body.app.mapmode #mapview{height:calc(100vh - 176px)}
 (()=>{
 // ===== interactive map: everything is recorded from the game while you play =====
 const $=id=>document.getElementById(id);
-const M=()=>{S.maps=S.maps||{};const w=S.world||'?';const m=S.maps[w]=S.maps[w]||{lm:{},ore:{},track:[],pins:[],paths:[],rings:[],notes:{}};if(!m.seen){m.seen={};for(const p of m.track)markSeen(m,p[0],p[1])}return m};
+const M=()=>{S.maps=S.maps||{};const w=S.world||'?';const m=S.maps[w]=S.maps[w]||{lm:{},ore:{},track:[],pins:[],paths:[],rings:[],notes:{}};if(!m.seen){m.seen={};for(const p of m.track)markSeen(m,p[0],p[1])}tidyDeposits(m);return m};
 const SEEN=10000;function markSeen(m,x,y){const i=Math.floor(x/SEEN),j=Math.floor(y/SEEN);for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++)m.seen[(i+a)+','+(j+b)]=1}
 S.mapv=Object.assign({x:0,y:0,s:0.25,rot:0,follow:true,flip:0,L:{terr:1,fog:0,grid:1,cave:1,exo:1,boss:1,dep:1,gey:1,ore:1,box:1,home:1,pins:1,paths:1,track:1,me:1}},S.mapv||{});
 const V=S.mapv;if(V.L.terr===undefined)V.L.terr=1;if(V.L.exo===undefined)V.L.exo=1;if(V.L.boss===undefined)V.L.boss=1;if(V.L.fog===undefined)V.L.fog=0;if(!V.ori2){V.rot=1;V.ori2=1}V.flip=0;
@@ -464,13 +464,18 @@ const ORECOL={Metal:'#c9cdd2',Iron:'#c9cdd2',Copper:'#e07b4a',Gold:'#f2d14b',Pla
 const oreCol=t=>{for(const k in ORECOL)if(t.indexOf(k)>=0)return ORECOL[k];return '#b9c2c8'};
 const rowItem=t=>{const[k,row]=t.split(':');const it=(k==='d'?D.dep:D.vox)&&(k==='d'?D.dep:D.vox)[row];return it?nm(it):(row||'').replace(/_/g,' ')};
 const keyOf=(t,x,y)=>t+'@'+Math.round(x/500)+','+Math.round(y/500);
+// deep veins change ore from one prospect to the next: keep only the newest reading per spot
+function tidyDeposits(mp){if(!mp||!mp.lm||mp.depTidy)return;const best={};
+ for(const k in mp.lm){const o=mp.lm[k];if(o[0][0]!=='d')continue;const pk=keyOf('d',o[1],o[2]);if(!best[pk]||(o[4]||0)>(mp.lm[best[pk]][4]||0))best[pk]=k}
+ for(const k in mp.lm){const o=mp.lm[k];if(o[0][0]!=='d')continue;const pk=keyOf('d',o[1],o[2]);if(best[pk]!==k){delete mp.lm[k];continue}if(k!==pk){mp.lm[pk]=o;delete mp.lm[k];if(mp.notes[k]){mp.notes[pk]=mp.notes[k];delete mp.notes[k]}}}
+ mp.depTidy=1}
 
 // ---------- recording ----------
 window.__mapIngest=m=>{
  if(m.w&&m.w!=='?')S.world=m.w;
  const mp=M(),now=Date.now();
  const put=(store,a)=>{const t=a[0];if(!t)return;const k=t[0];if(k==='a')return;
-  const dst=(k==='v')?mp.ore:mp.lm;dst[k==='b'?t:keyOf(t,a[1],a[2])]=[t,Math.round(a[1]),Math.round(a[2]),Math.round(a[3]||0),now,a[4]||0]};
+  const dst=(k==='v')?mp.ore:mp.lm;dst[k==='b'?t:k==='d'?keyOf('d',a[1],a[2]):keyOf(t,a[1],a[2])]=[t,Math.round(a[1]),Math.round(a[2]),Math.round(a[3]||0),now,a[4]||0]};
  if(m.lm)for(const a of m.lm)put(mp.lm,a);
  if(m.inv&&m.inv.ore){const p=m.p||S.pose;
   if(p){for(const k in mp.ore){const o=mp.ore[k];if(Math.hypot(o[1]-p[0],o[2]-p[1])<12000&&!m.inv.ore.some(a=>keyOf(a[0],a[1],a[2])===k))delete mp.ore[k]}}
@@ -591,7 +596,7 @@ function drawMap(){if(!W)return;const mp=M();hits=[];
    ctx.font='600 12px "Noto Sans KR"';ctx.fillStyle=dead?'#aab0b5':'#ffb3a8';ctx.shadowColor='#000';ctx.shadowBlur=3;ctx.fillText(bossName(o[0])+(dead?' (처치됨)':''),a+14,b+4);ctx.shadowBlur=0;
    noteLabel(mp.notes[k],a,b-12);hits.push({x:a,y:b,r:13,kind:'boss',ref:o,key:k})}
   else if(t==='x'&&L.exo){ctx.fillStyle='#b77bff';ctx.strokeStyle='#14081f';ctx.lineWidth=2;ctx.beginPath();for(let i=0;i<10;i++){const ang=i*Math.PI/5-Math.PI/2,rr=i%2?3:7;ctx.lineTo(a+Math.cos(ang)*rr,b+Math.sin(ang)*rr)}ctx.closePath();ctx.stroke();ctx.fill();noteLabel(mp.notes[k],a,b);hits.push({x:a,y:b,r:9,kind:'exo',ref:o,key:k})}
-  else if(t==='d'&&L.dep&&(!flt||flt.split(':')[1]===o[0].split(':')[1]||flt===o[0])){ctx.fillStyle=oreCol(o[0]);ctx.strokeStyle='#000';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(a,b-8);ctx.lineTo(a+8,b);ctx.lineTo(a,b+8);ctx.lineTo(a-8,b);ctx.closePath();ctx.stroke();ctx.fill();noteLabel(mp.notes[k],a,b);hits.push({x:a,y:b,r:10,kind:'dep',ref:o,key:k})}
+  else if(t==='d'&&L.dep&&(!flt||flt.split(':')[1]===o[0].split(':')[1]||flt===o[0])){const old=Date.now()-(o[4]||0)>6*3600e3;if(old)ctx.globalAlpha=.45;ctx.fillStyle=oreCol(o[0]);ctx.strokeStyle='#000';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(a,b-8);ctx.lineTo(a+8,b);ctx.lineTo(a,b+8);ctx.lineTo(a-8,b);ctx.closePath();ctx.stroke();ctx.fill();ctx.globalAlpha=1;noteLabel(mp.notes[k],a,b);hits.push({x:a,y:b,r:10,kind:'dep',ref:o,key:k})}
   else if(t==='g'&&L.gey){const oil=o[0].indexOf('Oil')>=0;ctx.fillStyle=oil?'#2a2a2a':'#7bd96a';ctx.strokeStyle=oil?'#f2d14b':'#0b1a08';ctx.lineWidth=2;ctx.beginPath();ctx.arc(a,b,7,0,7);ctx.fill();ctx.stroke();noteLabel(mp.notes[k],a,b);hits.push({x:a,y:b,r:10,kind:'gey',ref:o,key:k})}}
  const q=($('mapq').value||'').trim().toLowerCase(),qk=q?Object.keys(I).filter(k=>nm(k).toLowerCase().includes(q)||en(k).toLowerCase().includes(q)):[];
  if(L.box||qk.length)for(const b of allBoxes()){const has=qk.filter(k=>b.i[k]);if(!L.box&&!has.length)continue;const[a,c]=toS(b.p[0],b.p[1]);
@@ -648,7 +653,7 @@ function showInfo(h){const box=$('mapinfo'),mp=M();let t='',body='';selKey=h.key
  else if(h.kind==='deep'){t='심층 광맥 자리';body=`<div class="bench">${cell([h.ref[1],h.ref[2]])} · 가까이 가면 광석 종류가 표시됩니다</div>${wpButton(h.ref[1],h.ref[2],h.ref[3],h.ref[0])}`}
  else if(h.kind==='boss'){t='월드 보스: '+bossName(h.ref[0]);body=`<div class="bench">${cell([h.ref[1],h.ref[2]])}${h.ref[5]?' · 처치됨 (다시 나타날 때까지 대기)':' · 살아 있음'}</div>${wpButton(h.ref[1],h.ref[2],h.ref[3])}`}
  else if(h.kind==='exo'){t='엑조틱 지점';body=`<div class="bench">${cell([h.ref[1],h.ref[2]])}</div>${wpButton(h.ref[1],h.ref[2],h.ref[3],h.ref[0])}`}
- else if(h.kind==='dep'){t='심층 광맥: '+rowItem(h.ref[0]);body=`<div class="bench">${fmtD([h.ref[1],h.ref[2]])} · 채굴기(드릴)를 설치하는 곳</div>${wpButton(h.ref[1],h.ref[2],h.ref[3],h.ref[0])}`}
+ else if(h.kind==='dep'){const old=Date.now()-(h.ref[4]||0)>6*3600e3;t='심층 광맥: '+rowItem(h.ref[0])+(old?' (예전 기록)':'');body=`<div class="bench">${fmtD([h.ref[1],h.ref[2]])} · 채굴기(드릴)를 설치하는 곳 · 마지막 확인 ${ago(h.ref[4])}</div><div class="bench">광맥 종류는 탐사(서버)마다 바뀔 수 있습니다. 근처에 가면 지금 종류로 다시 바뀝니다.</div>${wpButton(h.ref[1],h.ref[2],h.ref[3],h.ref[0])}`}
  else if(h.kind==='gey'){t=h.ref[0].indexOf('Oil')>=0?'석유 간헐천':'효소 간헐천';body=`<div class="bench">${fmtD([h.ref[1],h.ref[2]])} · 추출기 설치 지점</div>${wpButton(h.ref[1],h.ref[2],h.ref[3],h.ref[0])}`}
  else if(h.kind==='ore'){t='광석: '+rowItem(h.ref[0]);body=`<div class="bench">${fmtD([h.ref[1],h.ref[2]])} · 기록 ${ago(h.ref[4])}</div>${wpButton(h.ref[1],h.ref[2],h.ref[3],h.ref[0])}`}
  else if(h.kind==='box'){const b=h.ref;t='보관함';const items=Object.entries(b.i).sort((a,c)=>c[1]-a[1]).slice(0,12);body=`<div class="bench">${fmtD(b.p)}${b.mem?' · 기억 '+ago(b.ts):''}</div><div style="max-height:150px;overflow:auto">${items.map(([k,n])=>`<div>${esc(nm(k))} <b style="color:var(--ac)">${n}</b></div>`).join('')}</div>${wpButton(b.p[0],b.p[1],b.p[2])}`}
@@ -680,7 +685,7 @@ let drag=null,moved=false;
 const hitAt=(x,y)=>{let best=null,bd=1e9;for(const h of hits){const d=Math.hypot(h.x-x,h.y-y);if(d<=h.r&&d<bd){best=h;bd=d}}return best};
 cv.addEventListener('pointerdown',e=>{if(e.button!==0)return;drag={x:e.offsetX,y:e.offsetY,vx:V.x,vy:V.y};moved=false;cv.setPointerCapture(e.pointerId)});
 const hitName=h=>{const mp=M(),n=h.key&&mp.notes[h.key];let t=h.kind==='cave'?(h.ci?h.ci.label+(h.ci.bio?' ('+h.ci.bio+')':''):'동굴'):h.kind==='deep'?'심층 광맥 자리':h.kind==='exo'?'엑조틱 지점':h.kind==='boss'?'월드 보스: '+bossName(h.ref[0])+(h.ref[5]?' (처치됨)':''):
- h.kind==='dep'?'심층 광맥: '+rowItem(h.ref[0]):h.kind==='gey'?(h.ref[0].indexOf('Oil')>=0?'석유 간헐천':'효소 간헐천'):h.kind==='ore'?'광석: '+rowItem(h.ref[0]):h.kind==='box'?'보관함':h.kind==='home'?'기지':h.kind==='pin'?(h.ref.n||'핀'):h.kind==='path'?(h.ref.n||'경로'):h.kind==='wp'?'나침반 목표 (눌러서 지우기)':'';
+ h.kind==='dep'?'심층 광맥: '+rowItem(h.ref[0])+(Date.now()-(h.ref[4]||0)>6*3600e3?' (예전 기록 · 다시 확인 필요)':''):h.kind==='gey'?(h.ref[0].indexOf('Oil')>=0?'석유 간헐천':'효소 간헐천'):h.kind==='ore'?'광석: '+rowItem(h.ref[0]):h.kind==='box'?'보관함':h.kind==='home'?'기지':h.kind==='pin'?(h.ref.n||'핀'):h.kind==='path'?(h.ref.n||'경로'):h.kind==='wp'?'나침반 목표 (눌러서 지우기)':'';
  return t+(n?' — '+n:'')+' · 눌러서 메모'};
 cv.addEventListener('pointerleave',()=>window.__hoverTip&&window.__hoverTip(null));
 cv.addEventListener('pointermove',e=>{const[wx,wy]=toW(e.offsetX,e.offsetY);if(window.__hoverTip){const h=drag?null:hitAt(e.offsetX,e.offsetY);window.__hoverTip(h?hitName(h):null,e.clientX,e.clientY)}$('mapcoord').textContent=`${gridName(wx,wy)?gridName(wx,wy)+' · ':''}X ${(wx/100).toFixed(0)}m · Y ${(wy/100).toFixed(0)}m${S.pose?' · 내 위치에서 '+fmtD([wx,wy]):''}`;
