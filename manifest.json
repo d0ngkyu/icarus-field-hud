@@ -1,6 +1,6 @@
 {
- "version": "2026.11.13.5",
- "notes": "심층 광맥 예전 기록 정리",
+ "version": "2026.11.13.6",
+ "notes": "지도 데이터 준비",
  "files": [
   {
    "p": "game/Icarus/Binaries/Win64/dwmapi.dll",
@@ -111,8 +111,8 @@
   },
   {
    "p": "app/main.js",
-   "n": 10936,
-   "h": "bfec297d28bdc7fec01fd6736c2e88a6d580bc1f"
+   "n": 11583,
+   "h": "d22152aef4c45b783d7feb16ce515267eb1f6835"
   },
   {
    "p": "app/updater.js",
@@ -123,6 +123,16 @@
    "p": "app/preload.js",
    "n": 951,
    "h": "36b9af4d70a9edbe06a775199f5a7dc79b2a8746"
+  },
+  {
+   "p": "app/extract.js",
+   "n": 6408,
+   "h": "8e326135b3758b20fa49a1a07b82cc825823f29c"
+  },
+  {
+   "p": "app/levjob.js",
+   "n": 871,
+   "h": "35216f8598cc40a06988d553ecc19292e75ad675"
   }
  ]
 }

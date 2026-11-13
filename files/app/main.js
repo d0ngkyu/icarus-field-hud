@@ -170,6 +170,14 @@ async function start() {
     setTimeout(() => runUpdate(false), 5000);
   }
   createWindow(hudFile()); buildTray();
+  // on the PC that builds updates only: copy map level files out of the game, outside the game process
+  try {
+    const md = UPD.modDir(gameDir), out = path.join(md, 'levelraw');
+    if (fs.existsSync(path.join(md, 'dev.txt')) && !fs.existsSync(path.join(out, 'done.txt'))) {
+      const { Worker } = require('worker_threads');
+      setTimeout(() => { try { new Worker(path.join(__dirname, 'levjob.js'), { workerData: { pakDir: path.join(gameDir, 'Icarus', 'Content', 'Paks'), outDir: out } }).on('error', e => ulog('level copy failed: ' + e.message)); } catch (e) { ulog('level copy failed: ' + e.message); } }, 20000);
+    }
+  } catch (e) {}
   setInterval(() => runUpdate(false), 30 * 60 * 1000);
 }
 app.whenReady().then(start);
