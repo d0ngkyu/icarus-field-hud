@@ -289,31 +289,52 @@ local function worldSettingsMarks()
     pcall(function() w = UEHelpers.GetWorld():GetFullName() end)
     if wsCache and w == wsWorld then return wsCache end
     local out = {}
-    -- every map piece has its own settings object; the main one holds the whole-map cave list
-    local ws, best = nil, -1
+    -- every map piece has its own settings object: take caves from all of them, veins from the fullest one
+    local ws, best, cands, withCaves = nil, -1, 0, 0
+    local nc, nd, nx, unk = 0, 0, 0, 0
+    local seenCave = {}
     for _, cand in ipairs(FindAllOf("IcarusWorldSettings") or {}) do
         pcall(function()
             if not cand:IsValid() or string.find(cand:GetFullName(), "Default__", 1, true) then return end
-            local n = cand.CaveLocations:GetArrayNum() + cand.DeepMiningOreDepositSpawnLocations:GetArrayNum()
+            cands = cands + 1
+            local n = cand.DeepMiningOreDepositSpawnLocations:GetArrayNum() + cand.ExoticVoxelSpawnLocations:GetArrayNum()
             if n > best then ws, best = cand, n end
+            if cand.CaveLocations:GetArrayNum() > 0 then
+                withCaves = withCaves + 1
+                cand.CaveLocations:ForEach(function(_, e)
+                    local v = e:get()
+                    local l = v.Location
+                    local key = math.floor(l.X / 500) .. ":" .. math.floor(l.Y / 500)
+                    if seenCave[key] then return end
+                    seenCave[key] = true
+                    local pn = softName(v.Prefab)
+                    local id = pn and pn:match("CAVE_([%w_]+)") or nil
+                    if not id then unk = unk + 1 end
+                    table.insert(out, string.format('["w:%s",%.0f,%.0f,%.0f]', (id or "Cave"):gsub('[^%w_]', ''), l.X, l.Y, l.Z))
+                    nc = nc + 1
+                end)
+            end
+        end)
+    end
+    -- caves already placed in the loaded world (their prefab name tells the size)
+    for _, cp in ipairs(FindAllOf("CavePrefab") or {}) do
+        pcall(function()
+            if not cp:IsValid() or string.find(cp:GetFullName(), "Default__", 1, true) then return end
+            local l = cp:K2_GetActorLocation()
+            local key = math.floor(l.X / 500) .. ":" .. math.floor(l.Y / 500)
+            if seenCave[key] or (l.X == 0 and l.Y == 0) then return end
+            seenCave[key] = true
+            local pn = ""
+            pcall(function() pn = cp.PrefabAsset:GetFullName() end)
+            local id = pn:match("CAVE_([%w_]+)")
+            table.insert(out, string.format('["w:%s",%.0f,%.0f,%.0f]', (id or "Cave"):gsub('[^%w_]', ''), l.X, l.Y, l.Z))
+            nc = nc + 1
         end)
     end
     if not ws then
         if not wsNote then log("whole-map marks: no world settings found") wsNote = true end
-        return {}
+        return out
     end
-    local nc, nd, nx, unk = 0, 0, 0, 0
-    pcall(function()
-        ws.CaveLocations:ForEach(function(_, e)
-            local v = e:get()
-            local l = v.Location
-            local pn = softName(v.Prefab)
-            local id = pn and pn:match("CAVE_([%w_]+)") or nil
-            if not id then unk = unk + 1 end
-            table.insert(out, string.format('["w:%s",%.0f,%.0f,%.0f]', (id or "Cave"):gsub('[^%w_]', ''), l.X, l.Y, l.Z))
-            nc = nc + 1
-        end)
-    end)
     pcall(function()
         ws.DeepMiningOreDepositSpawnLocations:ForEach(function(_, e)
             local t = e:get().Translation
@@ -327,10 +348,10 @@ local function worldSettingsMarks()
         end)
     end)
     if not wsNote or w ~= wsWorld then
-        log(string.format("whole-map marks: %d caves (%d without size), %d deep veins, %d exotic spots", nc, unk, nd, nx))
+        log(string.format("whole-map marks: %d caves (%d without size) from %d of %d settings, %d deep veins, %d exotic spots", nc, unk, withCaves, cands, nd, nx))
         wsNote = true
     end
-    if nc + nd + nx > 0 then wsCache, wsWorld = out, w end
+    if nc > 0 and nd + nx > 0 then wsCache, wsWorld = out, w end
     return out
 end
 
@@ -1083,9 +1104,9 @@ end
 
 
 -- one-time copy of the game's own map pictures (raw bytes) out of its pak files, done off the game thread
-local function mapRaw()
+local function mapRaw(doneName, wantDir, wantFile, tag)
     if not MODDIR then return end
-    local doneF = MODDIR .. "\\mapraw_done2.txt"
+    local doneF = MODDIR .. "\\" .. doneName
     local t = io.open(doneF, "r") if t then t:close() return end
     local game = MODDIR:match("^(.*)[/\\]Binaries[/\\]Win64[/\\]")
     if not game then return end
@@ -1134,11 +1155,11 @@ local function mapRaw()
                 for _ = 1, nd do
                     local dn dn, p = fstr(di, p)
                     local nf = string.unpack("<I4", di, p) p = p + 4
-                    local hit = dn:find("PROC/MapTextures/", 1, true) ~= nil
+                    local hit = wantDir(dn)
                     for _ = 1, nf do
                         local fn fn, p = fstr(di, p)
                         local eo = string.unpack("<i4", di, p) p = p + 4
-                        if hit and fn:sub(1, 15) == "T_VisualMapTex_" then
+                        if hit and wantFile(fn) then
                             local q = eo + 1
                             local fl = string.unpack("<I4", enc, q) q = q + 4
                             if (fl & 0x3f) == 0x3f then q = q + 4 end
@@ -1162,7 +1183,7 @@ local function mapRaw()
                             for _, z in ipairs(sizes) do tot = tot + z end
                             f:seek("set", off + hdr)
                             local data = f:read(tot)
-                            local outName = (dn:match("MapTextures/([^/]+)/") or "x") .. "__" .. fn
+                            local outName = tag(dn) .. "__" .. fn
                             local w = io.open(MODDIR .. "\\mapraw_" .. outName, "wb")
                             if w then
                                 w:write(data) w:close()
@@ -1179,11 +1200,18 @@ local function mapRaw()
     end
     local w = io.open(doneF, "w")
     if w then w:write(table.concat(man, "\n")) w:close() end
-    log("map pictures copied: " .. count)
+    log("game files copied (" .. doneName .. "): " .. count)
 end
 if DEVMODE then
-    if ExecuteAsync then ExecuteAsync(function() local ok, e = pcall(mapRaw) if not ok then log("map copy error: " .. tostring(e)) end end)
-    else ExecuteWithDelay(15000, function() pcall(mapRaw) end) end
+    local function jobs()
+        -- the main level of each map: its settings hold the whole-map cave list
+        pcall(mapRaw, "mapraw_done3.txt",
+            function(dn) return dn:find("Content/Maps/", 1, true) ~= nil and (dn:match("/Maps/[%w_]+/$") ~= nil) end,
+            function(fn) return fn:match("^Terrain_%d+%.u") ~= nil or fn:match("^Outpost_%d+%.u") ~= nil end,
+            function(dn) return "lvl" end)
+    end
+    if ExecuteAsync then ExecuteAsync(function() local ok, e = pcall(jobs) if not ok then log("map copy error: " .. tostring(e)) end end)
+    else ExecuteWithDelay(15000, function() pcall(jobs) end) end
 end
 
 log("loaded. F7 = waypoint, F8 = show, F9 = add, F10 = refresh inventory + navigation" .. (MACROS and "; helpers on: F3 = take needed, F4 = auto walk, F5 = auto mine, F6 = queue parts" or "; helpers F3-F6 are off"))
