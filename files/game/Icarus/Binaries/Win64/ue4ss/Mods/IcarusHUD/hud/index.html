@@ -122,7 +122,7 @@ body.compact .wrap>section:first-child,body.compact .mid,body.compact #treesec,b
 body.compact .wrap{grid-template-columns:1fr!important}
 body.compact #coachsec{margin:8px!important}
 </style></head><body>
-<div id="tb"><div class="dot" id="tbdot"></div><div class="logo">ICARUS <span>// FIELD HUD</span></div><div class="st" id="tbst">OFFLINE</div><div class="sp"></div><span class="tbo" id="tbonline" data-tip="지금 이 HUD를 켜 둔 사람 수 (나 포함, 익명)"></span><button class="tbv" id="tbver" data-tip="지금 버전입니다. 누르면 새 업데이트를 바로 확인합니다">v…</button>
+<div id="tb"><div class="dot" id="tbdot"></div><div class="logo">ICARUS <span>// FIELD HUD</span></div><div class="st" id="tbst">OFFLINE</div><div class="sp"></div><button class="tbv" id="tbver" data-tip="지금 버전입니다. 누르면 새 업데이트를 바로 확인합니다">v…</button>
 <button id="tbtop" title="항상 위에 표시">📌<span class="lbl"> 항상 위</span></button><button id="tbcmp" title="필요한 것만 보이는 작은 창">▭<span class="lbl"> 작게</span></button><button id="tbmin" title="최소화">—</button><button id="tbx" title="닫기 (트레이로)">✕</button></div>
 <header><h1>ICARUS 제작 HUD</h1><small id="live" style="color:var(--ok)">게임 연동 대기 중 · F3 재료 꺼내기 / F4 자동 이동 / F5 자동 채굴 / F6 부품 대기열 / F8 표시 / F9 추가 / F10 보관함·작업대 확인 · 건축 부품은 손에 들고 F8</small><span style="margin-left:auto;display:flex;gap:6px;align-items:center;font-size:12px;color:var(--mt)">글자 <button class="hbtn" id="zm">−</button><button class="hbtn" id="zp">＋</button> <label><input type="checkbox" id="snd"> 알림 소리</label> <button class="hbtn" id="unfold">모두 펼치기</button></span><small style="flex-basis:100%">만들 아이템을 고르면 필요한 재료가 자동으로 계산됩니다 · 데이터: 내 PC에 설치된 게임 버전 (2026-11-12 추출)</small></header>
 <section id="coachsec" style="margin:10px 10px 0"><h2>지금 할 일 (성장 코치)</h2><div id="coach"></div></section>
@@ -807,8 +807,14 @@ P.help.firstChild.innerHTML=`
 </section>
 <section id="updsec"><h2>업데이트 · 반자동 기능</h2>
 <div class="set"><span class="lb">버전<small id="updinfo">확인 중…</small></span><button class="mini" id="updbtn">지금 업데이트 확인</button></div>
-<div class="set" id="presset"><span class="lb">접속자 수 보기 (online)<small>익명 번호와 시간만 주고받아 지금 HUD를 켜 둔 사람 수를 셉니다. 끄면 나도 세지 않습니다.</small></span><label><input type="checkbox" id="optPresence"> 켜기</label></div>
 <div class="set"><span class="lb">반자동 기능 (F3~F6)<small>자동 채굴·자동 이동·상자에서 꺼내기·부품 대기열. 공개 서버에서는 규칙을 먼저 확인하세요. 바꾼 뒤 게임을 다시 켜야 적용됩니다.</small></span><label><input type="checkbox" id="optMacro"> 켜기</label></div>
+</section>
+<section id="diagsec"><h2>문제 해결</h2>
+<div class="set"><span class="lb">상태<small id="diaginfo">확인 중…</small></span></div>
+<div class="set"><span class="lb">안전 모드<small>게임이 튕길 때 쓰세요. 재료 계산·F8·F9·나침반만 남기고 나머지 게임 읽기를 끕니다. 바꾼 뒤 게임을 다시 켜야 적용됩니다.</small></span><label><input type="checkbox" id="optSafe"> 켜기</label></div>
+<div class="set"><span class="lb">모드 끄고 게임하기<small>그래도 튕기면 모드를 통째로 끕니다(게임을 끈 상태에서만). 다시 켤 수 있습니다.</small></span><button class="mini" id="diagmod">모드 끄기</button></div>
+<div class="set"><span class="lb">파일 검사·복구<small>모드 파일이 깨졌거나 빠졌으면 다시 받아 고칩니다.</small></span><button class="mini" id="diagfix">검사하기</button></div>
+<div class="set"><span class="lb">문제 보고서<small>원인 분석과 기록 요약을 바탕 화면에 파일로 만듭니다. 계정 정보는 지웁니다. 이 파일을 보내 주면 고쳐서 업데이트합니다.</small></span><button class="mini" id="diagrep">보고서 만들기</button></div>
 </section>
 <section><h2>기록 관리</h2>
 <div class="set"><span class="lb">최근 기록<small>성장 코치 아래 "최근 기록"</small></span><button class="mini" data-clr="log">지우기</button></div>
@@ -851,15 +857,12 @@ document.addEventListener('click',e=>{const c=e.target.dataset&&e.target.dataset
  if(c==='map'&&S.maps&&S.world)delete S.maps[S.world];
  e.target.textContent='지움 ✓';setTimeout(()=>e.target.textContent='지우기',1500);save();draw()});
 // update notices and the helper switch
-const HUD_VERSION='2026.11.13.8';
+const HUD_VERSION='2026.11.14.1';
 {const st=document.createElement('style');st.textContent='#tb .tbv{-webkit-app-region:no-drag;background:transparent;border:1px solid rgba(243,155,43,.45);color:#f3c27a;font:600 11px Oxanium,sans-serif;padding:2px 8px;margin-right:8px;cursor:pointer}#tb .tbv:hover{background:rgba(243,155,43,.15)}#tb .tbv.new{border-color:#4fd18b;color:#4fd18b}#tb .tbo{font:600 11px Oxanium,sans-serif;color:#4fd18b;margin-right:10px;letter-spacing:.06em;white-space:nowrap}#tb .tbo:empty{display:none}#tb .tbo::before{content:"●";margin-right:5px;font-size:9px;vertical-align:1px}';document.head.appendChild(st)}
 setTimeout(()=>{const A=window.hudApp;const vb=$('tbver');const pv=HUD_VERSION.startsWith('__')?'개발판':HUD_VERSION;
  if(vb)vb.textContent='v'+pv+' ⟳';
  if(!A||!A.info||!A.checkUpdate){$('updinfo').textContent='데이터 '+pv+' · 업데이트 기능은 HUD 프로그램을 트레이에서 종료하고 다시 켜면 나타납니다';$('updbtn').onclick=()=>location.reload();$('optMacro').disabled=true;
   if(vb)vb.onclick=()=>location.reload();return}
- const ol=$('tbonline'),setOn=n=>{ol.textContent=(n==null)?'':'ONLINE '+n};if(A.onOnline){A.onOnline(setOn);A.online().then(setOn)}
- A.info().then(i=>{const pr=$('presset');if(!i.presenceAvail){pr.style.display='none';return}$('optPresence').checked=!!i.presence});
- $('optPresence').onchange=e=>A.setPresence(e.target.checked).then(on=>{e.target.checked=on;if(!on)setOn(null)});
  vb.onclick=()=>{vb.textContent='확인 중…';A.checkUpdate().then(()=>A.info()).then(i=>{vb.textContent='v'+(i.version||pv)+' ⟳'})};
  const show=()=>A.info().then(i=>{if(vb)vb.textContent='v'+(i.version||pv)+' ⟳';$('updinfo').textContent='데이터 '+(i.version||pv)+' · 프로그램 '+i.app+(i.last?' · 마지막 확인 '+new Date(i.last.at).toLocaleTimeString():'');$('optMacro').checked=!!i.macros});show();
  $('updbtn').onclick=()=>{$('updinfo').textContent='확인 중…';A.checkUpdate().then(show)};
@@ -920,6 +923,18 @@ document.addEventListener('mousemove',e=>{tipX=e.clientX;tipY=e.clientY;if(tipFo
  if(el!==tipFor){hideTip();if(el){tipFor=el;tipT=setTimeout(()=>showTip(el.dataset.tip),300)}}},true);
 document.addEventListener('mousedown',hideTip,true);document.addEventListener('wheel',hideTip,{passive:true,capture:true});window.addEventListener('blur',hideTip);
 applyTips();setInterval(applyTips,1500);
+// problem check (desktop program only)
+setTimeout(()=>{const A=window.hudApp,sec=$('diagsec');if(!A||!A.diagStatus){if(sec)sec.style.display='none';return}
+ const show=()=>A.diagStatus().then(s=>{if(!s){sec.style.display='none';return}
+  $('diaginfo').textContent=(s.modOn?'모드 켜짐':'모드 꺼짐')+(s.safe?' · 안전 모드':'')+(s.off.length?' · 꺼 둔 기능: '+s.off.join(', '):'')+
+   (s.lastCrash?' · 마지막 튕김 '+new Date(s.lastCrash.at).toLocaleString()+(s.lastCrash.mod?' (모드 관련'+(s.lastCrash.step?': '+s.lastCrash.step:'')+')':' (게임 자체)'):' · 튕김 기록 없음');
+  $('optSafe').checked=s.safe;$('diagmod').textContent=s.modOn?'모드 끄기':'모드 다시 켜기';$('diagmod').dataset.on=s.modOn?'1':''});
+ show();setInterval(show,30000);
+ $('optSafe').onchange=e=>A.setSafe(e.target.checked).then(()=>{toast(e.target.checked?'안전 모드 켜짐 · 게임을 다시 켜면 적용됩니다':'안전 모드 꺼짐 · 게임을 다시 켜면 적용됩니다',true);show()});
+ $('diagmod').onclick=()=>{const on=!$('diagmod').dataset.on;A.setModOn(on).then(()=>{toast(on?'모드를 다시 켰습니다':'모드를 껐습니다 · 이제 모드 없이 게임이 켜집니다',true);show()}).catch(e=>toast(String(e.message||e).replace(/^.*Error: /,'')))};
+ $('diagfix').onclick=()=>{toast('파일을 검사하는 중…',true);A.checkUpdate().then(ok=>{toast(ok?'검사 완료 · 필요한 파일은 다시 받았습니다':'검사하지 못했습니다 (인터넷 연결 확인)',ok);show()})};
+ $('diagrep').onclick=()=>A.diagReport().then(f=>{if(f)toast('보고서를 바탕 화면에 만들었습니다: '+f.split(/[\\/]/).pop(),true)});
+ A.onDiag(n=>{toast(n.text,n.level===0);show();if(n.level>=1)addLog('문제 해결: '+n.text)})},400);
 // toasts
 function toast(msg,ok){if(S.optToast===false)return;const t=document.createElement('div');t.className='toast'+(ok?' ok':'');t.textContent=msg;$('toasts').appendChild(t);
  setTimeout(()=>t.classList.add('out'),4200);setTimeout(()=>t.remove(),4700);const all=$('toasts').children;if(all.length>4)all[0].remove()}

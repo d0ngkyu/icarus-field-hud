@@ -27,11 +27,29 @@ local function fileExists(p)
     return false
 end
 -- semi-automatic helpers (F3-F6) only run when the switch file exists (HUD settings turn it on)
-local MACROS = MODDIR and fileExists(MODDIR .. "\\macros_on.txt") or false
+-- features the HUD program switched off after a crash (one word per line), or everything extra in safe mode
+local FEAT_OFF = {}
+local SAFE = MODDIR and fileExists(MODDIR .. "\\safe_mode.txt") or false
+pcall(function()
+    local f = io.open(MODDIR .. "\\features_off.txt", "r")
+    if f then for line in f:lines() do local w = line:match("^%s*([%w_]+)") if w then FEAT_OFF[w] = true end end f:close() end
+end)
+local function on(feat) return not SAFE and not FEAT_OFF[feat] end
+local MACROS = MODDIR and fileExists(MODDIR .. "\\macros_on.txt") and on("macros") or false
+-- what the mod is busy with right now: if the game falls over, the HUD program reads this to know why
+local lastStep = nil
+local function step(name)
+    if name == lastStep then return end
+    lastStep = name
+    pcall(function()
+        local f = io.open(MODDIR .. "\\diag_step.txt", "w")
+        if f then f:write(name, "|", os.time(), "\n") f:close() end
+    end)
+end
 -- copying map pictures out of the game is only needed on the machine that builds updates
 local DEVMODE = MODDIR and fileExists(MODDIR .. "\\dev.txt") or false
 local function MacroBind(key, fn)
-    if MACROS then RegisterKeyBind(key, fn) end
+    if MACROS then RegisterKeyBind(key, function() step("macro") fn() end) end
 end
 
 local function openOut()
@@ -342,7 +360,10 @@ end
 
 local function scanLandmarks()
     local out, sum = {}, 0
-    local okW, wm = pcall(worldSettingsMarks)
+    step("worldmarks")
+    local okW, wm = true, {}
+    if on("worldmarks") then okW, wm = pcall(worldSettingsMarks) end
+    step("landmarks")
     if okW and wm then for _, m in ipairs(wm) do table.insert(out, m) end sum = sum + #wm * 7 else log("world marks failed: " .. tostring(wm)) end
     local function each(cn, kind, nameFn)
         local list = FindAllOf(cn)
@@ -364,7 +385,8 @@ local function scanLandmarks()
     each("BP_OilGeyser_C", "g", function() return "Oil" end)
     each("BP_EnzymeGeyser_C", "g", function() return "Enzyme" end)
     -- world bosses: the game shares their spawn points with everyone (same as the in-game map)
-    for _, sp in ipairs(WORLD_READY and FindAllOf("WorldBossSpawner") or {}) do
+    step("bosses")
+    for _, sp in ipairs(WORLD_READY and on("bosses") and FindAllOf("WorldBossSpawner") or {}) do
         pcall(function()
             if not sp:IsValid() or string.find(sp:GetFullName(), "Default__", 1, true) then return end
             local l = sp:K2_GetActorLocation()
@@ -376,6 +398,7 @@ local function scanLandmarks()
             sum = sum + math.floor(l.X / 1000) + dead * 7
         end)
     end
+    step("landmarks")
     local sig = #out .. ":" .. sum
     if sig == lastLm then return nil end
     lastLm = sig
@@ -472,6 +495,7 @@ local function readProgress(force)
 end
 
 local function send(mode)
+    step("key_" .. tostring(mode))
     ExecuteInGameThread(function()
         local ok, err = pcall(function()
             local name, src, isItem = nil, "", false
@@ -615,6 +639,7 @@ end
 WORLD_READY = false
 local function autoTick()
     local t0 = os.clock()
+    step("tick")
     tick = tick + 1
     local bagChanged = false
     if tick % 2 == 0 then bagChanged = scanBag() end
@@ -626,7 +651,10 @@ local function autoTick()
     local withInv = bagChanged or (tick % 20 == 0)
     local lmJ = nil
     if tick % 40 == 7 then
-        local okL, lj = pcall(scanLandmarks)
+        step("landmarks")
+        local okL, lj = true, nil
+        if on("landmarks") then okL, lj = pcall(scanLandmarks) end
+        step("idle")
         if okL then lmJ = lj else log("landmark scan failed: " .. tostring(lj)) end
     end
     local oreJ = nil
@@ -636,13 +664,19 @@ local function autoTick()
     end
     local fogJ = nil
     if (tick > 60 and tick % 80 == 13) or (fogNow and tick > 20) then
-        local okF, fj = pcall(readFog, tick < 160 or fogNow)
+        step("fog")
+        local okF, fj = true, nil
+        if on("fog") then okF, fj = pcall(readFog, tick < 160 or fogNow) end
+        step("idle")
         fogNow = false
         if okF then fogJ = fj else log("map fog read failed: " .. tostring(fj)) end
     end
     local progJ = nil
     if tick % 20 == 3 then
-        local okP, pj = pcall(readProgress)
+        step("progress")
+        local okP, pj = true, nil
+        if on("progress") then okP, pj = pcall(readProgress) end
+        step("idle")
         if okP then progJ = pj else log("progress read failed: " .. tostring(pj)) end
     end
     if not poseChanged and not withInv and not progJ and not lmJ and not oreJ and not fogJ then return end
@@ -1213,4 +1247,6 @@ if DEVMODE then
     else ExecuteWithDelay(15000, function() pcall(jobs) end) end
 end
 
+if SAFE then log("SAFE MODE: only crafting, inventory and waypoints are on") end
+for k in pairs(FEAT_OFF) do log("feature switched off after a crash: " .. k) end
 log("loaded. F7 = waypoint, F8 = show, F9 = add, F10 = refresh inventory + navigation" .. (MACROS and "; helpers on: F3 = take needed, F4 = auto walk, F5 = auto mine, F6 = queue parts" or "; helpers F3-F6 are off"))

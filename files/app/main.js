@@ -15,7 +15,8 @@ const saveCfg = () => { try { fs.mkdirSync(path.dirname(cfgFile()), { recursive:
 const UPD = require('./updater.js');
 const PKG = (() => { try { return require('./package.json'); } catch (e) { return {}; } })();
 const UPDATE_URL = process.env.HUD_UPDATE_URL || PKG.updateUrl || '';
-let gameDir = null, lastUpd = null, lastLiveAt = 0;
+let gameDir = null, lastUpd = null, lastLiveAt = 0, doctor = null;
+const sendDiag = n => { ulog('diag: ' + n.text); if (win && !win.isDestroyed()) win.webContents.send('diag', n); };
 const hudFile = () => gameDir && path.join(UPD.modDir(gameDir), 'hud', 'index.html');
 const logFile = () => path.join(app.getPath('userData'), 'update.log');
 const ulog = t => { try { fs.appendFileSync(logFile(), new Date().toISOString() + ' ' + t + '\n'); } catch (e) {} };
@@ -114,9 +115,19 @@ ipcMain.handle('toggleTop', () => toggleTop());
 ipcMain.handle('toggleCompact', () => toggleCompact());
 ipcMain.handle('minimize', () => win.minimize());
 ipcMain.handle('hide', () => win.hide());
-ipcMain.handle('info', () => ({ version: (lastUpd && lastUpd.version) || PKG.contentVersion || '', app: app.getVersion(), game: gameDir, macros: gameDir ? UPD.macrosOn(gameDir) : false, presence: !!presenceUrl() && cfg.presence !== false, presenceAvail: !!presenceUrl(), last: lastUpd && { at: lastUpd.at, changed: lastUpd.changed.length } }));
-ipcMain.handle('online', () => onlineN);
-ipcMain.handle('setPresence', (_e, on) => { cfg.presence = !!on; saveCfg(); if (on) presenceTick(); else { presenceLeave(); onlineN = null; } return cfg.presence; });
+ipcMain.handle('info', () => ({ version: (lastUpd && lastUpd.version) || PKG.contentVersion || '', app: app.getVersion(), game: gameDir, macros: gameDir ? UPD.macrosOn(gameDir) : false, last: lastUpd && { at: lastUpd.at, changed: lastUpd.changed.length } }));
+// ---------- problem check ----------
+ipcMain.handle('diagStatus', () => (doctor ? doctor.status() : null));
+ipcMain.handle('setSafe', (_e, on) => { if (doctor) doctor.setSafeMode(!!on); return doctor ? doctor.status() : null; });
+ipcMain.handle('setModOn', async (_e, on) => { if (!doctor) return null; await doctor.setModOn(!!on); return doctor.status(); });
+ipcMain.handle('diagReport', () => {
+  if (!doctor) return null;
+  const txt = doctor.report({ '데이터 버전': (lastUpd && lastUpd.version) || PKG.contentVersion || '-', '프로그램 버전': app.getVersion(), 'Windows': require('os').release() });
+  const f = path.join(app.getPath('desktop'), 'IcarusHUD_보고서_' + new Date().toISOString().slice(0, 16).replace(/[:T]/g, '-') + '.txt');
+  fs.writeFileSync(f, '\ufeff' + txt.replace(/\n/g, '\r\n'));
+  shell.showItemInFolder(f);
+  return f;
+});
 ipcMain.handle('setMacros', (_e, on) => (gameDir ? UPD.setMacros(gameDir, !!on) : false));
 ipcMain.handle('checkUpdate', () => runUpdate(true).then(r => !!r));
 
@@ -129,8 +140,8 @@ async function runUpdate(manual) {
   try {
     const r = await UPD.update(gameDir, UPDATE_URL, ulog);
     lastUpd = { ...r, at: Date.now() };
-    // settings the update site hands out (for now: where the online counter lives)
-    if (r.config && typeof r.config.presenceUrl === 'string' && r.config.presenceUrl !== (cfg.presenceUrl || '')) { cfg.presenceUrl = r.config.presenceUrl; saveCfg(); setTimeout(presenceTick, 1000); }
+    // a new update may hold the fix for a crash: switch back on what was switched off
+    if (doctor && r.changed.some(p => /\.lua$/.test(p)) && doctor.onNewVersion(r.version)) sendDiag({ level: 0, text: '새 수정본(' + r.version + ')이 와서 꺼 두었던 기능을 다시 켰습니다. 게임을 다시 켜면 적용됩니다.' });
     ulog('update ' + r.version + ': ' + r.changed.length + ' changed, ' + r.skipped.length + ' skipped');
     UPD.registerApp(gameDir);
     if (win && !win.isDestroyed()) win.webContents.send('upd', { version: r.version, changed: r.changed, skipped: r.skipped, notes: r.notes, manual: !!manual });
@@ -174,6 +185,13 @@ async function start() {
     setTimeout(() => runUpdate(false), 5000);
   }
   createWindow(hudFile()); buildTray();
+  // keep an eye out for crashes: look every 30 s (cheap: a few folder listings)
+  try {
+    const { Doctor } = require('./diag.js');
+    doctor = new Doctor(gameDir, UPD.modDir(gameDir), app.getPath('userData'), ulog);
+    const look = () => { try { doctor.keepLog(); const n = doctor.check((lastUpd && lastUpd.version) || PKG.contentVersion || ''); if (n) sendDiag(n); } catch (e) { ulog('diag failed: ' + e.message); } };
+    setTimeout(look, 4000); setInterval(look, 30000);
+  } catch (e) { ulog('diag not started: ' + e.message); }
   // on the PC that builds updates only: copy map level files out of the game, outside the game process
   try {
     const md = UPD.modDir(gameDir), out = path.join(md, 'levelraw');
@@ -184,30 +202,7 @@ async function start() {
   } catch (e) {}
   setInterval(() => runUpdate(false), 30 * 60 * 1000);
 }
-// ---------- how many people have the HUD open right now (anonymous: a random id and a time) ----------
-const presenceUrl = () => (process.env.HUD_PRESENCE_URL || cfg.presenceUrl || PKG.presenceUrl || '').replace(/\/+$/, '');
-let onlineN = null;
-async function presenceTick() {
-  if (!presenceUrl() || cfg.presence === false) return;
-  try {
-    if (!cfg.pid) { cfg.pid = require('crypto').randomBytes(9).toString('hex'); saveCfg(); }
-    const now = Date.now();
-    await net.fetch(presenceUrl() + '/presence/' + cfg.pid + '.json', { method: 'PUT', body: JSON.stringify({ t: now }), headers: { 'Content-Type': 'application/json' } });
-    const r = await net.fetch(presenceUrl() + '/presence.json?orderBy=%22t%22&startAt=' + (now - 4 * 60 * 1000), { cache: 'no-store' });
-    if (r.ok) { const d = await r.json(); onlineN = d ? Object.keys(d).length : 0; }
-  } catch (e) { onlineN = null; }
-  if (win && !win.isDestroyed()) win.webContents.send('online', onlineN);
-}
-async function presenceLeave() {
-  if (!presenceUrl() || !cfg.pid) return;
-  try { await net.fetch(presenceUrl() + '/presence/' + cfg.pid + '.json', { method: 'DELETE' }); } catch (e) {}
-}
-app.on('before-quit', e => {
-  if (presenceLeave.done || !presenceUrl() || !cfg.pid) return;
-  e.preventDefault(); presenceLeave.done = true;
-  Promise.race([presenceLeave(), new Promise(r => setTimeout(r, 1500))]).then(() => app.quit());
-});
-app.whenReady().then(start).then(() => { setTimeout(presenceTick, 3000); setInterval(presenceTick, 60 * 1000); });
+app.whenReady().then(start);
 
 
 // development check: HUD_SHOT=<png> captures the window and quits
