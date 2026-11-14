@@ -273,3 +273,5 @@
 - D_CharacterGrowth.json Player가 경험치/재능/설계도/솔로 성장 곡선을 참조함. 대응 C_PlayerExperienceGrowth, C_PlayerTalentGrowth, C_PlayerBlueprintGrowth, C_SoloTalentGrowth의 uasset/uexp가 pakchunk0_s20에 존재함을 인덱스로 확인. 곡선 수치 디코딩/재패킹/적용 시험 미실행.
 - 결론: XP와 습득 재능은 저장 데이터 수정 대상. 미사용 포인트 증가는 단순 저장 필드 편집으로 확정하지 않으며 성장 곡선 조정 필요 여부 검증 대상. 네 가지 기본 능력치는 데이터 모드 후보이며 특정 캐릭터만 적용하는 범위는 별도 설계 필요.
 - 조사 중 게임 프로세스 실행 확인; 종료/메모리 접근 없음. 실제 인게임 반영·멀티플레이 전파 범위 미검증. 다음: 사용자가 변경 범위/목표값을 지정하면 종료 상태 백업 후 별도 구현 및 검증. 본 요청은 가능성 조사만.
+
+- COMPACT-008 추가 요청: 게임 시작/호스트 월드 수동 저장/게임 종료. Codex가 app main.js/preload 및 신규 game-control 모듈, main.lua는 WORLD_READY 뒤 명령 처리 연결만 추가 소유. 로컬 SDK에서 AIcarusGameModeSurvival.ForceImmediateProspectSave, 저장 진행 상태/시각, UMG_EscapeMenu.QuitGame 선언 확인. 임의 콘솔 명령/강제 종료 금지, 수동 요청만 수행하고 저장 완료와 요청 전달을 구분. 지도·동굴/기존 스캔 로직은 보존.
