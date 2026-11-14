@@ -79,12 +79,12 @@ function target(gameDir, p) {
 }
 
 async function getJson(url) {
-  const r = await net.fetch(url + (url.includes('?') ? '&' : '?') + 't=' + Date.now(), { cache: 'no-store' });
+  const r = await net.fetch(url + (url.includes('?') ? '&' : '?') + 't=' + Date.now(), { cache: 'no-store', signal: AbortSignal.timeout(15000) });
   if (!r.ok) throw new Error('HTTP ' + r.status);
   return r.json();
 }
 async function getBuf(url) {
-  const r = await net.fetch(url, { cache: 'no-store' });
+  const r = await net.fetch(url, { cache: 'no-store', signal: AbortSignal.timeout(15000) });
   if (!r.ok) throw new Error('HTTP ' + r.status + ' ' + url);
   return Buffer.from(await r.arrayBuffer());
 }
@@ -102,9 +102,11 @@ function writeSafe(dst, buf) {
 }
 
 // Installs or updates. Returns { changed:[...], skipped:[...], appChanged, version, notes }.
-async function update(gameDir, baseUrl, log) {
+async function update(gameDir, baseUrl, log, canInstall = async () => true) {
   const man = await getJson(baseUrl + '/manifest.json');
+  if (!man || !Array.isArray(man.files) || !man.version) throw new Error('올바르지 않은 업데이트 목록');
   const res = { changed: [], skipped: [], appChanged: false, version: man.version, notes: man.notes || '', config: man.config || {} };
+  const staged = [];
   // a cached, older manifest must never put back files that a newer update already installed
   const verFile = path.join(modDir(gameDir), 'version.txt');
   let have = '';
@@ -116,19 +118,36 @@ async function update(gameDir, baseUrl, log) {
     try { dst = target(gameDir, f.p); } catch (e) { res.skipped.push(String(f.p) + ' (' + e.message + ')'); continue; }
     if (!dst) continue;
     let cur = null;
-    try { cur = fs.readFileSync(dst); } catch (e) {}
+    try { cur = fs.readFileSync(dst); } catch (e) {
+      if(e.code!=='ENOENT'){res.skipped.push(f.p+' (cannot read installed file: '+e.message+')');continue;}
+    }
     // loader files are only put in place when missing, so an existing UE4SS setup is left alone
     if (cur && f.once) continue;
     if (cur && cur.length === f.n && sha1(cur) === f.h) continue;
     try {
       const buf = await getBuf(baseUrl + '/files/' + f.p);
-      if (sha1(buf) !== f.h) throw new Error('checksum mismatch');
-      writeSafe(dst, buf);
-      res.changed.push(f.p);
-      if (f.p.startsWith('app/')) res.appChanged = true;
+      if (buf.length !== f.n || sha1(buf) !== f.h) throw new Error('size/checksum mismatch');
+      staged.push({f,dst,buf,previous:cur});
     } catch (e) {
       res.skipped.push(f.p + ' (' + e.message + ')');
       log && log('update skipped ' + f.p + ': ' + e.message);
+    }
+  }
+  // Validate every download before replacing any installed file. A failed
+  // download must not leave new Lua paired with an old companion module.
+  if (res.skipped.length) return res;
+  if (staged.length && !(await canInstall())) { res.deferred = true; return res; }
+  const applied=[];
+  for (const item of staged) {
+    const {f,dst,buf}=item;
+    try { writeSafe(dst,buf);applied.push(item);res.changed.push(f.p);if(f.p.startsWith('app/'))res.appChanged=true; }
+    catch(e){
+      res.skipped.push(f.p+' ('+e.message+')');
+      for(const prior of applied.reverse()){
+        try{if(prior.previous!==null)writeSafe(prior.dst,prior.previous);else fs.unlinkSync(prior.dst);}
+        catch(rollback){res.skipped.push(prior.f.p+' (rollback failed: '+rollback.message+')');}
+      }
+      res.changed=[];res.appChanged=false;break;
     }
   }
   if (!res.skipped.length && man.version) { try { fs.writeFileSync(verFile, String(man.version) + '\r\n'); } catch (e) {} }
