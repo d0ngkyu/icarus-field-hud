@@ -21,7 +21,8 @@ function M.tick(dir, pawn, world, enabled)
         local gm = mode()
         if not gm or world:GetFullName()~=p.world then reply(p.id,'world_changed') pending=nil return end
         if gm.UpdateProspectStateFailedCounter > p.failures then reply(p.id,'save_failed') pending=nil return end
-        if not gm.bCurrentUpdateProspectIsSaving and gm.LastProspectSaveStateTime > p.before then
+        if gm.bCurrentUpdateProspectIsSaving then p.sawSaving=true end
+        if not gm.bCurrentUpdateProspectIsSaving and (gm.LastProspectSaveStateTime > p.before or p.sawSaving) then
             pending=nil
             if p.action=='exit' then
                 -- Let the game's own escape-menu quit flow handle shutdown.
@@ -31,6 +32,7 @@ function M.tick(dir, pawn, world, enabled)
                 menu:QuitGame()
             else reply(p.id,'save_processed') end
         end
+        if pending and p.action=='save' and os.time()-p.at>=10 then reply(p.id,'accepted_unverified') pending=nil end
         return
     end
     local f=io.open(dir .. '/control-request.txt','r')
