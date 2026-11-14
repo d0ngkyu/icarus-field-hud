@@ -195,6 +195,7 @@ public partial class ItemTool : Form {
     [STAThread] public static int Main(string[] args) {
         try {
             if(args.Length==3&&args[0]=="--apply-update"){Updater.RunHelper(args);return 0;}
+            if(args.Contains("--connection-test")){ConnectionTest();return 0;}
             if(args.Contains("--layout-test")){LayoutTest();return 0;}
             if(args.Contains("--self-test")){SelfTest();return 0;}
             if(args.Contains("--suite-test")){SuiteTests.Run(Base);return 0;}
@@ -205,7 +206,7 @@ public partial class ItemTool : Form {
             }
         } catch(Exception ex) {
             File.WriteAllText(Path.Combine(Base,"error.txt"),ex.ToString(),Utf8);
-            if(!args.Contains("--self-test")&&!args.Contains("--suite-test")) MessageBox.Show(ex.Message,"실행 오류");
+            if(!args.Contains("--self-test")&&!args.Contains("--suite-test")&&!args.Contains("--layout-test")&&!args.Contains("--connection-test")) MessageBox.Show(ex.Message,"실행 오류");
             return 1;
         }
     }

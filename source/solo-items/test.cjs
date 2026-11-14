@@ -6,7 +6,7 @@ const mod=fs.readFileSync(__dirname+'/Scripts/main.lua','utf8');
 function run(tail){
  const L=lauxlib.luaL_newstate();lualib.luaL_openlibs(L);
  const harness=`
- files={}; calls=0; standalone=true; valid=true; count=0
+ files={}; nativeCalls=0; calls=0; standalone=true; valid=true; count=0
  io.open=function(p,m)
    local k=p:match('([^/]+)$')
    if m=='r' then if not files[k] then return nil end; return {read=function() return files[k] end,close=function() end} end
@@ -20,8 +20,9 @@ function run(tail){
  local pc={IsValid=function() return valid end, IsLocalController=function() return true end,
  AddItemToInventory=function(self,item) assert(item.RowName=='Fiber');calls=calls+1 end}
  package.preload.UEHelpers=function() return {GetPlayerController=function() return pc end,GetPlayer=function() return pc end} end
- StaticFindObject=function() return {IsValid=function() return true end,IsStandalone=function() return standalone end,IsValidName=function() return true end} end
+ StaticFindObject=function() nativeCalls=nativeCalls+1; return {IsValid=function() return true end,IsStandalone=function() return standalone end,IsValidName=function() return true end} end
  FName=function(x) return x end
+ LoopAsync=function(ms,f) assert(ms==3000);heartbeatLoop=f end
  Key={F11=122}
  RegisterKeyBind=function(k,f) key=f end
  ExecuteInGameThread=function(f) f() end
@@ -32,6 +33,9 @@ function run(tail){
  lua.lua_close(L);
 }
 const id='a'.repeat(32);
+test('heartbeat writes liveness without any UObject/native call or item generation',()=>run(`assert(files['heartbeat.txt']=='1|1000|1000|LOADED');heartbeatLoop();assert(nativeCalls==0 and calls==0)`));
+test('F11 without a request checks single world but never creates an item',()=>run(`key();assert(calls==0);assert(files['world-check.txt']=='1|1000|1000|SINGLE')`));
+test('readiness reports multiplayer and missing player separately',()=>{run(`standalone=false;key();assert(calls==0);assert(files['world-check.txt']:find('|MULTI',1,true))`);run(`valid=false;key();assert(calls==0);assert(files['world-check.txt']:find('|WAITING',1,true))`);});
 test('explicit request calls the template function once per item; replay has no effect',()=>run(`files['request.txt']='${id}|1000|Fiber|3';key();assert(calls==3);key();assert(calls==3);assert(files['status.txt']:find('|SENT|3|',1,true))`));
 test('multiplayer blocked without a generation call',()=>run(`standalone=false;files['request.txt']='${id}|1000|Fiber|3';key();assert(calls==0);assert(files['status.txt']:find('|ERROR|',1,true))`));
 test('expired, malformed, unknown and oversized requests are consumed without spawning',()=>{

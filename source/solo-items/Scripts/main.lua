@@ -8,6 +8,32 @@ local request = root .. 'request.txt'
 local processing = root .. 'processing.txt'
 local status = root .. 'status.txt'
 local busy = false
+-- File-only liveness: no UObject lookup or game-thread work in this loop.
+local session = os.time()
+local function heartbeat()
+    local path = root .. 'heartbeat.txt'
+    local f = io.open(path .. '.tmp', 'w')
+    if f then
+        f:write('1|' .. os.time() .. '|' .. session .. '|LOADED'); f:close()
+        os.remove(path); os.rename(path .. '.tmp', path)
+    end
+    return false
+end
+heartbeat()
+if type(LoopAsync) == 'function' then LoopAsync(3000, function() pcall(heartbeat); return false end) end
+local function probeWorld()
+    local state = 'WAITING'
+    local ok = pcall(function()
+        local pc, player = H.GetPlayerController(), H.GetPlayer()
+        if not (pc and pc:IsValid() and player and player:IsValid() and pc:IsLocalController()) then return end
+        local system = StaticFindObject('/Script/Engine.Default__KismetSystemLibrary')
+        if not (system and system:IsValid()) then return end
+        state = system:IsStandalone(pc) == true and 'SINGLE' or 'MULTI'
+    end)
+    if not ok then state = 'WAITING' end
+    local f = io.open(root .. 'world-check.txt', 'w')
+    if f then f:write('1|' .. os.time() .. '|' .. session .. '|' .. state); f:close() end
+end
 local function writeStatus(id, state, count, detail)
     local f = io.open(status, 'w')
     if f then f:write(table.concat({id, state, tostring(count), tostring(detail or ''):gsub('[\r\n|]', ' ')}, '|')); f:close() end
@@ -55,6 +81,7 @@ RegisterKeyBind(Key.F11, function()
     busy = true
     local ok, err = pcall(function()
         ExecuteInGameThread(function()
+            probeWorld()
             local success, why = pcall(process)
             if not success then writeStatus('-', 'ERROR', 0, why) end
             busy = false
