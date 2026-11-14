@@ -287,3 +287,5 @@
 - WeMod 기능 및 정책 확인: https://www.wemod.com/ko/cheats/icarus-trainers / https://www.wemod.com/policies . 실시간 기능 존재는 확인되나 감지 회피/계정정지 면제 보장은 확인 못 함. 은폐·인증·안티치트 우회 기능 구현 안 함.
 - 자동 승인 검토가 outputs 실행 패키지 생성+로컬 서버 시작 exec 명령을 거부함. 반환 이유는 blocked by policy이며 상세 이유 없음. 해당 명령은 실행되지 않았고 우회 실행하지 않음. 실행 패키지/실제 UI 확인/인게임 적용은 미완료. 원격 소스 보관 여부는 후속 커밋 기록으로 확인.
 - COMPACT-008 기존 작업/배포 소유권 유지. 기존 HUD/설치 게임 파일 변경 없음. 다음: 허용된 범위에서 패키징/UI 검증, 사용자의 별도 싱글 환경에서 실제 반영 확인. 제재 회피를 보장하지 않는다.
+
+- COMPACT-008 검토 공개: https://github.com/d0ngkyu/icarus-field-hud/pull/12 · source b0731c3931ddf2d18ea67a4bea84efb258d03323 · 81개 검사 통과, 검증 로컬 tree와 원격 일치. 최종 화면 회귀 후 stable 배포 예정. 로컬 SDK 기반 수동 저장/종료는 모의 검사만; 실제 서버 저장/종료 미시험. game_control 단계 진단 차단 추가. SOLO-TUNER 별도 작업 보존.
