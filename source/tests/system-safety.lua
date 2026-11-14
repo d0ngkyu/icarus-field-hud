@@ -12,7 +12,8 @@ local localController={IsValid=function() return true end,IsLocalPlayerControlle
 package.preload.UEHelpers=function() return {GetPlayer=function() return pawn end,GetWorld=function() return world end,GetPlayerController=function() return invalid end} end
 package.preload.animals=function() return assert(load(ANIMAL_SOURCE))() end
 Key=setmetatable({},{__index=function(_,k) return k end})
-RegisterKeyBind=function() end
+local boundKeys={}
+RegisterKeyBind=function(k) boundKeys[k]=true end
 ExecuteInGameThread=function(fn) fn() end
 LoopAsync=function() end
 io.open=function() return nil end
@@ -20,6 +21,8 @@ FindAllOf=function(name) if name=='PlayerController' then return {remoteControll
 print=function() end
 local extra='\nreturn {tick=autoTick,send=send,scan=scanOres,bag=scanBag,slots=addSlots,safe=function(v) SAFE=v end}'
 local m=assert(load(MAIN_SOURCE..extra))()
+for _,k in ipairs({'F3','F4','F5','F6'}) do assert(not boundKeys[k],'automation key registered: '..k) end
+for _,k in ipairs({'F7','F8','F9','F10'}) do assert(boundKeys[k],'reference key missing: '..k) end
 for i=1,60 do m.tick() end
 assert(not WORLD_READY and scans==0,'scans ran during initial warmup')
 m.tick();assert(WORLD_READY,'stable session not ready')

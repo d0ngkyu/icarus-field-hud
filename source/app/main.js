@@ -151,7 +151,7 @@ ipcMain.handle('toggleTop', () => toggleTop());
 ipcMain.handle('toggleCompact', () => toggleCompact());
 ipcMain.handle('minimize', () => win.minimize());
 ipcMain.handle('hide', () => win.hide());
-ipcMain.handle('info', () => ({ version: (lastUpd && lastUpd.version) || PKG.contentVersion || '', app: app.getVersion(), game: gameDir, macros: gameDir ? UPD.macrosOn(gameDir) : false, last: lastUpd && { at: lastUpd.at, changed: lastUpd.changed.length } }));
+ipcMain.handle('info', () => ({ version: (lastUpd && lastUpd.version) || PKG.contentVersion || '', app: app.getVersion(), game: gameDir, last: lastUpd && { at: lastUpd.at, changed: lastUpd.changed.length } }));
 // ---------- problem check ----------
 ipcMain.handle('diagStatus', () => (doctor ? doctor.status() : null));
 ipcMain.handle('setSafe', (_e, on) => { if (doctor) doctor.setSafeMode(!!on); return doctor ? doctor.status() : null; });
@@ -164,7 +164,6 @@ ipcMain.handle('diagReport', () => {
   shell.showItemInFolder(f);
   return f;
 });
-ipcMain.handle('setMacros', (_e, on) => (gameDir ? UPD.setMacros(gameDir, !!on) : false));
 ipcMain.handle('checkUpdate', () => runUpdate(true).then(r => !!r));
 
 app.on('second-instance', showWin);

@@ -212,11 +212,4 @@ function registerApp(gameDir) {
   } catch (e) {}
 }
 
-function setMacros(gameDir, on) {
-  const f = path.join(modDir(gameDir), 'macros_on.txt');
-  if (on) fs.writeFileSync(f, 'on\r\n'); else if (exists(f)) fs.unlinkSync(f);
-  return exists(f);
-}
-const macrosOn = gameDir => exists(path.join(modDir(gameDir), 'macros_on.txt'));
-
-module.exports = { findGame, askGame, update, registerApp, setMacros, macrosOn, modDir, isGame };
+module.exports = { findGame, askGame, update, registerApp, modDir, isGame };

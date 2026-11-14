@@ -29,9 +29,8 @@ const stage=el('section','craft-stage','<div class="workspace-tabs"><button data
 const steps=el('div','craft-view');steps.dataset.craftPanel='steps';steps.append(el('div','section-intro','<h2>어디서 무엇을 만들까요?</h2><p>작업대별로 만들 항목만 모았습니다.</p>'),bench);work.append(steps);
 right.dataset.craftPanel='materials';right.classList.add('craft-view');work.append(right);tree.dataset.craftPanel='tree';tree.classList.add('craft-view');work.append(tree);
 right.querySelector('h2').textContent='필요 재료';right.querySelector('.bench').innerHTML='<span id="invinfo">레시피 기준 전체 수량 · 보관함·가방 보유분은 섞지 않습니다.</span><input hidden id="near" type="checkbox"><button hidden id="invclr"></button>';
-right.querySelectorAll('h2')[1].textContent='중간 부품';$('cq').parentElement.innerHTML='<details class="quiet-details"><summary>게임에 제작 대기열 전달</summary><p>작업대를 연 뒤 F6을 누르면 그 작업대에서 가능한 항목을 요청합니다. 실제 재료는 게임에서 확인하세요.</p></details>';
-// Keep the already-bound queue button, not a replacement with missing listeners.
-const queueButton=document.createElement('button');queueButton.textContent='대기열 복사';queueButton.onclick=()=>{const parts=[];for(const[k,n,r]of totals().mid.slice().reverse())if(n>0&&r.b.length)parts.push(`${r.r}*${Math.ceil(n/r.n)}@${r.b.join(',')}`);for(const t of S.t){const r=rec(t.k);if(r)parts.push(`${r.r}*${Math.ceil(t.n/r.n)}@${r.b.join(',')}`)}if(parts.length){copyText('ICARUSCRAFT|'+parts.join('|'));window.__toast?.('대기열 복사됨 · 해당 작업대를 열고 F6',true)}};right.querySelector('details').append(queueButton);
+right.querySelectorAll('h2')[1].textContent='중간 부품';
+// Crafting reference only: no game queue commands.
 tree.querySelector('h2').textContent='제작 구조';tree.querySelector('.leg').textContent='부품을 누르면 그 부품의 재료로 이동합니다. 위 경로를 눌러 돌아가세요.';
 let craftView=S.craftView||'steps',trail=[];
 function showCraft(v){craftView=v;S.craftView=v;work.querySelectorAll('[data-craft-panel]').forEach(n=>n.hidden=n.dataset.craftPanel!==v);stage.querySelectorAll('[data-craft-view]').forEach(n=>n.classList.toggle('on',n.dataset.craftView===v));save()}
