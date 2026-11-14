@@ -183,6 +183,30 @@ test('an older (cached) manifest never replaces files from a newer update', asyn
   assert.equal(fs.readFileSync(lua, 'utf8'), 'lua 2026.11.14.10');
 });
 
+test('beta opt-in is isolated, removal restores stable, and both channel floors survive switches',async t=>{
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'hud-channels-'));t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));
+ const md=path.join(dir,'Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD');fs.mkdirSync(md,{recursive:true});
+ let stable='2026.11.14.26',beta='2026.11.14.100',selected,urls=[];
+ const u=updater({electron:{net:{fetch:async url=>{
+  urls.push(url);if(url.includes('manifest.json')){const channel=url.includes('/beta/')?'beta':'stable',version=channel==='beta'?beta:stable;selected=Buffer.from(channel+version);return {ok:true,json:async()=>({version,channel,filesPath:'releases/'+channel+'/'+version+'/files',files:[{p:'game/test',n:selected.length,h:crypto.createHash('sha1').update(selected).digest('hex')}]})};}
+  return {ok:true,arrayBuffer:async()=>selected};
+ }}}}).module.exports;
+ await u.update(dir,'https://mock.invalid');assert.ok(!urls.some(u=>u.includes('/beta/')));
+ fs.writeFileSync(path.join(md,'beta.txt'),'');await u.update(dir,'https://mock.invalid');assert.equal(fs.readFileSync(path.join(dir,'test'),'utf8'),'beta'+beta);
+ fs.unlinkSync(path.join(md,'beta.txt'));await u.update(dir,'https://mock.invalid');assert.equal(fs.readFileSync(path.join(dir,'test'),'utf8'),'stable'+stable);
+ stable='2026.11.14.25';assert.equal((await u.update(dir,'https://mock.invalid')).stale,'2026.11.14.26');
+ fs.writeFileSync(path.join(md,'beta.txt'),'');beta='2026.11.14.99';assert.equal((await u.update(dir,'https://mock.invalid')).stale,'2026.11.14.100');
+ beta='2026.11.14.101';assert.equal((await u.update(dir,'https://mock.invalid',null,async()=>false)).deferred,true);
+ assert.equal(JSON.parse(fs.readFileSync(path.join(md,'update-channel.json'))).channel,'stable');
+ assert.ok(urls.some(u=>u.includes('/releases/beta/2026.11.14.100/files/')));
+});
+test('wrong channel or redirected release paths are rejected before download',async t=>{
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'hud-channel-bad-'));t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));
+ for(const extra of [{channel:'beta'},{filesPath:'https://other.invalid'},{filesPath:'releases/beta/2026.11.14.1/files'}]){
+ const u=updater({electron:{net:{fetch:async()=>({ok:true,json:async()=>({version:'1',files:[],...extra})})}}}).module.exports;
+ await assert.rejects(u.update(dir,'https://mock.invalid'));
+ }
+});
 for(const failure of ['download','running','write'])test('update preserves old paired files on '+failure,async t=>{
   const dir=fs.mkdtempSync(path.join(os.tmpdir(),'hud-transaction-'));t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));
   for(const n of ['a','b'])fs.writeFileSync(path.join(dir,n),'old-'+n);

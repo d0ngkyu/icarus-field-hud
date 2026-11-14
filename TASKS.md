@@ -217,3 +217,7 @@
 
 ## CHANNELS-006 · Codex · 진행
 - 29fb9ac/.25와 정식 Codex·베타 Claude 합의 확인. codex/release-channels에서 updater 채널 선택/복귀, 저장소 기반 빌드·검증, 단일 Actions 배포, 채널 운영 문서/시험 담당. 기존 화면·동굴·Lua 소스는 수정하지 않음. 배포 산출물 직접 수동 쓰기 대신 자동 절차 준비. beta.txt는 사용자 선택 전 생성하지 않음.
+
+## CHANNELS-006 · 구현
+- 정식 Codex/베타 Claude 역할 반영. updater beta.txt 선택·정식 복귀·채널별 버전 하한, 불변 다운로드 경로 구현. game 실행 안전 검사 유지. Node 저장소 빌더와 단일 Actions(queue:max) 추가. Git blob 기반 검사·채널별 버전/이력 되돌림 차단·일괄 Git 커밋 공개.
+- Node+Fengari 73개 통과. 모의 채널 전환/다운그레이드/실행 중 보류·실파일 빌드 시험. Actions 실제 실행 및 PC 적용은 아직 미확인. RELEASE-CHANNELS.md 참조.
