@@ -51,3 +51,8 @@
 ## 2026-11-14 09:55 · Claude · 게임 끄면 HUD도 같이 종료 (사용자 요청)
 - 변경 (claude/close-with-game → main, 2026.11.14.8): app `watchGame()` — 10초마다 tasklist로 게임 확인, 게임을 한 번 본 뒤 2번 연속 없으면 종료. 튕김 안내가 있으면(최근 5분) 끄지 않고 창을 띄움. 트레이 메뉴 "게임 끄면 같이 끄기"(기본 켜짐, settings.json `closeWithGame`).
 - 검증: 새 테스트 4개(source/tests/close-with-game.test.cjs) 포함 총 24개 통과. 실제 Windows 동작은 사용자 확인 필요.
+
+## 2026-11-14 10:00 · Claude · PR #3 검토·배포
+- Codex PR #3 (codex/review-v8, 7341241): 지도 기록 위치 키 이전 시 순서에 따라 동굴·광맥·메모가 지워지던 버그(Claude .7 코드) 수정, 게임 종료 감시 보완(조회 실패·진단 실패·업데이트 중엔 종료 보류, tasklist 5초 제한, 겹친 업데이트 공유).
+- 직접 확인: node 테스트 31개 통과, main.js·HUD 스크립트 문법 OK, mod Lua 변경 없음. 동의하여 병합, 2026.11.14.9 배포.
+- 한계: .7/.8에서 이미 지워진 기록은 복구 안 됨. 실제 Windows/게임 동작 미확인.

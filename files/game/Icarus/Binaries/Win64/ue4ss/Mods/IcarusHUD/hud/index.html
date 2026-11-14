@@ -467,12 +467,16 @@ const keyOf=(t,x,y)=>t+'@'+Math.round(x/500)+','+Math.round(y/500);
 // deep veins change ore from one prospect to the next: keep only the newest reading per spot
 // cave entrances: one per spot too; a reading that knows the cave size beats a plain "Cave"
 const caveRank=o=>(o[0]==='c:Cave'?0:1e15)+(o[4]||0);
-function tidyDeposits(mp){if(!mp||!mp.lm)return;
- for(const kind of ['d','c']){const flag=kind==='d'?'depTidy':'caveTidy';if(mp[flag])continue;const best={},score=kind==='d'?(o=>o[4]||0):caveRank;
-  for(const k in mp.lm){const o=mp.lm[k];if(o[0][0]!==kind)continue;const pk=keyOf(kind,o[1],o[2]);if(!best[pk]||score(o)>score(mp.lm[best[pk]]))best[pk]=k}
-  for(const k in mp.lm){const o=mp.lm[k];if(o[0][0]!==kind)continue;const pk=keyOf(kind,o[1],o[2]);
-   if(best[pk]!==k){if(mp.notes[k]&&!mp.notes[pk]&&!mp.notes[best[pk]])mp.notes[pk]=mp.notes[k];delete mp.notes[k];delete mp.lm[k];continue}
-   if(k!==pk){mp.lm[pk]=o;delete mp.lm[k];if(mp.notes[k]){mp.notes[pk]=mp.notes[k];delete mp.notes[k]}}}
+function tidyDeposits(mp){if(!mp||!mp.lm)return;mp.notes=mp.notes||{};
+ for(const kind of ['d','c']){const flag=kind==='d'?'depTidy':'caveTidy';if(mp[flag])continue;const groups={},score=kind==='d'?(o=>o[4]||0):caveRank;
+  // Snapshot before moving keys: writing a canonical key during enumeration can
+  // otherwise make a later iteration delete the winner we just moved there.
+  for(const [k,o] of Object.entries(mp.lm)){if(o[0][0]!==kind)continue;const pk=keyOf(kind,o[1],o[2]);
+   (groups[pk]||(groups[pk]=[])).push({k,o,note:mp.notes[k]})}
+  for(const [pk,entries] of Object.entries(groups)){let best=entries[0];for(const e of entries)if(score(e.o)>score(best.o))best=e;
+   const note=best.note||mp.notes[pk]||(entries.find(e=>e.note)||{}).note;
+   for(const e of entries){delete mp.lm[e.k];delete mp.notes[e.k]}
+   mp.lm[pk]=best.o;if(note)mp.notes[pk]=note}
   mp[flag]=1}}
 
 // ---------- recording ----------
@@ -877,7 +881,7 @@ document.addEventListener('click',e=>{const c=e.target.dataset&&e.target.dataset
  if(c==='map'&&S.maps&&S.world)delete S.maps[S.world];
  e.target.textContent='지움 ✓';setTimeout(()=>e.target.textContent='지우기',1500);save();draw()});
 // update notices and the helper switch
-const HUD_VERSION='2026.11.14.8';
+const HUD_VERSION='2026.11.14.9';
 {const st=document.createElement('style');st.textContent='#tb .tbv{-webkit-app-region:no-drag;background:transparent;border:1px solid rgba(243,155,43,.45);color:#f3c27a;font:600 11px Oxanium,sans-serif;padding:2px 8px;margin-right:8px;cursor:pointer}#tb .tbv:hover{background:rgba(243,155,43,.15)}#tb .tbv.new{border-color:#4fd18b;color:#4fd18b}#tb .tbo{font:600 11px Oxanium,sans-serif;color:#4fd18b;margin-right:10px;letter-spacing:.06em;white-space:nowrap}#tb .tbo:empty{display:none}#tb .tbo::before{content:"●";margin-right:5px;font-size:9px;vertical-align:1px}';document.head.appendChild(st)}
 setTimeout(()=>{const A=window.hudApp;const vb=$('tbver');const pv=HUD_VERSION.startsWith('__')?'개발판':HUD_VERSION;
  if(vb)vb.textContent='v'+pv+' ⟳';

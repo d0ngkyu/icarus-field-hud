@@ -155,7 +155,14 @@ app.on('second-instance', showWin);
 app.on('before-quit', () => { quitting = true; });
 app.on('window-all-closed', () => {});
 // ---------- start: find the game, install on first run, then keep up to date ----------
-async function runUpdate(manual) {
+let updateTask = null, restartPending = false;
+function runUpdate(manual) {
+  if (updateTask) return updateTask;
+  if (restartPending) return Promise.resolve(lastUpd);
+  updateTask = performUpdate(manual).finally(() => { updateTask = null; });
+  return updateTask;
+}
+async function performUpdate(manual) {
   if (!UPDATE_URL || !gameDir) return null;
   try {
     const r = await UPD.update(gameDir, UPDATE_URL, ulog);
@@ -166,6 +173,7 @@ async function runUpdate(manual) {
     UPD.registerApp(gameDir);
     if (win && !win.isDestroyed()) win.webContents.send('upd', { version: r.version, changed: r.changed, skipped: r.skipped, notes: r.notes, manual: !!manual });
     if (r.appChanged) {
+      restartPending = true;
       ulog('program files changed, restarting');
       setTimeout(() => { quitting = true; app.relaunch(); app.exit(0); }, 2500);
     }
@@ -228,21 +236,23 @@ async function start() {
 // A crash note keeps the window open so the person can read it.
 function gameUp() {
   return new Promise(res => require('child_process').execFile('tasklist', ['/FI', 'IMAGENAME eq Icarus-Win64-Shipping.exe', '/NH'],
-    { windowsHide: true }, (e, out) => res(e ? null : /Icarus-Win64-Shipping/i.test(out || ''))));
+    { windowsHide: true, timeout: 5000 }, (e, out) => res(e ? null : /Icarus-Win64-Shipping/i.test(out || ''))));
 }
 function watchGame() {
   if (process.platform !== 'win32') return;
   let seen = false, gone = 0, busy = false;
   setInterval(async () => {
-    if (busy || quitting) return;
+    if (busy || quitting || updateTask || restartPending) return;
     busy = true;
     try {
       const up = await gameUp();
-      if (up === null) return;            // could not ask Windows: do nothing
+      if (updateTask || restartPending || quitting) return;
+      if (up === null) { gone = 0; return; } // unknown is not a confirmed absence
       if (up) { seen = true; gone = 0; return; }
       if (!seen || cfg.closeWithGame === false || ++gone < 2) return;
       let note = null;
-      try { if (doctor) note = doctor.check((lastUpd && lastUpd.version) || PKG.contentVersion || ''); } catch (e) {}
+      try { if (doctor) note = doctor.check((lastUpd && lastUpd.version) || PKG.contentVersion || ''); }
+      catch (e) { ulog('close deferred: diagnosis failed: ' + e.message); return; }
       if (note) sendDiag(note);
       if (note || Date.now() - lastNoteAt < 5 * 60000) { showWin(); seen = false; return; }
       ulog('game closed: closing the HUD too');
