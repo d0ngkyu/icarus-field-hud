@@ -398,7 +398,8 @@ local function scanLandmarks()
     local caveNamesLogged = 0
     each("CaveEntranceBase", "c", function(a)
         local fn = a:GetFullName()
-        local id = fn:match("CAVE_(%u%u_%u+_%d+)") or fn:match("CAVE_(%u%u_%u+)")
+        -- e.g. "BP_CaveEntrance_CF_SML_03_C /Game/..." -> CF_SML_03 (the HUD knows which caves use each entrance)
+        local id = fn:match("^BP_CaveEntrance_([%w_]-)_C%s") or fn:match("CAVE_(%u%u_%u+_%d+)")
         if caveNamesLogged < 3 and not caveNameSeen[fn:match("^%S+%s+(%S-):") or fn] then
             caveNameSeen[fn:match("^%S+%s+(%S-):") or fn] = true
             caveNamesLogged = caveNamesLogged + 1

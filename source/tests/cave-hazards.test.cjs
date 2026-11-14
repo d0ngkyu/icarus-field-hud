@@ -35,3 +35,13 @@ test('an unvisited cave shows the usual range from visited caves of the same lev
   assert.equal(ctx.hazText(mp, 'c@5,5'), '보통 동굴웜 2~4, 벌 0~1 (가 본 Lv.2 동굴 2곳 기준)');
   assert.match(ctx.hazText(mp, 'c@7,7'), /아직 모름/);
 });
+
+test('a cave entrance type shows the usual creatures from the game data', () => {
+  const ci = ctx.caveInfo('CF_SML_03');
+  assert.equal(ci.lv, 'Lv.2'); assert.equal(ci.size, 2);
+  const mp = { lm: { 'c@1,1': ['c:CF_SML_03', 0, 0, 0] } };
+  assert.equal(ctx.hazText(mp, 'c@1,1'), '보통 동굴웜 2~5, 벌집 1 (같은 입구 동굴 2종 기준)');
+  mp.haz = { 'c@1,1': { at: Date.now(), n: { '동굴웜': 3 } } };
+  assert.match(ctx.hazText(mp, 'c@1,1'), /^보통 동굴웜 2~5, 벌집 1 .*\n내가 본 것: 동굴웜 3/);
+  assert.equal(ctx.caveInfo('CF_SML_02').lv, 'Lv.1~2');
+});
