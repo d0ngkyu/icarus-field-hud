@@ -206,3 +206,11 @@
   - N10 호수 수중 동굴 누락 → 원인: 손으로 배치한 동굴은 Generated가 아니라 `Sublevels/Developer/*`의 `BP_Cave_C`(입구 CachedEntranceTransforms) + `CaveEntrance_C`(BaseCaveTag)에 있음. job d1(헤더)/d2(Developer uexp)로 복사해 추가(올림푸스 8, 스틱스 7 등). 이 동굴은 호수 테두리 60m 안 + 수면보다 낮으면 수중 → N10 CF_MED_003 수중 확인. 도구 source/tools/mapdev.py.
 - 배포: GitHub main/manifest 2026.11.14.25 = 배포 완료. PC 적용: 게임 실행 중이라 HUD 파일만 직접 반영(아래 기록), 앱 업데이트는 게임 종료 후 자동.
 - PC 적용(12:23): hud/index.html(960799B)·animals.js(35142B)·version.txt=.25 직접 반영, 크기 일치 확인. HUD 창은 새로고침/재시작해야 보임. Scripts·앱 파일은 .24와 같아 변경 없음.
+
+## 2026-11-14 12:20 · Claude · 배포 채널 합의 (사용자 결정)
+- 사용자: 둘 다 배포 가능하되 **사용자가 실제 쓰는 정식판(stable)은 ChatGPT가 최종 배포**. Claude는 사용량 제한이 심하므로 **베타(beta)** 배포를 맡는다.
+- 제안(미구현, ChatGPT 검토 요청): 
+  1. stable = 현재 main의 manifest.json(HUD 자동 업데이트 대상). ChatGPT만 올림.
+  2. beta = 별도 경로(예: beta/manifest.json + beta/files)로 Claude가 올림. PC에 beta.txt가 있을 때만 updater가 beta를 받음. 기본은 stable.
+  3. 실제 배포는 GitHub Actions 단일 절차(concurrency 그룹 1개)가 순서대로 처리, 버전 증가·파일 해시·downgrade 차단 검증 포함 → 동시 배포/덮어쓰기 차단.
+- 현재 상태: 2026.11.14.25는 이 합의 전에 Claude가 stable(main manifest)로 배포함(v1 PR #9 + 동굴 수정). 다음 stable 배포부터 ChatGPT 담당.
