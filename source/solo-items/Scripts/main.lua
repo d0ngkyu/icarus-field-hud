@@ -21,14 +21,27 @@ local function heartbeat()
 end
 heartbeat()
 if type(LoopAsync) == 'function' then LoopAsync(3000, function() pcall(heartbeat); return false end) end
+-- Explicit F11 only; never cache world objects across calls.
+local function soloMode(pc, player)
+    if not (pc and pc:IsValid() and player and player:IsValid() and pc:IsLocalController() == true) then return 'WAITING' end
+    local system = StaticFindObject('/Script/Engine.Default__KismetSystemLibrary')
+    if not (system and system:IsValid()) then return 'WAITING' end
+    if system:IsStandalone(pc) == true then return 'SINGLE' end
+    if pc:HasAuthority() ~= true then return 'MULTI' end
+    local gameplay = StaticFindObject('/Script/Engine.Default__GameplayStatics')
+    if not (gameplay and gameplay:IsValid()) then return 'WAITING' end
+    local mode = gameplay:GetGameMode(pc)
+    if not (mode and mode:IsValid()) then return 'WAITING' end
+    local players, spectators = mode:GetNumPlayers(), mode:GetNumSpectators()
+    if type(players) ~= 'number' or type(spectators) ~= 'number' or players < 1 or spectators < 0 then return 'WAITING' end
+    if players == 1 and spectators == 0 then return 'HOST' end
+    return 'MULTI'
+end
 local function probeWorld()
     local state = 'WAITING'
     local ok = pcall(function()
         local pc, player = H.GetPlayerController(), H.GetPlayer()
-        if not (pc and pc:IsValid() and player and player:IsValid() and pc:IsLocalController()) then return end
-        local system = StaticFindObject('/Script/Engine.Default__KismetSystemLibrary')
-        if not (system and system:IsValid()) then return end
-        state = system:IsStandalone(pc) == true and 'SINGLE' or 'MULTI'
+        state = soloMode(pc, player)
     end)
     if not ok then state = 'WAITING' end
     local f = io.open(root .. 'world-check.txt', 'w')
@@ -36,7 +49,7 @@ local function probeWorld()
 end
 local function writeStatus(id, state, count, detail)
     local f = io.open(status, 'w')
-    if f then f:write(table.concat({id, state, tostring(count), tostring(detail or ''):gsub('[\r\n|]', ' ')}, '|')); f:close() end
+    if f then f:write(table.concat({id, state, tostring(count), (tostring(detail or ''):gsub('[\r\n|]', ' '))}, '|')); f:close() end
 end
 -- A request made before this game start must never execute on a later keypress.
 os.remove(request)
@@ -59,9 +72,8 @@ local function process()
         local player = H.GetPlayer()
         assert(pc and pc:IsValid() and player and player:IsValid(), 'Enter a single-player world first')
         assert(pc:IsLocalController() == true, 'Local controller required')
-        local system = StaticFindObject('/Script/Engine.Default__KismetSystemLibrary')
-        assert(system and system:IsValid(), 'System library unavailable')
-        assert(system:IsStandalone(pc) == true, 'Single-player standalone mode required')
+        local mode = soloMode(pc, player)
+        assert(mode == 'SINGLE' or mode == 'HOST', mode == 'MULTI' and '다른 서버 접속 또는 여러 명이 있는 월드에서는 사용할 수 없습니다.' or '혼자 플레이하는 호스트인지 확인하지 못했습니다. 월드 입장 후 다시 시도하세요.')
         local lib = StaticFindObject('/Script/Icarus.Default__ItemTemplateLibrary')
         assert(lib and lib:IsValid() and lib:IsValidName(FName(item)) == true, 'Template not available in this game version')
         writeStatus(id, 'WORKING', 0, item)

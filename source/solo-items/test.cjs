@@ -6,7 +6,7 @@ const mod=fs.readFileSync(__dirname+'/Scripts/main.lua','utf8');
 function run(tail){
  const L=lauxlib.luaL_newstate();lualib.luaL_openlibs(L);
  const harness=`
- files={}; nativeCalls=0; calls=0; standalone=true; valid=true; count=0
+ files={}; nativeCalls=0; calls=0; standalone=true; authority=false; players=1; spectators=0; modeValid=true; valid=true; count=0
  io.open=function(p,m)
    local k=p:match('([^/]+)$')
    if m=='r' then if not files[k] then return nil end; return {read=function() return files[k] end,close=function() end} end
@@ -17,10 +17,10 @@ function run(tail){
  os.time=function() return 1000 end
  debug.getinfo=function() return {source='@mock/Scripts/main.lua'} end
  dofile=function() return {Fiber=true} end
- local pc={IsValid=function() return valid end, IsLocalController=function() return true end,
+ local pc={IsValid=function() return valid end, IsLocalController=function() return true end, HasAuthority=function() return authority end,
  AddItemToInventory=function(self,item) assert(item.RowName=='Fiber');calls=calls+1 end}
  package.preload.UEHelpers=function() return {GetPlayerController=function() return pc end,GetPlayer=function() return pc end} end
- StaticFindObject=function() nativeCalls=nativeCalls+1; return {IsValid=function() return true end,IsStandalone=function() return standalone end,IsValidName=function() return true end} end
+ StaticFindObject=function() nativeCalls=nativeCalls+1; return {IsValid=function() return true end,IsStandalone=function() return standalone end,GetGameMode=function() return {IsValid=function() return modeValid end,GetNumPlayers=function() return players end,GetNumSpectators=function() return spectators end} end,IsValidName=function() return true end} end
  FName=function(x) return x end
  LoopAsync=function(ms,f) assert(ms==3000);heartbeatLoop=f end
  Key={F11=122}
@@ -33,6 +33,13 @@ function run(tail){
  lua.lua_close(L);
 }
 const id='a'.repeat(32);
+test('one-player authoritative host is allowed even when IsStandalone is false',()=>run(`standalone=false;authority=true;files['request.txt']='${id}|1000|Fiber|1';key();assert(calls==1);assert(files['world-check.txt']:find('|HOST',1,true));assert(files['status.txt']:find('|SENT|1|',1,true))`));
+test('remote client is blocked even when alone',()=>run(`standalone=false;authority=false;files['request.txt']='${id}|1000|Fiber|1';key();assert(calls==0)`));
+test('multiple players, spectators, missing mode and uncertain counts fail closed',()=>{
+ for(const change of ['players=2','spectators=1','modeValid=false','players=nil','players=0','spectators=nil'])
+ run(`standalone=false;authority=true;${change};files['request.txt']='${id}|1000|Fiber|1';key();assert(calls==0);assert(files['status.txt']:find('|ERROR|0|',1,true))`);
+});
+test('joining player is rechecked on next request; status has exactly four fields',()=>run(`standalone=false;authority=true;files['request.txt']='${id}|1000|Fiber|1';key();assert(calls==1);players=2;files['request.txt']='${id}|1000|Fiber|1';key();assert(calls==1);local _,n=files['status.txt']:gsub('|','');assert(n==3)`));
 test('heartbeat writes liveness without any UObject/native call or item generation',()=>run(`assert(files['heartbeat.txt']=='1|1000|1000|LOADED');heartbeatLoop();assert(nativeCalls==0 and calls==0)`));
 test('F11 without a request checks single world but never creates an item',()=>run(`key();assert(calls==0);assert(files['world-check.txt']=='1|1000|1000|SINGLE')`));
 test('readiness reports multiplayer and missing player separately',()=>{run(`standalone=false;key();assert(calls==0);assert(files['world-check.txt']:find('|MULTI',1,true))`);run(`valid=false;key();assert(calls==0);assert(files['world-check.txt']:find('|WAITING',1,true))`);});
