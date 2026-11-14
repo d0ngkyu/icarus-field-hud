@@ -42,8 +42,8 @@ def summary(b):
     exps = []; rr = R(b, eo)
     for _ in range(ec):
         cls = rr.i32(); sup = rr.i32(); tmpl = rr.i32(); outer = rr.i32(); on = rr.i64(); fl = rr.u32()
-        size = rr.i64(); off = rr.i64(); rr.o += 4*3 + 16 + 4 + 4*5 + 4*4  # forced,notclient,notserver,guid,pkgflags,notalways,isasset,firstdep..x5? approx
-        exps.append(dict(cls=cls, name=names[on & 0xffffffff], size=size, off=off))
+        size = rr.i64(); off = rr.i64(); rr.o += 60  # forced,notclient,notserver,guid,pkgflags,notalways,isasset,firstdep,4 dep counts (104-byte export)
+        exps.append(dict(cls=cls, name=names[on & 0xffffffff], size=size, off=off, outer=outer, tmpl=tmpl))
     return names, imps, exps, total
 def objname(imps, exps, i):
     if i < 0: return imps[-i-1][1]

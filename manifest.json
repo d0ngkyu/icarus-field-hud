@@ -1,6 +1,6 @@
 {
- "version": "2026.11.14.20",
- "notes": "동굴 레벨을 실제 동굴 폭 기준으로 바꿨습니다 (60m·100m·150m 기준). 동굴 정보에 폭과 심층 광맥 수가 나옵니다.",
+ "version": "2026.11.14.21",
+ "notes": "지도 선택(다른 맵 열람)·접속 맵 자동 표시 (Codex PR #8), 전체 동굴 목록 추출 수정",
  "config": {},
  "files": [
   {
@@ -67,8 +67,8 @@
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/index.html",
-   "n": 883588,
-   "h": "cc5706ee0428caed0159bf729e5acafc123e2ac4"
+   "n": 887260,
+   "h": "db51870989a917eba1cd93a36a490b677d798e14"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/animals.js",
@@ -147,8 +147,8 @@
   },
   {
    "p": "app/cavejob.js",
-   "n": 3277,
-   "h": "c637a0d52fa1cc0046eda91012300f61710f3e45"
+   "n": 4196,
+   "h": "d1b1d59c60ccc0deee37fcbc392a4868ddfe16c1"
   },
   {
    "p": "app/diag.js",
