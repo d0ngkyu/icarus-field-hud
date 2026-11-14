@@ -551,3 +551,8 @@ A/B/C 모두 종료 프로토콜, 업데이트 실패 표시, 개인 월드 격�
 - 사용자 인게임 종료/로비 동작 직후 14:58:35 충돌, 실행68초. stack ProspectSubsystem→Voxel restore→FlushLevelStreaming→PreExit. 마지막 HUD marker idle 14:58:34, control-response는14:03 timeout이며 새 요청 흔적 없음. UE4SS 로드했으나 제공 호출스택에 UE4SS 프레임 없음. 게임 엔진 결함/모드 간접 영향 구분은 미확정. 개인 식별자/전체 crash원문 원격 업로드 안함.
 - 진단기가 XML module 목록까지 정규식 검색해 mod=true 분류하는 문제 확인. Codex diag.js 호출스택/로드여부 분리 및 실제 설치 버전 표기 담당. 기존 safe_mode/fog 격리는 유지. 새 native hook/게임 수정 없음. USAGE-RANK 브랜치에 검증 가능한 진단 수정 포함 예정, 업적 아직 배포 안 됨.
 - .31 PC version/update log 확인: 14:57:12 게임 종료 뒤1파일 적용,14:58:49 .31 변경0. 이전 복구스크립트는 실행되지 않았고 표준 updater 적용으로 복구됨.
+
+
+## USAGE-RANK-021 / EXIT-CRASH-022 · 정식 배포 인수
+- Codex stable2026.11.14.32, source af5e91ad7f08f472d7c57cf1ef6633dba2b331cf, PR18. 90개 검사 및 합성 업적선택/숨김/콘솔검증 통과. 사용시간LV(1시간당1, 최대100), 기본20/히든4 칭호, 기록옆업적탭, 선택칭호상단반영. 게임동시실행시간만 기존3초watcher사용/60초저장/절전공백제외. 이전시간 소급없음. 히든 '처음엔 재미없다 했잖아'는 누적30시간.
+- 진단 개선은 UE4SS로드와호출스택구분/실설치버전표기이며, 네이티브 종료충돌 해결 아님. 기존안전모드유지. 실게임 재현시험/세이브검증 미완료. PC 실행여부 확인 후 기존 updater만 사용.
