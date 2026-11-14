@@ -16,6 +16,10 @@ local function quote(s)
         return string.format('\\u%04x', string.byte(c))
     end) .. '"'
 end
+-- Fewer native reads = fewer chances to crash: the genetics list is read once per opening of a panel, only after
+-- its panel has stayed open for two checks in a row (fully built), and never again after a bad read.
+local cache, bad, pendingId, pendingSeen = {}, {}, nil, 0
+local readOne
 function M.read()
     local panels = FindAllOf("UMG_MountInterface_V2_C") or {}
     local inspected = 0
@@ -26,6 +30,24 @@ function M.read()
             and panel:IsInViewport() and panel:IsVisible() then
             local actor = panel.LinkedMount
             if not valid(actor) then return nil end
+            local id = actor:GetFullName()
+            if cache[id] then return cache[id] end
+            if bad[id] then return nil end
+            if pendingId ~= id then pendingId, pendingSeen = id, 1 return nil end
+            pendingSeen = pendingSeen + 1
+            if pendingSeen < 2 then return nil end
+            bad[id] = true                      -- set first: a failure below never retries this animal
+            local value = readOne(panel, actor)
+            if value then bad[id] = nil cache[id] = value end
+            return value
+        end
+    end
+    pendingId, pendingSeen, cache = nil, 0, {}   -- panel closed: read again (once) next time it opens
+    return nil
+end
+
+readOne = function(panel, actor)
+    do do -- (kept from the earlier loop body)
             local species = actor.MountData.RowName:ToString()
             local class = StaticFindObject("/Script/Icarus.GeneticsComponent")
             if not valid(class) then return nil end

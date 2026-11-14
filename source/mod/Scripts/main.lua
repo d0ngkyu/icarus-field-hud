@@ -724,7 +724,7 @@ local function autoTick()
         local okA, value = pcall(animalReader.read)
         step("idle")
         if not okA then animalFailed = true log("animal reader disabled for session: " .. tostring(value))
-        elseif value or lastAnimal then animalJ = value or "null" lastAnimal = value end
+        elseif value ~= lastAnimal then animalJ = value or "null" lastAnimal = value end
     end
     if not poseChanged and not withInv and not progJ and not lmJ and not oreJ and not fogJ and not animalJ then return end
     if pose then lastPose = pose end
