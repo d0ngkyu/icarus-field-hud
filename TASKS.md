@@ -558,7 +558,7 @@ A/B/C 모두 종료 프로토콜, 업데이트 실패 표시, 개인 월드 격�
 - 진단 개선은 UE4SS로드와호출스택구분/실설치버전표기이며, 네이티브 종료충돌 해결 아님. 기존안전모드유지. 실게임 재현시험/세이브검증 미완료. PC 실행여부 확인 후 기존 updater만 사용.
 
 
-## 진행 중 · SOLO-CONNECT-023
+## 착수 기록 · SOLO-CONNECT-023 (아래 완료 참조)
 - Codex / codex/solo-items / 독립0.3.3: 상단 ONLINE/WAITING/OFFLINE. 게임 프로세스와 해당 모드의 최신 heartbeat를 분리하며 ONLINE은 모드 응답만 의미. 3초마다 작은 파일 신호만 기록, 신규 UObject 상시 탐색/읽기 없음. F11 명시 조작 때 기존 검증 경로로 싱글 사용 준비 확인. HUD/EXIT-CRASH/USAGE-RANK 섹터 변경 없음. 소스/모의검증 후 독립 채널 배포, 게임 실행 중 교체 금지.
 
 
@@ -572,3 +572,12 @@ A/B/C 모두 종료 프로토콜, 업데이트 실패 표시, 개인 월드 격�
 
 ### SOLO-CONNECT-023 · 배포 인수
 - Codex 단독 독립 채널0.3.3 / source 09928acff2904fc7726a6774cac282989ae6a0c6. C# 연결 판정/자체검사/레이아웃32조합 및 Lua mock8개 통과. 실제 OFFLINE화면 확인. heartbeat는 파일만3초, F11 준비 체크는 명시 조작만. 게임 종료 상태에서 기존 own-mod 동기화가 새 Lua 반영했고 hash 일치 확인. 다음 원격 ZIP/9개 검증→manifest→기존앱 안전 updater 설치. 실제 ONLINE/실게임은 아직 미확인.
+
+
+## SOLO-CONNECT-023 · 0.3.3 게시 및 PC 적용 완료
+- 상단 ONLINE(초록 모드응답)/WAITING(노랑 게임은 실행·모드대기)/OFFLINE(회색)과 원인 설명 추가. 선택 게임 설치 경로의 실제 프로세스/시작시각, own enabled 모드, 최신10초 heartbeat 모두 확인. 과거 세션·만료·부분파일·미래신호 차단. ONLINE은 아이템 지급/모든 설정 적용 보장이 아님.
+- Lua 3초 주기 작은 파일 heartbeat만 추가(이 루프의 UObject/native 호출 0). 명시 F11에서만 싱글 준비 확인, 요청 없으면 생성0회; 요청이 있으면 기존 생성도 수행. 싱글/멀티/월드대기 확인 문구10초만 표시. 체력 등 수치 설정은 여전히 게임 종료 후 적용/재실행. CONNECTION.md에 의미/한계/UE4SS API 근거 기록.
+- 검증: C# 연결 fresh/stale/future/partial/old-session/disabled/offline/single/multi/expiry, layout4크기×8탭, exe 자체검사 통과. Lua mock8개 통과. npm 미설치로 첫 Lua 실행 의존성 실패 후 기존 guqdj/work/lua-test/node_modules 재사용하여 재실행 성공. 실제 설치앱0.3.3 OFFLINE/게임실행 안내 확인; 실게임 ONLINE/F11은 다음 게임 실행에서 확인 필요.
+- source09928acff2904fc7726a6774cac282989ae6a0c6, manifestb8dcddba3156290de0a64ec69c6208f572b1cc8a. 원격ZIP SHA256 5870a19dd47b3a7c5bd2f54c356c8423e202b8ec909a09d99f61b223ac6a94df 및 내부9개 크기/hash 검증, 실CDN0.3.3 및 source 의미diff 없음 확인.
+- PC: 게임 종료 확인 후 적용. 기존 앱 업데이트 확인은0.3.2 최신으로 표시(동시 PowerShell HTTP는0.3.3 응답; 원인 캐시/HTTP 경로 추정, 확정 아님). 검증한 원격ZIP을 표준 Updater.Extract/VerifyStage/BeginApply에 넘겨 게임 종료 재검사·기존앱 정상종료·helper rollback 절차로0.3.3 설치. 자동 확인 자체가0.3.3 설치에 성공한 것으로 주장하지 않음. PowerShell7에서 .NET Framework 어셈블리 직접 호출은 System.Web 타입 불일치 실패; Windows PowerShell5.1에서 표준 updater 실행 성공.
+- installed-version0.3.3, 실제 설치9개 SHA256 일치 및 설치 own Lua hash 일치. 새 프로세스는 LocalAppData/Programs/IcarusSoloTools. 앞선0.3.2 크기조절도 함께 설치됨. 게임 실행/강제종료/HUD 변경 없음. standalone 배포 소유 해제. 다음: 사용자의 싱글 세션에서 ONLINE/F11/지급 결과 확인.
