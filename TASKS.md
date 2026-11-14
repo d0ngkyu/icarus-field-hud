@@ -586,3 +586,7 @@ A/B/C 모두 종료 프로토콜, 업데이트 실패 표시, 개인 월드 격�
 ## ACTIVITY-024 · 진행 중
 - Codex codex/activity-achievements: 앱/업적/단축키 섹터. 사용자 요청 재미 업적30개 추가(기존24 유지), 작은 카드·목록 정리, HUD 포커스에서1~9/!~( 전환(입력칸 제외). 사용자가 전체 화면 클릭·마우스 이동·PC무입력시간 집계 명시 승인. 클릭내용/좌표/키내용/앱명 저장없음, 로컬숫자만, HUD종료시집계종료/설정OFF 제공. 게임native/Lua/세이브변경 없음.
 - 전역 마우스 Raw Input 별도 경량helper 검토, GetLastInputInfo로 무입력시간. 원시이동량은 화면px/실제cm와 다르므로 단위명시. 소스·성능·종료생명주기·수치검증 후 stable단일배포. 기존안전모드유지.
+
+
+## ACTIVITY-024 · 정식 배포 인수
+- Codex stable2026.11.14.33, source02ff7205fb38f0d4fa7961840fcd56d7b42948c2 PR19. 생활30추가 총54, 전체화면 집계 OFF 제공, HUD포커스1~9/Shift기호 전환. Node+Fengari95개 통과, 합성UI/정상helper종료 확인. 실게임FPS/실물입력정확도 미검증. Lua/세이브변경없음. 기존 안전 updater로만 PC 적용.
