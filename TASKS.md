@@ -342,5 +342,11 @@
 - Codex stable 2026.11.14.29, source 9680db38fdbf0548f95a9fa0abbff04a73b54f15 (PR #13), 검사 84개와 원격 source tree 일치 확인. 수동 저장 진행/10초 후 미확인/파일 갱신 구분, 저장 상태 true→false 판정 추가. 파일 갱신만으로 종료하지 않음. 닫힌 HUD 창의 400ms 위치 저장 타이머 취소/가드. 게임 실행 중 설치 교체/종료 없이 안전 updater 적용 대기.
 
 
-## 진행 중 · SOLO-ITEMS-UI-014
+## SOLO-ITEMS-UI-014 · 착수 기록 (아래 완료 참조)
 - Codex · codex/solo-items · 사용자 요청: 아이템 생성기 디자인 개선. 독립 source/solo-items/ItemTool.cs UI 및 설명서만 소유. 네이비/골드, 검색 목록/선택 카드 분리, 수량 프리셋과 하단 연결 설정. 게임 생성 Lua/요청 프로토콜/기존 HUD/SAVE-FIX-013 영역은 변경하지 않음. 실제 Windows UI 확인 후 실행 파일 재패키징 예정.
+
+
+## SOLO-ITEMS-UI-014 · 디자인 0.2 완료 (2026-11-14)
+- 사용자 요청: 아이템 생성기 고급스러운 디자인. 독립 C# 도구만 네이비/샴페인 골드, 검색 목록/선택 카드, 결과 수, 1/10/50/100 수량 버튼, 하단 모드 설정으로 개편. source/solo-items/ItemTool.cs 및 README만 변경; Lua/생성 프로토콜/기존 HUD·SAVE-FIX-013 영역 미변경.
+- 소스 codex/solo-items c0fb2d128ae63e97afce4b8cc147113ee8f78899, 원격 fetch 후 전체 source/solo-items와 로컬 diff 없음. Windows 실행 파일 자체 검사 통과, 실제 1040×800 창의 색상/배치/한글/잘림 여부 시각 확인. 선택 카드 클릭 자동화는 foreground process id 조회 실패로 완료하지 못했으며 실게임 지급 시험도 없음.
+- 출력 IcarusSoloItems-0.2.zip / IcarusSoloItems-0.2/IcarusSoloItems.exe. exe SHA256 A065103374A161CAB6D1DCB67F7B87E5C96AD659C3FB5CF7F89F0082BF0D2E59. 기존 0.1 출력 보존. 디자인 작업 완료, 생성 기능의 첫 실게임 확인은 기존 후속 과제로 유지.
