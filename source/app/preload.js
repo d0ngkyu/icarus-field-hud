@@ -15,7 +15,6 @@ contextBridge.exposeInMainWorld('hudApp', {
   minimize: () => ipcRenderer.invoke('minimize'),
   hide: () => ipcRenderer.invoke('hide'),
   info: () => ipcRenderer.invoke('info'),
-  setMacros: on => ipcRenderer.invoke('setMacros', on),
   checkUpdate: () => ipcRenderer.invoke('checkUpdate'),
   diagStatus: () => ipcRenderer.invoke('diagStatus'),
   diagReport: () => ipcRenderer.invoke('diagReport'),
