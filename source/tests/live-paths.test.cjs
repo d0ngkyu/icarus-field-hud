@@ -35,7 +35,7 @@ test('preload buffers the latest initial message once, preserving all public API
   assert.deepEqual(received, ['latest', 'next']);
   assert.throws(() => api.onLive(null));
   assert.deepEqual(Object.keys(api).sort(), [
-    'setTitle', 'gameControl', 'onGameProgress', 'state', 'toggleTop', 'toggleCompact', 'minimize', 'hide', 'info',
+    'setActivityEnabled', 'setTitle', 'gameControl', 'onGameProgress', 'state', 'toggleTop', 'toggleCompact', 'minimize', 'hide', 'info',
     'checkUpdate', 'diagStatus', 'diagReport', 'setSafe', 'setModOn', 'onState',
     'onLive', 'onUpd', 'onDiag',
   ].sort());
