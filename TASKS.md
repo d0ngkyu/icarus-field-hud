@@ -601,3 +601,7 @@ A/B/C 모두 종료 프로토콜, 업데이트 실패 표시, 개인 월드 격�
 
 ## 진행 중 · SOLO-HOST-025
 - Codex codex/solo-items 독립0.3.4: 실제 지급 실패 status ERROR/0/Single-player standalone mode required 및 world-check MULTI 확인. 사용자 직접 연 월드에서 혼자 플레이 확인. 기존 IsStandalone만으로 개인호스트를 차단하는 결함 수정: 로컬 권한+유효 GameMode+인원1/관전자0 검사. 다른 클라이언트/복수인원/알수없음 차단 유지. source/solo-items 및 standalone만 소유. 게임 실행 중 설치 교체/게임종료 안함. 지급 자체의 native 성공은 여전히 미검증.
+
+
+### SOLO-HOST-025 · 배포 인수
+- Codex / 독립0.3.4 / source ef27cddebe7f1afea96c78c142826862b08902cc. Lua12개(1인권한호스트 허용, 원격클라이언트/2인/관전자/미확인인원 차단, 접속인원변경 재검사 포함), exe 자체/연결/32레이아웃 검사 통과. 원격ZIP 검증 후 manifest 게시. 현재 게임 실행 중으로 설치 교체 대기. 실제 지급 성공은 아직 확인되지 않음.
