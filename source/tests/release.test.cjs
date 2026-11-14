@@ -11,10 +11,11 @@ test('release uses pinned Git bytes, preserves stable during beta, and refuses v
  const git=(...a)=>cp.execFileSync('git',a,{cwd:root,stdio:['ignore','pipe','pipe']}).toString().trim();
  const put=(p,b)=>{fs.mkdirSync(path.dirname(path.join(root,p)),{recursive:true});fs.writeFileSync(path.join(root,p),b);};
  const f={p:'app/main.js',n:3,h:crypto.createHash('sha1').update('old').digest('hex')};
- put('manifest.json',JSON.stringify({version:'2026.11.14.25',files:[f]}));put('files/app/main.js','old');put('source/app/main.js','new');
+ put('manifest.json',JSON.stringify({version:'2026.11.14.25',files:[f]}));put('files/app/main.js','old');put('source/app/main.js','new');put('source/mod/hud/layout.css','body{color:white}');put('source/mod/hud/layout.js','void 0;');
  git('init');git('add','.');git('-c','user.name=Test','-c','user.email=test@localhost','commit','-m','base');const source=git('rev-parse','HEAD');
  put('source/app/main.js','dirty');
  const beta=build({root,source,channel:'beta',version:'2026.11.14.100'});
+ assert.ok(beta.files.some(f=>f.p.endsWith('/hud/layout.css')));assert.ok(beta.files.some(f=>f.p.endsWith('/hud/layout.js')));
  assert.equal(fs.readFileSync(path.join(root,'files/app/main.js'),'utf8'),'old');
  assert.equal(fs.readFileSync(path.join(root,beta.filesPath,'app/main.js'),'utf8'),'new');
  assert.throws(()=>build({root,source,channel:'beta',version:'2026.11.14.99'}));
