@@ -154,3 +154,5 @@
 - 전체 동굴 목록 단계 A가 안 돌아감: update.log상 11:03에 켜진 옛 HUD가 계속 실행 중(11:18 실행은 두 번째 창이라 바로 종료)으로 보임. 사용자에게 트레이 종료 후 게임 재시작 요청.
 
 - MAP-SELECTION-004 최종 동기화: .20 / 93b01f7 통합, 동굴 폭 분류 반영. cave-hazards 시험 충돌은 양쪽 폭/추정 검사 유지로 해결. PR #7, Claude 검토/배포 대기.
+
+- 최종 인계: PR #8 https://github.com/d0ngkyu/icarus-field-hud/pull/8 / codex/map-selection-v20 (.20 기반). PR #7은 중간 동기화 브랜치의 Git 병합 충돌을 피하기 위해 대체 후 닫음. 최종 소스·시험·기록은 #8에 모두 보존. Node 59개 재통과, Windows CRLF에서도 지도 시험 실행 확인.
