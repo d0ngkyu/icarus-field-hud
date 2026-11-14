@@ -15,6 +15,7 @@ const saveCfg = () => { try { fs.mkdirSync(path.dirname(cfgFile()), { recursive:
 const UPD = require('./updater.js');
 const PKG = (() => { try { return require('./package.json'); } catch (e) { return {}; } })();
 const UPDATE_URL = process.env.HUD_UPDATE_URL || PKG.updateUrl || '';
+function installedVersion(){try{return fs.readFileSync(path.join(UPD.modDir(gameDir),'version.txt'),'utf8').trim()||PKG.contentVersion||'';}catch(e){return PKG.contentVersion||'';}}
 let gameDir = null, lastUpd = null, lastLiveAt = 0, doctor = null;
 let lastNoteAt = 0;
 const sendDiag = n => { lastNoteAt = Date.now(); ulog('diag: ' + n.text); if (win && !win.isDestroyed()) win.webContents.send('diag', n); };
@@ -25,6 +26,39 @@ const ulog = t => { try { fs.appendFileSync(logFile(), new Date().toISOString() 
 const onScreen = b => b && b.x !== undefined && screen.getAllDisplays().some(d => {
   const a = d.workArea; return b.x < a.x + a.width - 60 && b.x + b.width > a.x + 60 && b.y >= a.y - 10 && b.y < a.y + a.height - 60;
 });
+
+// Usage rank: reuse the existing game watcher; never scan the game for this badge.
+let usageSample = null, usageActive = false, usageSavedAt = 0, usageSession = 0;
+const usageTitles = [[1,'갓 내린 신입'],[2,'돌멩이 수집가'],[3,'모닥불 지박령'],[5,'동굴 전세입자'],[7,'나무꾼 출신'],[10,'폭풍 단골손님'],[13,'광맥 감별사'],[16,'제작대 집주인'],[20,'이카루스 현지인'],[25,'보급품 감별사'],[30,'귀환 연기 전문가'],[35,'산소통 단골'],[40,'행성 고인물'],[50,'동굴 건물주'],[60,'폭풍과 맞담배'],[70,'귀환선 환불러'],[80,'행성 명예주민'],[90,'개척자 원로'],[95,'지구가 어딘데'],[100,'이 행성 건물주']];
+const usageNumber = n => Number.isFinite(n) && n > 0 ? n : 0;
+function usageInfo() {
+  const seconds = usageNumber(cfg.hudUseSeconds), level = Math.min(100, 1 + Math.floor(seconds / 3600));
+  const titles = usageTitles.map(([lv,title])=>({id:'rank-'+lv,title,level:lv,goal:(lv-1)*3600,value:seconds,unlocked:level>=lv,hidden:false,description:'누적 '+(lv-1)+'시간 함께 사용'}));
+  const secrets = [
+    {id:'secret-session',title:'잠깐만 한다며',goal:7200,value:usageNumber(cfg.hudMaxSession),description:'한 번에 2시간 함께 사용',hint:'짧게 하기로 했던 약속'},
+    {id:'secret-night',title:'내일의 나야 미안',goal:3600,value:usageNumber(cfg.hudNightSeconds),description:'자정부터 새벽 5시 사이 누적 1시간 사용',hint:'모두 잠든 시간의 개척자'},
+    {id:'secret-thirty',title:'처음엔 재미없다 했잖아',goal:108000,value:seconds,description:'누적 30시간 함께 사용',hint:'첫인상은 오래가지 않죠'},
+    {id:'secret-return',title:'귀환 버튼 어디 갔지',goal:180000,value:seconds,description:'누적 50시간 함께 사용',hint:'지구행 표를 어디 뒀더라'}
+  ].map(x=>({...x,hidden:true,unlocked:x.value>=x.goal}));
+  const achievements=[...titles,...secrets], automatic=titles.filter(t=>t.unlocked).pop();
+  const selected=achievements.find(t=>t.id===cfg.hudTitleId&&t.unlocked)||automatic;
+  const next=titles.find(t=>!t.unlocked);
+  return {seconds,level,title:selected.title,selectedId:selected.id,automatic:!achievements.some(t=>t.id===cfg.hudTitleId&&t.unlocked),achievements:achievements.map(t=>t.hidden&&!t.unlocked?{id:t.id,hidden:true,unlocked:false,title:'???',hint:t.hint}:t),nextTitle:next?.title||null,nextTitleSeconds:next?Math.max(0,next.goal-seconds):0,nextLevelSeconds:level<100?Math.max(0,level*3600-seconds):0};
+}
+function sampleUsage(up, now = Date.now()) {
+  const elapsed = usageSample === null ? 0 : now - usageSample;
+  const valid = up === true && usageActive && elapsed > 0 && elapsed <= 10000;
+  if (valid) {
+    cfg.hudUseSeconds = usageInfo().seconds + elapsed/1000;
+    usageSession += elapsed/1000;
+    cfg.hudMaxSession = Math.max(usageNumber(cfg.hudMaxSession),usageSession);
+    if(new Date(now).getHours()<5)cfg.hudNightSeconds=usageNumber(cfg.hudNightSeconds)+elapsed/1000;
+  } else usageSession=0;
+  const wasActive = usageActive;
+  usageSample = now; usageActive = up === true;
+  if ((usageActive && now - usageSavedAt >= 60000) || (wasActive && !usageActive)) { saveCfg(); usageSavedAt = now; }
+}
+// End usage rank
 
 let win = null, tray = null, quitting = false;
 const iconPath = path.join(__dirname, 'icon.png');
@@ -146,12 +180,13 @@ ipcMain.handle('gameControl',async (_e,action)=>{
  if(!gameControlAction)gameControlAction=require('./game-control.js').createControl({modDir:()=>gameDir&&UPD.modDir(gameDir),gameUp,openExternal:url=>shell.openExternal(url),saveRoot:process.env.LOCALAPPDATA?path.join(process.env.LOCALAPPDATA,"Icarus","Saved","PlayerData"):null,progress:p=>{if(win&&!win.isDestroyed())win.webContents.send("game-progress",p)}});
  return gameControlAction(action);
 });
+ipcMain.handle('setTitle', (_e,id) => { if(id==='auto'||usageInfo().achievements.some(t=>t.id===id&&t.unlocked)){cfg.hudTitleId=id==='auto'?null:id;saveCfg();}return usageInfo(); });
 ipcMain.handle('state', () => state());
 ipcMain.handle('toggleTop', () => toggleTop());
 ipcMain.handle('toggleCompact', () => toggleCompact());
 ipcMain.handle('minimize', () => win.minimize());
 ipcMain.handle('hide', () => win.hide());
-ipcMain.handle('info', () => ({ version: (lastUpd && lastUpd.version) || PKG.contentVersion || '', app: app.getVersion(), game: gameDir, last: lastUpd && { at: lastUpd.at, changed: lastUpd.changed.length } }));
+ipcMain.handle('info', () => ({ usage: usageInfo(), version: installedVersion(), app: app.getVersion(), game: gameDir, last: lastUpd && { at: lastUpd.at, changed: lastUpd.changed.length } }));
 // ---------- problem check ----------
 ipcMain.handle('diagStatus', () => (doctor ? doctor.status() : null));
 ipcMain.handle('setSafe', (_e, on) => { if (doctor) doctor.setSafeMode(!!on); return doctor ? doctor.status() : null; });
@@ -167,7 +202,7 @@ ipcMain.handle('diagReport', () => {
 ipcMain.handle('checkUpdate', () => runUpdate(true).then(r => !!r));
 
 app.on('second-instance', showWin);
-app.on('before-quit', () => { quitting = true; });
+app.on('before-quit', () => { saveCfg(); quitting = true; });
 app.on('window-all-closed', () => {});
 // ---------- start: find the game, install on first run, then keep up to date ----------
 let updateTask = null, restartPending = false;
@@ -239,7 +274,7 @@ async function start() {
   try {
     const { Doctor } = require('./diag.js');
     doctor = new Doctor(gameDir, UPD.modDir(gameDir), app.getPath('userData'), ulog);
-    const look = () => { try { doctor.keepLog(); const n = doctor.check((lastUpd && lastUpd.version) || PKG.contentVersion || ''); if (n) sendDiag(n); } catch (e) { ulog('diag failed: ' + e.message); } };
+    const look = () => { try { doctor.keepLog(); const n = doctor.check(installedVersion()); if (n) sendDiag(n); } catch (e) { ulog('diag failed: ' + e.message); } };
     setTimeout(look, 4000); setInterval(look, 30000);
   } catch (e) { ulog('diag not started: ' + e.message); }
   // on the PC that builds updates only: copy map level files out of the game, outside the game process
@@ -288,11 +323,12 @@ function watchGame() {
     try {
       const up = await gameUp();
       if (updateTask || restartPending || quitting) return;
+      sampleUsage(up);
       if (up === null) { gone = 0; return; } // unknown is not a confirmed absence
       if (up) { seen = true; gone = 0; return; }
       if (!seen || cfg.closeWithGame === false || ++gone < 2) return;
       let note = null;
-      try { if (doctor) note = doctor.check((lastUpd && lastUpd.version) || PKG.contentVersion || ''); }
+      try { if (doctor) note = doctor.check(installedVersion()); }
       catch (e) { ulog('exit diagnosis failed; original game crash files remain: ' + e.message); }
       if (note) ulog('exit diagnosis: ' + note.text);
       try { if (doctor) fs.writeFileSync(path.join(app.getPath('userData'), 'last-exit-report.txt'), doctor.report({reason:'game closed'})); }

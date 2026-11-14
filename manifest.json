@@ -1,10 +1,10 @@
 {
- "version": "2026.11.14.31",
+ "version": "2026.11.14.32",
  "channel": "stable",
- "source": "90e9b040c2b16b3e9f98282d0683f8a270aa7ef4",
- "notes": "업데이트 주소 복구: 최신 브랜치 명시 주소 사용, 자동 조작 제거 및 제작 안내 유지",
+ "source": "af5e91ad7f08f472d7c57cf1ef6633dba2b331cf",
+ "notes": "누적 사용 LV·기본 칭호20·히든 칭호4·업적 탭 추가, 종료 충돌 진단 오판 및 설치 버전 표시 수정. 게임 엔진 종료 충돌 원인은 조사 중.",
  "config": {},
- "filesPath": "releases/stable/2026.11.14.31/files",
+ "filesPath": "releases/stable/2026.11.14.32/files",
  "files": [
   {
    "p": "game/Icarus/Binaries/Win64/dwmapi.dll",
@@ -70,8 +70,8 @@
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/index.html",
-   "n": 959031,
-   "h": "d0090c327be62239c873ba0cf6be10cc46accd60"
+   "n": 959872,
+   "h": "aec312e33ddc433b2eb86cbcb4cb3cc7dd9ea3c2"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/animals.js",
@@ -125,8 +125,8 @@
   },
   {
    "p": "app/main.js",
-   "n": 19704,
-   "h": "d37d368188e398e98be212f17713fdb81b4ebd60"
+   "n": 23278,
+   "h": "3babea42272051e84d15d516aa794cfb1f2a80fb"
   },
   {
    "p": "app/updater.js",
@@ -135,8 +135,8 @@
   },
   {
    "p": "app/preload.js",
-   "n": 1788,
-   "h": "1ad723789dd3a6859b6db6594b25631dbfddc64e"
+   "n": 1841,
+   "h": "793ed13613e1e398c8c3529a59a3896ed90150fd"
   },
   {
    "p": "app/extract.js",
@@ -155,8 +155,8 @@
   },
   {
    "p": "app/diag.js",
-   "n": 11813,
-   "h": "975e9aafd0d3fb89efe78cdc4cb0cb407368fabc"
+   "n": 12142,
+   "h": "9c4453cb628dc1cc3de13846b0d454e35dc03579"
   },
   {
    "p": "app/seticon.js",
@@ -165,13 +165,13 @@
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/layout.css",
-   "n": 15641,
-   "h": "f076f36b9420411d7ff0ccf62c33a1e97e3ed33a"
+   "n": 16650,
+   "h": "352b77bcaee31decfb6edc143cf95f8b4d79966a"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/layout.js",
-   "n": 22263,
-   "h": "d136de23e70e243af3796afbb1e200599634d812"
+   "n": 25654,
+   "h": "34775e8c50c02fa5c706ad083538a00f849da9e2"
   },
   {
    "p": "app/game-control.js",
