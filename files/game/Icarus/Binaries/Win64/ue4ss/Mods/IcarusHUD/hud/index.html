@@ -1027,7 +1027,7 @@ document.addEventListener('click',e=>{const c=e.target.dataset&&e.target.dataset
  if(c==='map'&&S.maps&&window.__mapViewWorld)delete S.maps[window.__mapViewWorld()];if(c==='map'&&window.__mapRecordsChanged)window.__mapRecordsChanged();
  e.target.textContent='지움 ✓';setTimeout(()=>e.target.textContent='지우기',1500);save();draw()});
 // update notices and the helper switch
-const HUD_VERSION='2026.11.14.26';
+const HUD_VERSION='2026.11.14.27';
 {const st=document.createElement('style');st.textContent='#tb .tbv{-webkit-app-region:no-drag;background:transparent;border:1px solid rgba(243,155,43,.45);color:#f3c27a;font:600 11px Oxanium,sans-serif;padding:2px 8px;margin-right:8px;cursor:pointer}#tb .tbv:hover{background:rgba(243,155,43,.15)}#tb .tbv.new{border-color:#4fd18b;color:#4fd18b}#tb .tbo{font:600 11px Oxanium,sans-serif;color:#4fd18b;margin-right:10px;letter-spacing:.06em;white-space:nowrap}#tb .tbo:empty{display:none}#tb .tbo::before{content:"●";margin-right:5px;font-size:9px;vertical-align:1px}';document.head.appendChild(st)}
 setTimeout(()=>{const A=window.hudApp;const vb=$('tbver');const pv=HUD_VERSION.startsWith('__')?'개발판':HUD_VERSION;
  if(vb)vb.textContent='v'+pv+' ⟳';
@@ -1130,4 +1130,4 @@ const prevDraw=draw;draw=function(){prevDraw();refreshBars()};
 setTab(S.tab2||'coach');draw();
 })();
 </script>
-</body></html>
+<link rel="stylesheet" href="layout.css"><script src="layout.js"></script></body></html>

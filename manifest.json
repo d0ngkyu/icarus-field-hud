@@ -1,10 +1,10 @@
 {
- "version": "2026.11.14.26",
+ "version": "2026.11.14.27",
  "channel": "stable",
- "source": "c71038968b8c473fd1a814d9b44ddab6da3cbdd1",
- "notes": "정식·베타 채널 분리, 안전한 정식 복귀 및 단일 검증 배포",
+ "source": "d7d15a44021ddd1caabd6e2f82d66a09bd835c7c",
+ "notes": "화면 간결화, 서버별 성장 계획, 제작 단계 탐색, 동물 차트와 1~8 출생 확률, 창 고정 보완",
  "config": {},
- "filesPath": "releases/stable/2026.11.14.26/files",
+ "filesPath": "releases/stable/2026.11.14.27/files",
  "files": [
   {
    "p": "game/Icarus/Binaries/Win64/dwmapi.dll",
@@ -70,13 +70,13 @@
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/index.html",
-   "n": 960799,
-   "h": "68dfc8fe744503b6f47bd90f87571e1e57348549"
+   "n": 960873,
+   "h": "46f6db93a8fab47a664de9a93a61503f269ed191"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/animals.js",
-   "n": 35142,
-   "h": "666f288ae55faab1da09b6132162a445edd7e55d"
+   "n": 37370,
+   "h": "d941807a53923807f3c682646ff1f9809d6933af"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/icons.webp",
@@ -125,8 +125,8 @@
   },
   {
    "p": "app/main.js",
-   "n": 18185,
-   "h": "47ee1c43aa7de83ec37bc40fc7c030783ee98aeb"
+   "n": 18617,
+   "h": "300fdd969ecc67cd8f0997cb941fe1b9f8f706d1"
   },
   {
    "p": "app/updater.js",
@@ -162,6 +162,16 @@
    "p": "app/seticon.js",
    "n": 1052,
    "h": "6d63bd9865743cb8263fe2d61b069cb0d786228c"
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/layout.css",
+   "n": 10683,
+   "h": "e93c8c73ead700ab04cb67c7a66ded96935e17df"
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/layout.js",
+   "n": 16570,
+   "h": "7841ef57f4ccada7379c17ee6e9635154f4e313c"
   }
  ]
 }
