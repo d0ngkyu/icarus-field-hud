@@ -590,3 +590,10 @@ A/B/C 모두 종료 프로토콜, 업데이트 실패 표시, 개인 월드 격�
 
 ## ACTIVITY-024 · 정식 배포 인수
 - Codex stable2026.11.14.33, source02ff7205fb38f0d4fa7961840fcd56d7b42948c2 PR19. 생활30추가 총54, 전체화면 집계 OFF 제공, HUD포커스1~9/Shift기호 전환. Node+Fengari95개 통과, 합성UI/정상helper종료 확인. 실게임FPS/실물입력정확도 미검증. Lua/세이브변경없음. 기존 안전 updater로만 PC 적용.
+
+
+## ACTIVITY-024 · .33 배포·PC 적용 완료
+- PR19 source02ff7205fb38f0d4fa7961840fcd56d7b42948c2, 배포e64ebaf. Actions https://github.com/d0ngkyu/icarus-field-hud/actions/runs/43566403487 성공37초. Node+Fengari95개(skip0), 원격38파일 root/불변hash 검증. PC 기본업데이트8개변경0실패→15:28:24 재시작, 실제31개(once제외)hash일치/.33 창 확인.
+- 생활30추가 총54, 작은카드/필터/입력칸제외1~9와Shift기호 전환. 전체화면마우스 클릭·우클릭·휠·이동(raw단위)/60초이상무입력/실행·날짜 누적. 설정OFF/로컬합계저장, 키내용·좌표·앱이름 저장/전송없음. 새 게임native/Lua/세이브변경 없음.
+- helper 초기약22MiB/CPU관측0.047초, 5초전달/60초저장. 정상종료 및 별도부모프로세스강제종료후 helper소멸 확인. 실제설치UI 클릭숫자증가/집계OFF→프로세스0 확인. 마우스이동 실제센서정확도·고폴링게임FPS·장시간부하는 미검증. 비정상종료시 마지막저장이후 손실가능. ACTIVITY-REVIEW.md 참조.
+- stable배포소유 해제. 기존 종료native충돌 원인은 이 작업으로 해결한 것으로 간주하지 않음. 독립싱글도구 변경없음.
