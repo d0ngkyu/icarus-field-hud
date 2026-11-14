@@ -413,6 +413,8 @@ body.app.mapmode #mapview{height:calc(100vh - 176px)}
 <div id="mapview">
  <section id="mapside">
   <h2>지도</h2>
+  <label for="mapselect">열람할 지도</label><select id="mapselect" style="width:100%;margin:6px 0" aria-label="열람할 지도"></select>
+  <div class="bt"><button class="mini" id="mtcurrent">현재 맵으로</button><button class="mini" id="mtfit">전체 지도 보기</button></div>
   <div class="bench" id="mapworld">맵 정보 없음 — 게임에 들어가면 자동으로 기록됩니다</div>
   <div class="bench" id="mapstat" style="margin-top:4px"></div>
   <h2>레이어</h2>
@@ -454,7 +456,23 @@ body.app.mapmode #mapview{height:calc(100vh - 176px)}
 (()=>{
 // ===== interactive map: everything is recorded from the game while you play =====
 const $=id=>document.getElementById(id);
-const M=()=>{S.maps=S.maps||{};const w=S.world||'?';const m=S.maps[w]=S.maps[w]||{lm:{},ore:{},track:[],pins:[],paths:[],rings:[],notes:{}};if(!m.seen){m.seen={};for(const p of m.track)markSeen(m,p[0],p[1])}tidyDeposits(m);return m};
+// Map browsing is independent of telemetry. Repeated cached live.js is not a heartbeat.
+function mapSession(initial){
+ let view=initial||'Terrain_016',world=null,token=null,changedAt=0,live=false;
+ return {get view(){return view},get world(){return world},active(now){return live&&now-changedAt<30000},
+  select(w){view=w},ingest(m,now){
+   if(!m.w||m.w==='?'||m.t==null)return false;
+   const was=this.active(now),different=m.w!==world;
+   if(different){world=m.w;token=m.t;changedAt=now;live=false;return false}
+   if(m.t===token)return false;
+   live=now-changedAt<30000;token=m.t;changedAt=now;
+   if(live&&!was){view=world;return true}return false;
+  }};
+}
+const session=mapSession(S.mapBrowse||S.world);
+const currentMap=()=>session.active(Date.now())&&session.view===session.world;
+window.__mapViewWorld=()=>session.view;
+const M=(w=session.view)=>{S.maps=S.maps||{};const m=S.maps[w]=S.maps[w]||{lm:{},ore:{},track:[],pins:[],paths:[],rings:[],notes:{}};if(!m.seen){m.seen={};for(const p of m.track)markSeen(m,p[0],p[1])}tidyDeposits(m);return m};
 const SEEN=10000;function markSeen(m,x,y){const i=Math.floor(x/SEEN),j=Math.floor(y/SEEN);for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++)m.seen[(i+a)+','+(j+b)]=1}
 S.mapv=Object.assign({x:0,y:0,s:0.25,rot:0,follow:true,flip:0,L:{terr:1,fog:0,grid:1,cave:1,exo:1,boss:1,dep:1,gey:1,ore:1,box:1,home:1,pins:1,paths:1,track:1,me:1}},S.mapv||{});
 const V=S.mapv;if(V.L.terr===undefined)V.L.terr=1;if(V.L.exo===undefined)V.L.exo=1;if(V.L.boss===undefined)V.L.boss=1;if(V.L.fog===undefined)V.L.fog=0;if(!V.ori2){V.rot=1;V.ori2=1}V.flip=0;
@@ -508,8 +526,17 @@ function hazText(mp,key){const h=mp.haz&&mp.haz[key];const o=mp.lm[key];const ci
 
 // ---------- recording ----------
 window.__mapIngest=m=>{
- if(m.w&&m.w!=='?')S.world=m.w;
- const mp=M(),now=Date.now();
+ const now=Date.now(),previous=session.view;
+ const auto=session.ingest(m,now);
+ if(auto){const target=session.view;session.select(previous);selectMap(target,true)}
+ if(m.w&&m.w!=='?'&&m.w!==S.world){
+  S.mapLiveStates=S.mapLiveStates||{};
+  if(S.world)S.mapLiveStates[S.world]={home:S.home,mem:S.mem};
+  const prior=S.mapLiveStates[m.w]||{};S.home=prior.home||null;S.mem=prior.mem||{};
+  S.box=[];S.pose=null;S.wp=null;S.wpSel=null;S.world=m.w;
+ }
+ if(!S.world||!m.w||m.w==='?')return;
+ const mp=M(S.world);
  const put=(store,a)=>{const t=a[0];if(!t)return;const k=t[0];if(k==='a')return;
   const dst=(k==='v')?mp.ore:mp.lm;const key=k==='b'?t:(k==='d'||k==='c')?keyOf(k,a[1],a[2]):keyOf(t,a[1],a[2]);const was=dst[key];
   if(k==='c'&&t==='c:Cave'&&was&&was[0]!=='c:Cave')return;
@@ -539,8 +566,8 @@ const mapOn=()=>document.body.classList.contains('mapmode');
 // ---------- game map picture under everything (pictures copied from the game files) ----------
 const MAPB={"Terrain_016": [-403200, 403200, -403200, 403200], "Terrain_017": [-403200, 403200, -403200, 403200], "Outpost_002": [-100800, 100800, -100800, 100800], "Outpost_003": [-100800, 100800, -100800, 100800], "Outpost_004": [-100800, 100800, -100800, 100800], "Outpost_005": [-100800, 100800, -100800, 100800], "Outpost_006": [-100800, 100800, -100800, 100800], "Outpost_007": [-100800, 100800, -100800, 100800], "Outpost_008": [-100800, 100800, -100800, 100800], "Terrain_019": [-403200, 403200, -403200, 403200], "Outpost_009": [-100800, 100800, -100800, 100800], "Outpost_011": [-100800, 100800, -100800, 100800], "Outpost_012": [-100800, 100800, -100800, 100800], "Terrain_021": [-403200, 403200, -403200, 403200], "Outpost_DEV": [-100800, 100800, -100800, 100800], "Outpost_013": [-100800, 100800, -100800, 100800], "Terrain_022": [-403200, 403200, -403200, 403200]};
 const IMG={};
-function mapImg(w){if(!w||!MAPB[w])return null;let o=IMG[w];if(!o){o=IMG[w]={ok:false,bad:false,im:new Image()};o.im.onload=()=>{o.ok=true;requestDraw()};o.im.onerror=()=>{o.bad=true};o.im.src='maps/'+w+'.webp'}return o.ok?o.im:null}
-function drawTerrain(){const w=S.world,im=mapImg(w);if(!im)return false;const[x0,x1,y0,y1]=MAPB[w];
+function mapImg(w){if(!w||!MAPB[w])return null;let o=IMG[w];if(!o){o=IMG[w]={ok:false,bad:false,im:new Image()};o.im.onload=()=>{o.ok=true;requestDraw()};o.im.onerror=()=>{o.bad=true;requestDraw()};o.im.src='maps/'+w+'.webp'}return o.ok?o.im:null}
+function drawTerrain(){const w=session.view,im=mapImg(w);if(!im)return false;const[x0,x1,y0,y1]=MAPB[w];
  // picture: left->right = +Y (mirrored when flip is on), top->bottom = -X
  const yl=V.flip?y1:y0,yr=V.flip?y0:y1;
  const p0=toS(x1,yl),pu=toS(x1,yr),pv=toS(x0,yl),iw=im.naturalWidth,ih=im.naturalHeight;
@@ -558,7 +585,7 @@ function drawTerrain(){const w=S.world,im=mapImg(w);if(!im)return false;const[x0
 const fogCv=document.createElement('canvas');
 // the game's own uncovered-map tiles (read by the mod), turned into a small picture used as a mask
 const FOGM={};
-function gameFogMask(mp){const w=S.world;if(FOGM[w])return FOGM[w];const g=mp.gfog;if(!g)return null;
+function gameFogMask(mp){const w=session.view;if(FOGM[w])return FOGM[w];const g=mp.gfog;if(!g)return null;
  const nr=g.r.length,nc=Math.max(...g.r.map(r=>r.length))*4,c=document.createElement('canvas');c.width=g.o===2?nr:nc;c.height=g.o===2?nc:nr;
  const x=c.getContext('2d'),id=x.createImageData(c.width,c.height),d=id.data;
  for(let r=0;r<nr;r++){const row=g.r[r];for(let k=0;k<row.length;k++){const v=parseInt(row[k],16);for(let b=0;b<4;b++){const col=k*4+b;const open=(v>>(3-b))&1;
@@ -570,7 +597,7 @@ function drawGameFog(mp){const fm=gameFogMask(mp);if(!fm)return false;const{c,g}
  const p0=toS(g.cx,g.cy),pu=toS(g.cx,g.cy+g.ts),pv=toS(g.cx+g.ts,g.cy);
  ctx.save();ctx.setTransform(DPR*(pu[0]-p0[0]),DPR*(pu[1]-p0[1]),DPR*(pv[0]-p0[0]),DPR*(pv[1]-p0[1]),DPR*p0[0],DPR*p0[1]);ctx.imageSmoothingEnabled=true;ctx.drawImage(c,0,0);ctx.restore();ctx.setTransform(DPR,0,0,DPR,0,0);return true}
 // same squares as the in-game map: letters left to right, numbers top to bottom
-function gridName(x,y){const b=MAPB[S.world];if(!b)return'';const i=Math.floor((x-b[0])/50400),j=Math.floor((y-b[2])/50400);if(i<0||j<0||x>b[1]||y>b[3])return'';return String.fromCharCode(65+i)+(j+1)}
+function gridName(x,y){const b=MAPB[session.view];if(!b)return'';const i=Math.floor((x-b[0])/50400),j=Math.floor((y-b[2])/50400);if(i<0||j<0||x>b[1]||y>b[3])return'';return String.fromCharCode(65+i)+(j+1)}
 // ---------- caves by size, memo labels ----------
 const BOSSN={SandWorm:'샌드웜',Scorpion:'거대 전갈',AlphaWolf:'검은 늑대 (알파)',LavaHunter:'용암 사냥꾼',HammerheadSlug:'망치머리 민달팽이',SandwyrmQueen:'샌드웜 여왕'};
 const bossName=t=>{const r=t.slice(2).split('#')[0];return BOSSN[r]||r};
@@ -617,19 +644,19 @@ function noteLabel(txt,a,b,col){if(!txt)return;const t=txt.length>22?txt.slice(0
  ctx.fillStyle='rgba(6,9,12,.78)';ctx.fillRect(a+10,b-17,w+8,17);ctx.fillStyle=col||'#ffe3b0';ctx.fillText(t,a+14,b-4)}
 const boxKey=b=>'b:'+Math.round(b.p[0]/100)+','+Math.round(b.p[1]/100);
 let caveDedup={n:-1,hide:{}};
-function dedupCaves(mp){const ks=Object.keys(mp.lm);if(caveDedup.n===ks.length)return caveDedup.hide;const w=[],c=[],hide={};
+function dedupCaves(mp){const ks=Object.keys(mp.lm);if(caveDedup.mp===mp&&caveDedup.n===ks.length)return caveDedup.hide;const w=[],c=[],hide={};
  for(const k of ks){const t=mp.lm[k][0][0];if(t==='w')w.push(mp.lm[k]);else if(t==='c')c.push(k)}
  for(const k of c){const o=mp.lm[k];if(w.some(x=>Math.hypot(x[1]-o[1],x[2]-o[2])<6000))hide[k]=1}
- return(caveDedup={n:ks.length,hide}).hide}
+ return(caveDedup={mp,n:ks.length,hide}).hide}
 // ---------- drawing ----------
 let hits=[];
 function drawMap(){if(!W)return;const mp=M();hits=[];
- if(V.follow&&S.pose){V.x=S.pose[0];V.y=S.pose[1]}
+ if(currentMap()&&V.follow&&S.pose){V.x=S.pose[0];V.y=S.pose[1]}
  ctx.setTransform(DPR,0,0,DPR,0,0);ctx.clearRect(0,0,W,H);
  const g=ctx.createRadialGradient(W/2,H/2,0,W/2,H/2,Math.max(W,H)*.7);g.addColorStop(0,'#101820');g.addColorStop(1,'#070a0d');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
  const L=V.L;
  const hasT=L.terr&&drawTerrain();
- if(L.grid&&MAPB[S.world]){const[gx0,gx1,gy0,gy1]=MAPB[S.world],C=50400;ctx.lineWidth=1;ctx.strokeStyle=hasT?'rgba(255,240,215,.28)':'rgba(243,155,43,.25)';ctx.beginPath();
+ if(L.grid&&MAPB[session.view]){const[gx0,gx1,gy0,gy1]=MAPB[session.view],C=50400;ctx.lineWidth=1;ctx.strokeStyle=hasT?'rgba(255,240,215,.28)':'rgba(243,155,43,.25)';ctx.beginPath();
   for(let x=gx0;x<=gx1+1;x+=C){const[a,b]=toS(x,gy0),[c,d]=toS(x,gy1);ctx.moveTo(a,b);ctx.lineTo(c,d)}
   for(let y=gy0;y<=gy1+1;y+=C){const[a,b]=toS(gx0,y),[c,d]=toS(gx1,y);ctx.moveTo(a,b);ctx.lineTo(c,d)}ctx.stroke();
   const fs=Math.max(10,Math.min(22,C/100*V.s*.16));ctx.font='600 '+fs+'px Oxanium,sans-serif';ctx.fillStyle=hasT?'rgba(255,245,230,.75)':'rgba(243,155,43,.7)';ctx.shadowColor='#000';ctx.shadowBlur=4;
@@ -667,23 +694,46 @@ function drawMap(){if(!W)return;const mp=M();hits=[];
   else if(t==='d'&&L.dep&&(!flt||flt.split(':')[1]===o[0].split(':')[1]||flt===o[0])){const old=Date.now()-(o[4]||0)>6*3600e3;if(old)ctx.globalAlpha=.45;ctx.fillStyle=oreCol(o[0]);ctx.strokeStyle='#000';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(a,b-8);ctx.lineTo(a+8,b);ctx.lineTo(a,b+8);ctx.lineTo(a-8,b);ctx.closePath();ctx.stroke();ctx.fill();ctx.globalAlpha=1;noteLabel(mp.notes[k],a,b);hits.push({x:a,y:b,r:10,kind:'dep',ref:o,key:k})}
   else if(t==='g'&&L.gey){const oil=o[0].indexOf('Oil')>=0;ctx.fillStyle=oil?'#2a2a2a':'#7bd96a';ctx.strokeStyle=oil?'#f2d14b':'#0b1a08';ctx.lineWidth=2;ctx.beginPath();ctx.arc(a,b,7,0,7);ctx.fill();ctx.stroke();noteLabel(mp.notes[k],a,b);hits.push({x:a,y:b,r:10,kind:'gey',ref:o,key:k})}}
  const q=($('mapq').value||'').trim().toLowerCase(),qk=q?Object.keys(I).filter(k=>nm(k).toLowerCase().includes(q)||en(k).toLowerCase().includes(q)):[];
- if(L.box||qk.length)for(const b of allBoxes()){const has=qk.filter(k=>b.i[k]);if(!L.box&&!has.length)continue;const[a,c]=toS(b.p[0],b.p[1]);
+ if(currentMap()&&(L.box||qk.length))for(const b of allBoxes()){const has=qk.filter(k=>b.i[k]);if(!L.box&&!has.length)continue;const[a,c]=toS(b.p[0],b.p[1]);
   ctx.fillStyle=has.length?'#ffc56b':'rgba(243,155,43,.55)';ctx.fillRect(a-4,c-4,8,8);
   if(has.length){ctx.strokeStyle='#ffc56b';ctx.lineWidth=2;ctx.beginPath();ctx.arc(a,c,13+3*Math.sin(Date.now()/200),0,7);ctx.stroke();ctx.font='12px "Noto Sans KR"';ctx.fillText(has.map(k=>nm(k)+' '+b.i[k]).join(', '),a+10,c-8)}
   noteLabel(mp.notes[boxKey(b)],a,c);hits.push({x:a,y:c,r:8,kind:'box',ref:b,key:boxKey(b)})}
- if(L.home&&S.home){const[a,b]=toS(S.home[0],S.home[1]);ctx.font='20px sans-serif';ctx.textAlign='center';ctx.fillText('🏠',a,b+7);ctx.textAlign='left';noteLabel(mp.notes.home,a,b);hits.push({x:a,y:b,r:12,kind:'home',key:'home'})}
+ if(currentMap()&&L.home&&S.home){const[a,b]=toS(S.home[0],S.home[1]);ctx.font='20px sans-serif';ctx.textAlign='center';ctx.fillText('🏠',a,b+7);ctx.textAlign='left';noteLabel(mp.notes.home,a,b);hits.push({x:a,y:b,r:12,kind:'home',key:'home'})}
  if(L.pins)for(const p of mp.pins){const[a,b]=toS(p.x,p.y);ctx.fillStyle=p.c||'#ff6a55';ctx.strokeStyle='#000';ctx.lineWidth=2;ctx.beginPath();ctx.arc(a,b-10,6,0,7);ctx.moveTo(a-4,b-7);ctx.lineTo(a,b);ctx.lineTo(a+4,b-7);ctx.stroke();ctx.fill();
   ctx.font='12px "Noto Sans KR"';ctx.fillStyle='#fff';ctx.fillText(p.n||'',a+9,b-8);if(p.t)noteLabel(p.t,a,b+10);hits.push({x:a,y:b-8,r:10,kind:'pin',ref:p})}
- if(S.wp){const w=S.wp.split('|').map(Number);const[a,b]=toS(w[0],w[1]);ctx.strokeStyle='#4fd18b';ctx.lineWidth=2;ctx.beginPath();ctx.arc(a,b,10,0,7);ctx.moveTo(a-15,b);ctx.lineTo(a+15,b);ctx.moveTo(a,b-15);ctx.lineTo(a,b+15);ctx.stroke();hits.push({x:a,y:b,r:14,kind:'wp',ref:w})}
- if(L.me&&S.pose){const[a,b]=toS(S.pose[0],S.pose[1]);const yaw=(S.pose[3]||0)*Math.PI/180;const[dx,dy]=rotv(Math.sin(yaw),-Math.cos(yaw));
+ if(currentMap()&&S.wp){const w=S.wp.split('|').map(Number);const[a,b]=toS(w[0],w[1]);ctx.strokeStyle='#4fd18b';ctx.lineWidth=2;ctx.beginPath();ctx.arc(a,b,10,0,7);ctx.moveTo(a-15,b);ctx.lineTo(a+15,b);ctx.moveTo(a,b-15);ctx.lineTo(a,b+15);ctx.stroke();hits.push({x:a,y:b,r:14,kind:'wp',ref:w})}
+ if(currentMap()&&L.me&&S.pose){const[a,b]=toS(S.pose[0],S.pose[1]);const yaw=(S.pose[3]||0)*Math.PI/180;const[dx,dy]=rotv(Math.sin(yaw),-Math.cos(yaw));
   ctx.save();ctx.translate(a,b);ctx.rotate(Math.atan2(dy,dx)+Math.PI/2);ctx.fillStyle='#4fd18b';ctx.shadowColor='#4fd18b';ctx.shadowBlur=12;ctx.beginPath();ctx.moveTo(0,-11);ctx.lineTo(8,9);ctx.lineTo(0,4);ctx.lineTo(-8,9);ctx.closePath();ctx.fill();ctx.restore()}
  const lmn=Object.keys(mp.lm).length,on=Object.keys(mp.ore).length;
  $('mapstat').textContent=`동굴·광맥·간헐천 ${lmn}곳 · 광석 노드 ${on}개 · 핀 ${mp.pins.length}개`;
- $('mapworld').textContent=S.world?'현재 맵: '+(WORLDN[S.world]||S.world):'맵 정보 없음 — 게임에 들어가면 자동으로 기록됩니다';
+ const active=session.active(Date.now()),w=session.view;
+ $('mapworld').textContent='열람: '+(WORLDN[w]||w)+(active?' · 접속: '+(WORLDN[session.world]||session.world):' · 미접속 / 연결 대기')+(IMG[w]&&IMG[w].bad?' · 지형 이미지 미설치 (격자·저장 기록 표시)':'');
+ for(const id of ['mtme','mtfollow','mtwpclr'])$(id).disabled=!currentMap();
+ $('mtcurrent').disabled=!active;
+ $('mapselect').value=w;
  if(qk.length){clearTimeout(window.__mqT);window.__mqT=setTimeout(requestDraw,125)}
 }
 const WORLDN={Terrain_016:'올림푸스',Terrain_017:'스틱스',Terrain_019:'프로메테우스',Terrain_021:'엘리시움'};
 
+function fitMap(){const b=MAPB[session.view];if(!b||!W||!H)return;
+ V.x=(b[0]+b[1])/2;V.y=(b[2]+b[3])/2;
+ const dx=(b[1]-b[0])/100,dy=(b[3]-b[2])/100;
+ V.s=Math.max(.01,Math.min(30,.9*Math.min(W/(V.rot&1?dx:dy),H/(V.rot&1?dy:dx))));V.follow=false;followBtn();save();requestDraw()}
+function selectMap(w,automatic=false){if(!MAPB[w])return;
+ S.mapViews=S.mapViews||{};S.mapViews[session.view]={x:V.x,y:V.y,s:V.s,rot:V.rot,follow:V.follow};
+ session.select(w);S.mapBrowse=w;
+ const saved=S.mapViews[w];if(saved)Object.assign(V,saved);else{V.x=0;V.y=0;V.s=.06;V.follow=false}
+ drawing=null;drag=null;hits=[];setTool(null);closeInfo();cv.classList.remove('drag');
+ if(window.__hoverTip)window.__hoverTip(null);$('mapcoord').textContent='';$('mapore').value='';fillOre();
+ if(!saved)fitMap();if(automatic)V.follow=true;followBtn();save();requestDraw();
+}
+if(!MAPB[session.view])session.select('Terrain_016');
+const mapOption=w=>'<option value="'+w+'">'+(WORLDN[w]||w)+'</option>';
+$('mapselect').innerHTML='<optgroup label="주요 지도">'+Object.keys(WORLDN).filter(w=>MAPB[w]).map(mapOption).join('')+'</optgroup><optgroup label="전초기지 · 기타 지도">'+Object.keys(MAPB).filter(w=>!WORLDN[w]).map(mapOption).join('')+'</optgroup>';
+$('mapselect').value=session.view;
+$('mapselect').onchange=e=>selectMap(e.target.value);
+$('mtcurrent').onclick=()=>{if(session.active(Date.now()))selectMap(session.world,true)};
+$('mtfit').onclick=fitMap;
 // ---------- sidebar ----------
 const LAYERICON={"terr": "<path d=\"M2 4l4-2 4 2 4-2v10l-4 2-4-2-4 2z\" fill=\"#3d5a2a\" stroke=\"#9fc27a\"/><path d=\"M6 2v10M10 4v10\" stroke=\"#9fc27a\"/>", "fog": "<path d=\"M4 11h8a3 3 0 0 0 0-6 4 4 0 0 0-7.5 1A2.5 2.5 0 0 0 4 11z\" fill=\"#8a949c\"/>", "grid": "<path d=\"M2 2h12v12H2zM6 2v12M10 2v12M2 6h12M2 10h12\" fill=\"none\" stroke=\"#d8c7a8\" stroke-width=\"1.2\"/>", "cave": "<path d=\"M2 13Q2 3 8 3t6 10z\" fill=\"#4fd1c8\" stroke=\"#061012\" stroke-width=\"1.5\"/><path d=\"M5 13Q5 8 8 8t3 5z\" fill=\"#061012\"/>", "exo": "<path d=\"M8 1l2 5h5l-4 3 1.6 5L8 11l-4.6 3L5 9 1 6h5z\" fill=\"#b77bff\" stroke=\"#14081f\"/>", "boss": "<path d=\"M8 1l7 7-7 7-7-7z\" fill=\"#e8433a\" stroke=\"#170404\"/><circle cx=\"6.3\" cy=\"7.3\" r=\"1.1\" fill=\"#fff\"/><circle cx=\"9.7\" cy=\"7.3\" r=\"1.1\" fill=\"#fff\"/>", "dep": "<path d=\"M8 2l5 6-5 6-5-6z\" fill=\"none\" stroke=\"#e0a050\" stroke-width=\"2\"/>", "gey": "<path d=\"M8 1C5 6 4 8 4 10a4 4 0 0 0 8 0c0-2-1-4-4-9z\" fill=\"#7bd96a\" stroke=\"#0b1a08\"/>", "ore": "<path d=\"M3 11l2-6 5-2 4 4-2 6-6 1z\" fill=\"#b9c2c8\" stroke=\"#30363a\"/><path d=\"M6 7l3 1 1 3\" stroke=\"#30363a\" fill=\"none\"/>", "box": "<path d=\"M2 5h12v9H2z\" fill=\"#a8641a\" stroke=\"#f39b2b\"/><path d=\"M2 5l2-3h8l2 3M2 9h12\" stroke=\"#f39b2b\" fill=\"none\"/>", "home": "<path d=\"M2 8l6-6 6 6v6H2z\" fill=\"#fff\" stroke=\"#333\"/><path d=\"M6.5 14v-4h3v4\" fill=\"#333\"/>", "pins": "<path d=\"M8 15s5-5 5-9A5 5 0 0 0 3 6c0 4 5 9 5 9z\" fill=\"#ff6a55\" stroke=\"#3a0d08\"/><circle cx=\"8\" cy=\"6\" r=\"1.8\" fill=\"#fff\"/>", "paths": "<path d=\"M2 13c3-1 2-5 6-6s3-4 6-5\" fill=\"none\" stroke=\"#58b7e8\" stroke-width=\"2\"/><circle cx=\"2\" cy=\"13\" r=\"1.5\" fill=\"#58b7e8\"/><circle cx=\"14\" cy=\"2\" r=\"1.5\" fill=\"#58b7e8\"/>", "track": "<path d=\"M2 13c3-1 2-5 6-6s3-4 6-5\" fill=\"none\" stroke=\"#58b7e8\" stroke-width=\"2\" stroke-dasharray=\"2 2\"/>", "me": "<path d=\"M8 1l5 13-5-3-5 3z\" fill=\"#4fd18b\" stroke=\"#062012\"/>"};
 $('maplayers').innerHTML=LAYERS.map(([k,n,c])=>`<label><input type="checkbox" data-ml="${k}" ${V.L[k]?'checked':''}>${LAYERICON[k]?`<svg class="lic" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">${LAYERICON[k]}</svg>`:`<span class="sw" style="background:${c}"></span>`}${n}</label>`).join('');
@@ -695,11 +745,11 @@ $('mapq').oninput=requestDraw;
 $('mzin').onclick=()=>{V.s=Math.min(30,V.s*1.5);save();requestDraw()};
 $('mzout').onclick=()=>{V.s=Math.max(0.01,V.s/1.5);save();requestDraw()};
 const followBtn=()=>{$('mtfollow').style.color=V.follow?'var(--ok)':''};followBtn();
-$('mtme').onclick=()=>{if(S.pose){V.x=S.pose[0];V.y=S.pose[1];requestDraw()}};
-$('mtfollow').onclick=()=>{V.follow=!V.follow;followBtn();save();requestDraw()};
+$('mtme').onclick=()=>{if(currentMap()&&S.pose){V.x=S.pose[0];V.y=S.pose[1];requestDraw()}};
+$('mtfollow').onclick=()=>{if(!currentMap())return;V.follow=!V.follow;followBtn();save();requestDraw()};
 const fogLbl=()=>{$('mfogbtn').textContent=V.L.fog?'🌫 안 가 본 곳: 가림':'🗺 안 가 본 곳: 보임';const c=document.querySelector('[data-ml=fog]');if(c)c.checked=!!V.L.fog};
 $('mfogbtn').onclick=()=>{V.L.fog=V.L.fog?0:1;fogLbl();save();requestDraw()};fogLbl();
-$('mtwpclr').onclick=()=>{S.wp=null;S.wpSel=null;save();draw();requestDraw();addLog('지도에서 나침반 목표 표시를 지웠습니다')};
+$('mtwpclr').onclick=()=>{if(!currentMap())return;S.wp=null;S.wpSel=null;save();draw();requestDraw();addLog('지도에서 나침반 목표 표시를 지웠습니다')};
 $('mtrot').onclick=()=>{V.rot=(V.rot+1)&3;save();requestDraw()};
 $('mttrackclr').onclick=()=>{M().track=[];save();requestDraw()};
 $('mtringclr').onclick=()=>{M().rings=[];save();requestDraw()};
@@ -712,8 +762,8 @@ document.addEventListener('keydown',e=>{if(!mapOn())return;if(e.key==='Escape'){
 function finishPath(){if(drawing&&drawing.pts.length>1){M().paths.push(drawing);addLog('경로 추가: '+drawing.n);save();showInfo({kind:'path',ref:drawing})}drawing=null;setTool(null);requestDraw()}
 
 // ---------- info panel ----------
-const fmtD=p=>{if(!S.pose)return'';const d=Math.hypot(p[0]-S.pose[0],p[1]-S.pose[1])/100;return d>=1000?(d/1000).toFixed(1)+'km':Math.round(d)+'m'};
-function wpButton(x,y,z,kind){return `<button class="mini" data-mwp="${Math.round(x)}|${Math.round(y)}|${Math.round(z||0)}" data-mk="${kind||''}">게임에 표시 (F7)</button>`}
+const fmtD=p=>{if(!currentMap()||!S.pose)return'';const d=Math.hypot(p[0]-S.pose[0],p[1]-S.pose[1])/100;return d>=1000?(d/1000).toFixed(1)+'km':Math.round(d)+'m'};
+function wpButton(x,y,z,kind){if(!currentMap())return '<span class=bench>게임 목표 지정은 접속 중인 맵에서 가능합니다</span>';return `<button class="mini" data-mwp="${Math.round(x)}|${Math.round(y)}|${Math.round(z||0)}" data-mk="${kind||''}">게임에 표시 (F7)</button>`}
 let selKey=null;
 function showInfo(h){const box=$('mapinfo'),mp=M();let t='',body='';selKey=h.key||null;requestDraw();
  const cell=r=>{const g=gridName(r[0],r[1]);return(g?g+' · ':'')+fmtD(r)};
@@ -744,7 +794,7 @@ function showInfo(h){const box=$('mapinfo'),mp=M();let t='',body='';selKey=h.key
  const pd=$('mipdel');if(pd)pd.onclick=()=>{const arr=h.kind==='pin'?mp.pins:mp.paths;const i=arr.indexOf(h.ref);if(i>=0)arr.splice(i,1);box.style.display='none';save();requestDraw()};
 }
 function closeInfo(){$('mapinfo').style.display='none';selKey=null;requestDraw()}
-$('mapinfo').addEventListener('pointerdown',e=>{const d=e.target.dataset;if(!d||!d.mwp)return;e.preventDefault();
+$('mapinfo').addEventListener('pointerdown',e=>{const d=e.target.dataset;if(!currentMap()||!d||!d.mwp)return;e.preventDefault();
  const{raw}=totals(),bag=(S.inv&&S.inv.bag)||{};const qs=raw.filter(x=>x[1]>0).map(x=>x[0]+':'+((bag[x[0]]||0)+x[1])).join(',');
  copyText('ICARUSHUD|'+d.mwp+'|'+(d.mk&&d.mk.indexOf(':')>0?'k='+d.mk+'|':'')+(qs?'q='+qs+'|':'')+(S.home?'h='+S.home.map(Math.round).join(',')+'|':''));
  S.wpSel=d.mwp;addLog('지도에서 목표 선택');const l=$('live');l.textContent='선택됨 → 게임에서 F7을 누르면 나침반에 표시됩니다';l.style.color='var(--ac)'});
@@ -757,7 +807,7 @@ const hitName=h=>{const mp=M(),n=h.key&&mp.notes[h.key];let t=h.kind==='cave'?(h
  h.kind==='dep'?'심층 광맥: '+rowItem(h.ref[0])+(Date.now()-(h.ref[4]||0)>6*3600e3?' (예전 기록 · 다시 확인 필요)':''):h.kind==='gey'?(h.ref[0].indexOf('Oil')>=0?'석유 간헐천':'효소 간헐천'):h.kind==='ore'?'광석: '+rowItem(h.ref[0]):h.kind==='box'?'보관함':h.kind==='home'?'기지':h.kind==='pin'?(h.ref.n||'핀'):h.kind==='path'?(h.ref.n||'경로'):h.kind==='wp'?'나침반 목표 (눌러서 지우기)':'';
  return t+(n?' — '+n:'')+' · 눌러서 메모'+(h.kind==='cave'?'\n'+hazText(mp,h.key):'')};
 cv.addEventListener('pointerleave',()=>window.__hoverTip&&window.__hoverTip(null));
-cv.addEventListener('pointermove',e=>{const[wx,wy]=toW(e.offsetX,e.offsetY);if(window.__hoverTip){const h=drag?null:hitAt(e.offsetX,e.offsetY);window.__hoverTip(h?hitName(h):null,e.clientX,e.clientY)}$('mapcoord').textContent=`${gridName(wx,wy)?gridName(wx,wy)+' · ':''}X ${(wx/100).toFixed(0)}m · Y ${(wy/100).toFixed(0)}m${S.pose?' · 내 위치에서 '+fmtD([wx,wy]):''}`;
+cv.addEventListener('pointermove',e=>{const[wx,wy]=toW(e.offsetX,e.offsetY);if(window.__hoverTip){const h=drag?null:hitAt(e.offsetX,e.offsetY);window.__hoverTip(h?hitName(h):null,e.clientX,e.clientY)}$('mapcoord').textContent=`${gridName(wx,wy)?gridName(wx,wy)+' · ':''}X ${(wx/100).toFixed(0)}m · Y ${(wy/100).toFixed(0)}m${currentMap()&&S.pose?' · 내 위치에서 '+fmtD([wx,wy]):''}`;
  if(!drag)return;const dx=e.offsetX-drag.x,dy=e.offsetY-drag.y;if(Math.abs(dx)+Math.abs(dy)>3){moved=true;cv.classList.add('drag');if(V.follow){V.follow=false;followBtn()}}
  if(moved){const[a,b]=irotv(dx,dy);V.x=drag.vx+b/V.s*100;V.y=drag.vy-a/V.s*100;requestDraw()}});
 cv.addEventListener('pointerup',e=>{cv.classList.remove('drag');const was=moved;drag=null;if(was){save();return}
@@ -770,12 +820,12 @@ cv.addEventListener('dblclick',()=>{if(tool==='path')finishPath()});
 cv.addEventListener('contextmenu',e=>{e.preventDefault();const[wx,wy]=toW(e.offsetX,e.offsetY);addPin(wx,wy)});
 cv.addEventListener('wheel',e=>{e.preventDefault();const[wx,wy]=toW(e.offsetX,e.offsetY);const f=e.deltaY<0?1.2:1/1.2;V.s=Math.min(30,Math.max(0.01,V.s*f));
  if(!V.follow){const[nx,ny]=toW(e.offsetX,e.offsetY);V.x+=wx-nx;V.y+=wy-ny}save();requestDraw()},{passive:false});
-function addPin(x,y){const mp=M();const p={x:Math.round(x),y:Math.round(y),z:S.pose?S.pose[2]:0,n:'핀 '+(mp.pins.length+1),c:'#ff6a55',t:''};mp.pins.push(p);addLog('지도에 핀 추가');save();requestDraw();showInfo({kind:'pin',ref:p})}
+function addPin(x,y){const mp=M();const p={x:Math.round(x),y:Math.round(y),z:currentMap()&&S.pose?S.pose[2]:0,n:'핀 '+(mp.pins.length+1),c:'#ff6a55',t:''};mp.pins.push(p);addLog('지도에 핀 추가');save();requestDraw();showInfo({kind:'pin',ref:p})}
 
 window.__mapShown=()=>{fillOre();setTimeout(resize,30)};
 try{new ResizeObserver(()=>{if(mapOn())resize()}).observe(document.getElementById('mapwrap'))}catch(e){}
 window.addEventListener('resize',()=>{if(mapOn())resize()});
-setInterval(()=>{if(mapOn()&&S.pose)requestDraw()},1000);
+setInterval(()=>{if(mapOn())requestDraw()},1000);
 })();
 </script>
 <style>
@@ -925,7 +975,7 @@ const opt=(id,key,def)=>{const el=$(id);el.checked=S[key]===undefined?def:!!S[ke
 opt('optToast','optToast',true);opt('optAuto','optAuto',true);
 document.addEventListener('click',e=>{const c=e.target.dataset&&e.target.dataset.clr;if(!c)return;
  if(c==='log')S.log=[];if(c==='mem')S.mem={};if(c==='home')delete S.home;if(c==='built')S.built={};
- if(c==='map'&&S.maps&&S.world)delete S.maps[S.world];
+ if(c==='map'&&S.maps&&window.__mapViewWorld)delete S.maps[window.__mapViewWorld()];
  e.target.textContent='지움 ✓';setTimeout(()=>e.target.textContent='지우기',1500);save();draw()});
 // update notices and the helper switch
 const HUD_VERSION='__HUD_VERSION__';
