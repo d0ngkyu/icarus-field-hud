@@ -350,3 +350,10 @@
 - 사용자 요청: 아이템 생성기 고급스러운 디자인. 독립 C# 도구만 네이비/샴페인 골드, 검색 목록/선택 카드, 결과 수, 1/10/50/100 수량 버튼, 하단 모드 설정으로 개편. source/solo-items/ItemTool.cs 및 README만 변경; Lua/생성 프로토콜/기존 HUD·SAVE-FIX-013 영역 미변경.
 - 소스 codex/solo-items c0fb2d128ae63e97afce4b8cc147113ee8f78899, 원격 fetch 후 전체 source/solo-items와 로컬 diff 없음. Windows 실행 파일 자체 검사 통과, 실제 1040×800 창의 색상/배치/한글/잘림 여부 시각 확인. 선택 카드 클릭 자동화는 foreground process id 조회 실패로 완료하지 못했으며 실게임 지급 시험도 없음.
 - 출력 IcarusSoloItems-0.2.zip / IcarusSoloItems-0.2/IcarusSoloItems.exe. exe SHA256 A065103374A161CAB6D1DCB67F7B87E5C96AD659C3FB5CF7F89F0082BF0D2E59. 기존 0.1 출력 보존. 디자인 작업 완료, 생성 기능의 첫 실게임 확인은 기존 후속 과제로 유지.
+
+
+## SAVE-FIX-013 · 정식 .29 공개 완료 (PC 확인 진행)
+- PR #13 source 9680db38fdbf0548f95a9fa0abbff04a73b54f15. Actions https://github.com/d0ngkyu/icarus-field-hud/actions/runs/43560448444 성공(26초). 원격 manifest .29 및 35개 root/불변 파일 크기·SHA1 검증. 84개 검사 통과, skip0.
+- 저장 접수/경과 시간, 저장 중→완료 상태 전환 추가. save-only 10초 확인 후 완료 미확인으로 반환. 로컬 기존 Prospect JSON의 최신 수정/비어 있지 않음만 읽어 파일 갱신 증거를 별도 표시하며 자동저장과 구분 불가/성공 확정 아님. 종료는 이 증거만으로 실행하지 않음. 스캔은 수동 요청 중 2초 간격, 내용 읽기/업로드 없음.
+- 사용자 스크린샷 Object has been destroyed: 400ms 창 위치 저장 콜백의 destroyed 가드 누락 확인. 닫을 때 타이머 취소, 이미 큐에 든 콜백도 창 유효성 검사; 실제 모의 회귀 포함. 스크린샷 잘린 스택만으로 해당 줄을 확정하지 않음.
+- 실제 게임 종료 확인 후 기존 HUD를 열어 업데이트 클릭. 현재 CDN 응답은 아직 .28이며 PC 적용 확인 진행 중. 서버/세이브 쓰기 명령이나 강제 종료 없음. 실제 저장 완료 보장은 아직 미검증.
