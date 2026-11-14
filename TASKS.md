@@ -514,3 +514,7 @@ A/B/C 모두 종료 프로토콜, 업데이트 실패 표시, 개인 월드 격�
 
 ### SOLO-DESIGN-019 · 바탕화면 표시 후속
 - 사용자: 바탕화면 아이콘이 바뀌지 않았다고 보고. 실제 Desktop exe에서 아이콘 추출 시 금빛 날개 확인: 리소스 교체와 Explorer 표시 갱신은 별개임. SHChangeNotify(해당 파일/폴더/association) 및 Windows ie4uinit -show로 캐시 갱신 요청. Explorer/게임 종료 없음. 사용자가 보는 바탕화면의 실제 갱신 결과는 아직 미확인; 앞선 파일 hash 확인을 화면 표시 확인으로 확대하지 않음.
+
+
+## UPDATE-URL-020 · 진행 중
+- Codex 앱 업데이트 주소 복구 담당. raw /main/manifest는 cache-bust에도 .29, /refs/heads/main/manifest는 .30 확인. 소스 package updateUrl 명시 브랜치 주소로 수정·검증 후 stable .31 배포 및 기존 안전 updater로 PC 적용 예정. 게임 미실행, 다른 섹터 변경 없음.
