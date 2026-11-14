@@ -224,3 +224,9 @@
 
 ## CHANNELS-006 · 정식 배포 진행
 - 담당 Codex, source c71038968b8c473fd1a814d9b44ddab6da3cbdd1 (PR #10 병합 확인), stable 2026.11.14.26 예정. 73개 검사 통과/소스 원격 tree 일치. 단일 Actions 첫 실배포 실행 중. 게임 설치본 직접 변경 없음. Claude beta 후속 배포는 RELEASE-CHANNELS.md 절차 사용.
+
+## CHANNELS-006 · 완료 확인 (2026-11-14)
+- 정식 .26 자동 배포 성공: https://github.com/d0ngkyu/icarus-field-hud/actions/runs/43551569451 (test/publish success, 27초). PR #10, source c71038968b8c473fd1a814d9b44ddab6da3cbdd1, 배포 fef84fe. Node+Fengari 73개 통과.
+- 원격 fetch 뒤 .26 manifest의 30개 파일 전부 크기/SHA1 확인: root files와 releases/stable/2026.11.14.26/files 모두 일치. 베타 updater/단일 workflow 준비 완료; 첫 beta 공개는 담당 Claude가 동일 workflow로 진행(현재 beta manifest 미발행). beta.txt 없는 기본 PC는 정식만 받음.
+- PC 읽기 확인: version.txt .25, beta.txt 없음. .26 PC 설치 적용은 아직 확인 안 됨. 실행 중 설치 파일 수동 교체/프로세스 종료 안 함. 다음 안전 업데이트에서 적용. 실게임/실제 베타 설치 시험 아님.
+- 실제 Actions는 순차 실행·해시/버전 검증 성공. 동시 두 요청의 실실행 부하 시험은 하지 않았으며 GitHub concurrency queue:max 설정 사용. 동일 계정에서 AI 이름별 접근 통제는 협업 규칙 한계. 최신 절차 RELEASE-CHANNELS.md.
