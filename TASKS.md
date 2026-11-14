@@ -637,3 +637,13 @@ A/B/C 모두 종료 프로토콜, 업데이트 실패 표시, 개인 월드 격�
 
 ## COLLECTOR-UPDATE-028 · 정식 배포 인수
 - Codex stable2026.11.14.35 / sourced244fff064785d84883b73e8235ee9fe8c9635e7 (PR21), 2026-11-14 16:23 KST. 104개 검사 및 실제 Windows helper 잠금/해제/재시작 검증, 원격3개 소스 바이트 일치. .34 배포 완료 후 연속 보완이며 현재 배포 담당 Codex 유지. 기존 .33 PC는 활동 집계 OFF로 일회 정상 updater 적용 준비, 설치 뒤 ON 복구 예정. 다음 버전부터 업데이트 시 collector 자동 일시중지/복원.
+
+
+## ANIMAL-LIVE-026 / MANUAL-CONTROL-027 / COLLECTOR-UPDATE-028 · .35 배포·PC 적용 완료
+- PR20 source1b97300578a66d1c556fd30dc3bc331cb685dd10와 PR21 sourced244fff064785d84883b73e8235ee9fe8c9635e7. 최종 stable2026.11.14.35 배포c59ddd2, Actions https://github.com/d0ngkyu/icarus-field-hud/actions/runs/43570875942 성공23초. 104개 통과/실패0/스킵0, 원격39개 root·불변파일 크기/SHA1 일치. .33 대비30,021bytes 증가.
+- PC: .33에서 기존 UI 집계OFF로 helper 잠금 해제→기본 updater12파일 변경/0실패→16:24:38 자동재시작. version.txt .35/실제 UI빌드.35/설치32개(once제외)hash 모두 일치. 기존8개 해금 유지/전체79. 집계ON 복구 후 실제 helper 실행 확인, 다시 업데이트 확인 시0changed/0skipped 및 helper PID 변경·집계중 복귀 확인. 게임 미실행에서만 수행, 설치 파일 수동교체/서버종료 없음.
+- .34의0changed/1skipped 실패는 기록을 보존했다. 독립 helper에서 실행파일 rename EPERM/exit 후 성공 재현, 실제 PC 집계OFF 뒤 표준업데이트 성공으로 파일잠금 원인과 일치. .35는 업데이트전 종료완료 대기·자동집계복원·개별 실패이유 로그로 보완.
+- 결과: 동물 현재 UI/효과툴팁/게임순서/좌우능력치·하단교배, 지도·동물 너비 조절, 기본테마5+업적테마3/로컬글꼴·크기·간격·모서리·탭순서, 기존해금보존·조합10+게임추정15추가 총79. 수동저장/저장후종료 safe_mode 예외와 명시feature차단·호스트/월드/저장실패/만료 보호 유지. fog 및 다른 위험스캔 격리 유지.
+- 성능: 새helper 별도시험23,805,952bytes(22.7MiB),CPU누적0.08초 수준 짧은관측; 실제설치helper도약22.6MiB. 전체HUD RAM증분/실게임FPS/장시간부하는 미검증. 추가폰트/영상/상시애니메이션/월드스캔 없음. 입력은 합계만 로컬저장, 실제채집·채굴·달리기성공 판별 아님.
+- 다음 실제게임 확인: 새 게임 세션에서 동물 상세·더보기·툴팁, 호스트월드 수동저장/게임Esc메뉴에서저장후종료. 게임을 임의실행하거나 월드를 종료해 검증하지 않았음. 기존 Prospect/Voxel/PreExit 충돌 원인 및 정확한 유전확률은 여전히 미확정. 이번완료를 해당문제해결로 확대하지 않는다. ANIMAL-PERSONAL-REVIEW.md 참조.
+- 소스·stable배포 소유 해제. Claude는 main/PR20·21에서 검토 가능하며 자동읽음/동의는 확인하지 않았다. 독립solo 및 동굴데이터 작업 보존. 최신 검증 작업트리 work/icarus-collector-update, 원래 기능트리 work/icarus-animal-live; 원격main이 배포의 기준.
