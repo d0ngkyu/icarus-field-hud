@@ -88,9 +88,17 @@ test('game exit waits for a pending update and duplicate requests share that upd
   const h = harness(); await h.step(); h.running = false;
   h.run(`gameDir = 'test'; UPD.update = () => { globalThis.updateCalls = (globalThis.updateCalls || 0) + 1; return new Promise(r => { globalThis.finishUpdate = r; }); }; UPD.registerApp = () => {};`);
   h.run(`globalThis.pending = runUpdate(false); globalThis.duplicate = runUpdate(true);`);
+  await new Promise(r => setImmediate(r));
   assert.equal(h.run('updateCalls'), 1);
   await h.step(); await h.step(); assert.equal(h.quit(), 0);
   h.run(`finishUpdate({ version: 'test', changed: [], skipped: [], appChanged: false });`);
   await h.run('Promise.all([pending, duplicate])');
+  h.run(`UPD.update = async () => ({version:'test',changed:[],skipped:[],appChanged:false});`);
   await h.step(); await h.step(); assert.equal(h.quit(), 1);
+});
+
+test('running game and failed process query defer updates before any write',async()=>{
+  const h=harness();h.run(`gameDir='test';UPD.update=()=>{throw Error('must not update');};`);
+  assert.equal(await h.run('runUpdate(false)'),null);
+  h.running=false;h.fail=true;assert.equal(await h.run('runUpdate(false)'),null);
 });

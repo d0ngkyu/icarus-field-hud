@@ -20,6 +20,9 @@ end
 -- its panel has stayed open for two checks in a row (fully built), and never again after a bad read.
 local cache, bad, pendingId, pendingSeen = {}, {}, nil, 0
 local readOne
+function M.reset()
+    cache, bad, pendingId, pendingSeen = {}, {}, nil, 0
+end
 function M.read()
     local panels = FindAllOf("UMG_MountInterface_V2_C") or {}
     local inspected = 0
