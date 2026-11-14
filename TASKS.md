@@ -126,3 +126,9 @@
 - 직접 확인: node 테스트 52개 + Lua 모의 실행(fengari 설치해 실행) 통과, Lua 문법, animals_read_once.py. `IsA("/Script/Engine.Actor")` 문자열 형식은 UE4SS API(IsA(string FullClassName)) 확인.
 - 참고(위험 낮음): 위치를 못 읽는 순간에도 세션을 초기화해 45초 준비 대기가 다시 걸림 — 탈것·로딩에서 자주 생기면 조정 필요.
 - 배포 2026.11.14.16. 실제 장시간 플레이 검증은 남음.
+
+## 2026-11-14 11:20 · Claude · 동굴 규모(icarusintel 기준) + 지도 레이어 아이콘 (사용자 요청)
+- 참고: icarusintel.com(규모 SMALL/MEDIUM/LARGE/MEGA, 광석 수 구간 Low 1-24·Medium 25-34·High 35-54·Ultra 55+, 동굴 팝업 "WORMS: YES (2-5)") — 사용자 스크린샷의 웜/벌 범위가 우리가 뽑은 게임 프리팹 Min/Max와 일치. golden-game.tistory.com/561 은 사이트가 외부 읽기를 막아(robots) 읽지 못함.
+- 규모 추정: 프리팹의 생물 스폰 지점 수(6~54)를 icarusintel 구간에 맞춤 → <25 Lv.1 SMALL, 25-34 Lv.2 MEDIUM, 35-54 Lv.3 LARGE, 55+ M MEGA. 현재 데이터엔 MEGA 해당 없음(최대 54, CF_MED_002). 추정임을 기록.
+- 지도 오른쪽 레이어 목록: 색 네모 → 항목별 아이콘(SVG: 지도·구름·격자·동굴·별·보스·광맥·간헐천·광석·상자·집·핀·경로·발자취·내 위치).
+- 배포 2026.11.14.17. 검증: node 테스트 전부, JS 문법, 아이콘 화면 캡처. 실제 게임 화면 미확인.
