@@ -282,6 +282,7 @@ end
 
 -- landmarks for the map (caves, deep ore veins, geysers) - cheap, runs every 30 s
 local lastLm = ""
+local caveNameSeen = {}
 local function worldName()
     local n = "?"
     pcall(function() n = UEHelpers.GetWorld():GetFullName():match("([%w_]+)$") end)
@@ -385,7 +386,18 @@ local function scanLandmarks()
             end)
         end
     end
-    each("CaveEntranceBase", "c", function() return "Cave" end)
+    -- the entrance sits in its cave's own level: the level name says the size (CAVE_CF_MED_005 = medium)
+    local caveNamesLogged = 0
+    each("CaveEntranceBase", "c", function(a)
+        local fn = a:GetFullName()
+        local id = fn:match("CAVE_(%u%u_%u+_%d+)") or fn:match("CAVE_(%u%u_%u+)")
+        if caveNamesLogged < 3 and not caveNameSeen[fn:match("^%S+%s+(%S-):") or fn] then
+            caveNameSeen[fn:match("^%S+%s+(%S-):") or fn] = true
+            caveNamesLogged = caveNamesLogged + 1
+            log("cave entrance: " .. fn:sub(1, 200))
+        end
+        return id or "Cave"
+    end)
     each("ResourceDeposit", "d", function(a) return a.Type.RowName:ToString() end)
     each("BP_OilGeyser_C", "g", function() return "Oil" end)
     each("BP_EnzymeGeyser_C", "g", function() return "Enzyme" end)

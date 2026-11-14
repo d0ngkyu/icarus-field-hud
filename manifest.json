@@ -1,6 +1,6 @@
 {
- "version": "2026.11.14.6",
- "notes": "지도 안개 읽기를 꺼서 게임 튕김 의심 경로를 막았습니다. 튕김 때문에 꺼진 기능은 업데이트가 와도 자동으로 다시 켜지지 않습니다.",
+ "version": "2026.11.14.7",
+ "notes": "지도의 동굴을 규모별 Lv.1~3과 계급장 아이콘으로 표시합니다. 메가 동굴은 M 표시.",
  "config": {},
  "files": [
   {
@@ -52,8 +52,8 @@
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/Scripts/main.lua",
-   "n": 56422,
-   "h": "f48c5ecf082e4e633c0b4424987f6cf601455267"
+   "n": 56988,
+   "h": "a6f4ae9277791140e51237d6634e793e84211a23"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/Scripts/bp_names.lua",
@@ -62,8 +62,8 @@
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/index.html",
-   "n": 872273,
-   "h": "7184a58286d4ee0ff5ced818855c2a8ea3f1bdfa"
+   "n": 874209,
+   "h": "1843a52231efa0b0d32782127be9888e1eda8c4c"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/icons.webp",
