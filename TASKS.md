@@ -525,3 +525,7 @@ A/B/C 모두 종료 프로토콜, 업데이트 실패 표시, 개인 월드 격�
 
 ## UPDATE-URL-020 · 배포 인수
 - Codex stable .31, source 90e9b040c2b16b3e9f98282d0683f8a270aa7ef4 (PR17). 84개 통과, 명시 브랜치 URL 응답 검증. package.json updateUrl만 변경. 기존 PC는 기존 updater에 정상 주소를 전달하는 일회 복구 실행으로 설치하며 게임 상태 재검사/다운로드 hash/원자 교체를 유지.
+
+
+## 진행 중 · SOLO-RESIZE-021
+- Codex / codex/solo-items / 독립 도구 0.3.2: 고정 창 해제, 기본 980x650, 창 크기에 맞춘 배치와 크기 기억. source/solo-items 및 standalone만 소유. HUD UPDATE-URL 작업과 별도. TASKS 동시 갱신 409 후 최신 기록 재조회·보존하여 재시도.
