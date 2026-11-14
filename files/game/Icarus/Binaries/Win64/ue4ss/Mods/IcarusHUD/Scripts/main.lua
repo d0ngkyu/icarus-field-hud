@@ -34,7 +34,10 @@ pcall(function()
     local f = io.open(MODDIR .. "\\features_off.txt", "r")
     if f then for line in f:lines() do local w = line:match("^%s*([%w_]+)") if w then FEAT_OFF[w] = true end end f:close() end
 end)
-local function on(feat) return not SAFE and not FEAT_OFF[feat] end
+-- Quarantine native fog-array reads until their crash cause is understood.
+-- A longer interval and Lua pcall do not make a native access violation safe.
+-- Keep this independent of the desktop doctor and its persisted settings.
+local function on(feat) return feat ~= "fog" and not SAFE and not FEAT_OFF[feat] end
 local MACROS = MODDIR and fileExists(MODDIR .. "\\macros_on.txt") and on("macros") or false
 -- what the mod is busy with right now: if the game falls over, the HUD program reads this to know why
 local lastStep = nil
@@ -585,6 +588,7 @@ local lastFogSig, fogAt = nil, -1000
 local FOG_EVERY = 800  -- ticks of 750 ms = 10 minutes
 fogNow = false
 local function readFog(force)
+    if not on("fog") then return nil end
     if not lastPose then return nil end
     local mm = nil
     for _, c in ipairs(FindAllOf("MapManager_C") or {}) do
@@ -671,7 +675,7 @@ local function autoTick()
     local fogFirst = fogAt < 0 and lastPose ~= nil and tick > 60
     local fogDue = fogFirst or (fogAt >= 0 and tick % FOG_EVERY == 13) or (fogNow and tick > 20 and tick - fogAt >= 80)
     if fogNow and not fogDue and tick - fogAt < 80 then fogNow = false end
-    if fogDue then
+    if fogDue and on("fog") then
         fogAt = tick
         step("fog")
         local okF, fj = true, nil

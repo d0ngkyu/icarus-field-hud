@@ -1,6 +1,6 @@
 {
- "version": "2026.11.14.5",
- "notes": "지도 안개 읽기를 1분마다에서 10분마다로 줄여 게임 튕김을 막았습니다.",
+ "version": "2026.11.14.6",
+ "notes": "지도 안개 읽기를 꺼서 게임 튕김 의심 경로를 막았습니다. 튕김 때문에 꺼진 기능은 업데이트가 와도 자동으로 다시 켜지지 않습니다.",
  "config": {},
  "files": [
   {
@@ -52,8 +52,8 @@
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/Scripts/main.lua",
-   "n": 56119,
-   "h": "c8292925fa7206cf33ede6f9da5706e429d32dd3"
+   "n": 56422,
+   "h": "f48c5ecf082e4e633c0b4424987f6cf601455267"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/Scripts/bp_names.lua",
@@ -63,7 +63,7 @@
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/index.html",
    "n": 872273,
-   "h": "d19db8ffb23e3cc223354b93b4b4d47260992e8e"
+   "h": "7184a58286d4ee0ff5ced818855c2a8ea3f1bdfa"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/icons.webp",
@@ -112,8 +112,8 @@
   },
   {
    "p": "app/main.js",
-   "n": 14137,
-   "h": "ad7e54e4113cee02443f4b737d32da4393d8c5cf"
+   "n": 13946,
+   "h": "14ae3ea4d5fa9ec5d0307669db786f80785a828d"
   },
   {
    "p": "app/updater.js",
@@ -137,8 +137,8 @@
   },
   {
    "p": "app/diag.js",
-   "n": 10776,
-   "h": "e966bc15a41eab63b3c37cef31fc6ecccf7f1e3f"
+   "n": 10772,
+   "h": "ddafb4b65400706ad46b4b1435bc5e5c0abed668"
   }
  ]
 }
