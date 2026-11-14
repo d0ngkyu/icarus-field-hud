@@ -1,7 +1,7 @@
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
-const html=fs.readFileSync(path.join(__dirname,'../mod/hud/index.html'),'utf8');
+const html=fs.readFileSync(path.join(__dirname,'../mod/hud/index.html'),'utf8').replace(/\r\n/g,'\n');
 function harness(){
  const nodes=new Map(),noop=()=>{};
  const ctx=new Proxy({createRadialGradient:()=>({addColorStop:noop}),measureText:()=>({width:10})},{get:(o,k)=>o[k]||noop,set:(o,k,v)=>(o[k]=v,true)});
