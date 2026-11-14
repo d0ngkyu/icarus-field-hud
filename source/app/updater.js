@@ -103,15 +103,31 @@ function writeSafe(dst, buf) {
 
 // Installs or updates. Returns { changed:[...], skipped:[...], appChanged, version, notes }.
 async function update(gameDir, baseUrl, log, canInstall = async () => true) {
-  const man = await getJson(baseUrl + '/manifest.json');
+  const channel = exists(path.join(modDir(gameDir), 'beta.txt')) ? 'beta' : 'stable';
+  baseUrl = baseUrl.replace(/\/$/, '');
+  const site = baseUrl + (channel === 'beta' ? '/beta' : '');
+  const man = await getJson(site + '/manifest.json');
   if (!man || !Array.isArray(man.files) || !man.version) throw new Error('올바르지 않은 업데이트 목록');
+  if (man.channel && man.channel !== channel) throw new Error('업데이트 채널이 일치하지 않습니다.');
+  if (channel === 'beta' && man.channel !== 'beta') throw new Error('베타 배포 정보가 없습니다.');
+  // Immutable version folders prevent a later release changing files mid-download.
+  if (man.filesPath && !/^releases\/(stable|beta)\/[0-9]+(?:\.[0-9]+)*\/files$/.test(man.filesPath)) throw new Error('배포 파일 주소가 올바르지 않습니다.');
+  if (man.filesPath && !man.filesPath.startsWith('releases/' + channel + '/')) throw new Error('배포 파일 채널이 일치하지 않습니다.');
+  const filesUrl = man.filesPath ? baseUrl + '/' + man.filesPath : site + '/files';
   const res = { changed: [], skipped: [], appChanged: false, version: man.version, notes: man.notes || '', config: man.config || {} };
+  res.channel = channel;
   const staged = [];
   // a cached, older manifest must never put back files that a newer update already installed
   const verFile = path.join(modDir(gameDir), 'version.txt');
   let have = '';
   try { have = fs.readFileSync(verFile, 'utf8').trim(); } catch (e) {}
-  if (have && verCmp(man.version, have) < 0) { res.stale = have; log && log('update skipped: site shows ' + man.version + ', installed ' + have); return res; }
+  const stateFile = path.join(modDir(gameDir), 'update-channel.json');
+  let state = { channel: 'stable', versions: { stable: have } };
+  try { const s = JSON.parse(fs.readFileSync(stateFile, 'utf8')); if (['stable','beta'].includes(s.channel) && s.versions) state = s; } catch (e) {}
+  // Removing beta.txt deliberately restores stable, even if its number is lower.
+  // Within each channel, the highest successfully installed version remains a floor.
+  const floor = state.versions[channel] || (state.channel === channel ? have : '');
+  if (floor && verCmp(man.version, floor) < 0) { res.stale = floor; log && log('update skipped: site shows ' + man.version + ', installed ' + floor); return res; }
   for (const f of man.files) {
     // one bad entry must not stop the rest of the update
     let dst = null;
@@ -125,7 +141,7 @@ async function update(gameDir, baseUrl, log, canInstall = async () => true) {
     if (cur && f.once) continue;
     if (cur && cur.length === f.n && sha1(cur) === f.h) continue;
     try {
-      const buf = await getBuf(baseUrl + '/files/' + f.p);
+      const buf = await getBuf(filesUrl + '/' + f.p);
       if (buf.length !== f.n || sha1(buf) !== f.h) throw new Error('size/checksum mismatch');
       staged.push({f,dst,buf,previous:cur});
     } catch (e) {
@@ -136,7 +152,7 @@ async function update(gameDir, baseUrl, log, canInstall = async () => true) {
   // Validate every download before replacing any installed file. A failed
   // download must not leave new Lua paired with an old companion module.
   if (res.skipped.length) return res;
-  if (staged.length && !(await canInstall())) { res.deferred = true; return res; }
+  if (!(await canInstall())) { res.deferred = true; return res; }
   const applied=[];
   for (const item of staged) {
     const {f,dst,buf}=item;
@@ -150,7 +166,13 @@ async function update(gameDir, baseUrl, log, canInstall = async () => true) {
       res.changed=[];res.appChanged=false;break;
     }
   }
-  if (!res.skipped.length && man.version) { try { fs.writeFileSync(verFile, String(man.version) + '\r\n'); } catch (e) {} }
+  if (!res.skipped.length && man.version) {
+    try {
+      fs.mkdirSync(modDir(gameDir), { recursive: true });
+      writeSafe(stateFile, JSON.stringify({ channel, versions: { ...state.versions, [channel]: man.version } }));
+      writeSafe(verFile, String(man.version) + '\r\n');
+    } catch (e) { res.skipped.push('update state (' + e.message + ')'); }
+  }
   return res;
 }
 function verCmp(a, b) {

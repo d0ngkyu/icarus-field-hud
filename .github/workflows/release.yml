@@ -1,0 +1,79 @@
+name: Publish HUD channel
+on:
+  workflow_dispatch:
+    inputs:
+      channel:
+        type: choice
+        options: [stable, beta]
+        required: true
+      source:
+        description: Full tested source commit SHA
+        required: true
+      version:
+        description: Numeric YYYY.MM.DD.build (increases within channel)
+        required: true
+      notes:
+        required: true
+permissions:
+  contents: read
+concurrency:
+  group: hud-release-all-channels
+  cancel-in-progress: false
+  queue: max
+jobs:
+  test:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate inputs and source ancestry
+        env:
+          SOURCE: ${{ inputs.source }}
+        run: |
+          node -e "if(!/^[a-f0-9]{40}$/.test(process.env.SOURCE))process.exit(1)"
+          git cat-file -e "$SOURCE^{commit}"
+          git worktree add --detach ../release-test "$SOURCE"
+      - name: Test selected source (no game access)
+        run: |
+          npm install --prefix "$RUNNER_TEMP/hud-tests" --ignore-scripts fengari@0.1.4
+          cd ../release-test
+          NODE_PATH="$RUNNER_TEMP/hud-tests/node_modules" node --test source/tests/*.test.cjs
+  publish:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build and publish atomically
+        env:
+          SOURCE: ${{ inputs.source }}
+          CHANNEL: ${{ inputs.channel }}
+          VERSION: ${{ inputs.version }}
+          NOTES: ${{ inputs.notes }}
+        run: |
+          git fetch origin main
+          git merge --ff-only origin/main
+          node source/tools/release.cjs "$SOURCE" "$CHANNEL" "$VERSION" "$NOTES"
+          git config user.name 'HUD release bot'
+          git config user.email 'hud-release@users.noreply.github.com'
+          git add manifest.json files releases
+          if [ -d beta ]; then git add beta; fi
+          git commit -m "Release $CHANNEL $VERSION from $SOURCE"
+          git push origin HEAD:main
+          git fetch origin main
+          git merge-base --is-ancestor HEAD origin/main
+          echo "Published $CHANNEL $VERSION from $SOURCE" >> "$GITHUB_STEP_SUMMARY"
