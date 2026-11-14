@@ -699,7 +699,7 @@ local function readFog(force)
 end
 
 -- No native references survive a tick. Errors disable this reader for the session.
-local animalReader, animalFailed, lastAnimal = nil, false, nil
+local animalReader, animalFailed, lastAnimal, lastAnimalWhy = nil, false, nil, nil
 local okAnimal, loadedAnimal = pcall(require, "animals")
 if okAnimal then animalReader = loadedAnimal else log("animal reader unavailable: " .. tostring(loadedAnimal)) end
 WORLD_READY = false
@@ -777,6 +777,7 @@ local function autoTick()
         step("animals")
         local okA, value = pcall(animalReader.read)
         step("idle")
+        if animalReader.why and animalReader.why ~= lastAnimalWhy then lastAnimalWhy = animalReader.why log("animals: " .. animalReader.why) end
         if not okA then animalFailed = true log("animal reader disabled for session: " .. tostring(value))
         -- Resend the cached JSON while the panel is open: the HUD expires
         -- observations after 12 seconds. This does not reread the native array.

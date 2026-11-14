@@ -241,7 +241,9 @@ async function start() {
     let running = false;
     const runCaves = () => {
       if (running || !fs.existsSync(path.join(md, 'dev.txt'))) return;
-      const needA = !fs.existsSync(path.join(out, 'doneA.txt')), needB = fs.existsSync(jobFile) && !fs.existsSync(path.join(out, 'doneB.txt'));
+      // cavejob.js keeps one marker per job id, so a new cavejob.json (new id) runs without deleting anything
+      let jid = null; try { jid = String(JSON.parse(fs.readFileSync(jobFile, 'utf8')).id || '1').replace(/[^\w-]/g, ''); } catch (e) {}
+      const needA = !fs.existsSync(path.join(out, 'doneA2.txt')), needB = jid && !fs.existsSync(path.join(out, 'doneB_' + jid + '.txt'));
       if (!needA && !needB) return;
       running = true;
       const { Worker } = require('worker_threads');

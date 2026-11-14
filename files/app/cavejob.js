@@ -19,7 +19,7 @@ try {
   try { job = JSON.parse(fs.readFileSync(jobFile, 'utf8')); } catch (e) {}
   const jid = String(job && job.id || '1').replace(/[^\w-]/g, '');
   const doneA = path.join(outDir, 'doneA2.txt'), doneB = path.join(outDir, 'doneB_' + jid + '.txt');
-  const wantA = !fs.existsSync(doneA), wantB = job && (job.ranges || []).length > 0 && !fs.existsSync(doneB);
+  const wantA = !fs.existsSync(doneA), wantB = job && !fs.existsSync(doneB);
   log('start A=' + wantA + ' B=' + !!wantB);
   const man = [], sizes = [], ranges = [], odd = new Set();
   const need = new Map();
@@ -47,7 +47,7 @@ try {
         for (const want of need.get(full) || []) {
           try {
             const r = rawRange(pak, f.eo, want.start, want.len);
-            const out = flat(full) + '.part' + r.first;
+            const out = flat(full) + '.' + jid + '.part' + r.first;
             fs.writeFileSync(path.join(outDir, out), r.data);
             ranges.push([out, r.method, r.us, r.blockSize, r.first, r.sizes.join(',')].join('|'));
           } catch (e) { log(full + ' range: ' + e.message); }
@@ -63,7 +63,19 @@ try {
   }
   if (wantB) {
     fs.writeFileSync(path.join(outDir, 'manifestB_' + jid + '.txt'), ranges.join('\n')); fs.writeFileSync(doneB, String(ranges.length));
-    if (job.final) fs.writeFileSync(path.join(outDir, 'doneB.txt'), jid);
+  }
+  // bundle: pack listed outDir files into one file so the builder can fetch them in one go
+  if (job && job.bundle && !fs.existsSync(path.join(outDir, 'bundle_' + jid + '.txt'))) {
+    const rx = new RegExp(job.bundle), list = fs.readdirSync(outDir).filter(n => rx.test(n)).sort(), idx = [];
+    // split into parts of ~300 MB so each can be fetched on its own
+    let part = 0, off = 0, fd = fs.openSync(path.join(outDir, 'bundle_' + jid + '_0.bin'), 'w');
+    for (const n of list) {
+      const b = fs.readFileSync(path.join(outDir, n));
+      if (off > 0 && off + b.length > 300 * 1048576) { fs.closeSync(fd); part++; off = 0; fd = fs.openSync(path.join(outDir, 'bundle_' + jid + '_' + part + '.bin'), 'w'); }
+      fs.writeSync(fd, b); idx.push(n + '|' + part + '|' + off + '|' + b.length); off += b.length;
+    }
+    fs.closeSync(fd); fs.writeFileSync(path.join(outDir, 'bundle_' + jid + '.txt'), idx.join('\n'));
+    log('bundle ' + jid + ' ' + list.length + ' files ' + off);
   }
   log('done A=' + man.length + ' B=' + ranges.length);
 } catch (e) { log('error ' + (e && e.stack || e)); }

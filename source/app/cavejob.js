@@ -19,7 +19,7 @@ try {
   try { job = JSON.parse(fs.readFileSync(jobFile, 'utf8')); } catch (e) {}
   const jid = String(job && job.id || '1').replace(/[^\w-]/g, '');
   const doneA = path.join(outDir, 'doneA2.txt'), doneB = path.join(outDir, 'doneB_' + jid + '.txt');
-  const wantA = !fs.existsSync(doneA), wantB = job && (job.ranges || []).length > 0 && !fs.existsSync(doneB);
+  const wantA = !fs.existsSync(doneA), wantB = job && !fs.existsSync(doneB);
   log('start A=' + wantA + ' B=' + !!wantB);
   const man = [], sizes = [], ranges = [], odd = new Set();
   const need = new Map();
@@ -47,7 +47,7 @@ try {
         for (const want of need.get(full) || []) {
           try {
             const r = rawRange(pak, f.eo, want.start, want.len);
-            const out = flat(full) + '.part' + r.first;
+            const out = flat(full) + '.' + jid + '.part' + r.first;
             fs.writeFileSync(path.join(outDir, out), r.data);
             ranges.push([out, r.method, r.us, r.blockSize, r.first, r.sizes.join(',')].join('|'));
           } catch (e) { log(full + ' range: ' + e.message); }
@@ -63,7 +63,6 @@ try {
   }
   if (wantB) {
     fs.writeFileSync(path.join(outDir, 'manifestB_' + jid + '.txt'), ranges.join('\n')); fs.writeFileSync(doneB, String(ranges.length));
-    if (job.final) fs.writeFileSync(path.join(outDir, 'doneB.txt'), jid);
   }
   // bundle: pack listed outDir files into one file so the builder can fetch them in one go
   if (job && job.bundle && !fs.existsSync(path.join(outDir, 'bundle_' + jid + '.txt'))) {

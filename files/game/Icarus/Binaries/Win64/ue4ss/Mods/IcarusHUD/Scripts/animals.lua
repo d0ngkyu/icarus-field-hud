@@ -23,29 +23,47 @@ local readOne
 function M.reset()
     cache, bad, pendingId, pendingSeen = {}, {}, nil, 0
 end
+-- M.why: short reason for the last result, logged by main.lua when it changes (diagnosis only).
+M.why = ""
+-- Other animal windows, only checked by name/visibility (no data read) so the log shows which one is open.
+local others = {"UMG_PersistentMountInfo_C", "UMG_TameParent_C", "W_CreatureScanner_C", "Umg_GeneticLineage_C", "UMG_MountTrade_C", "UMG_TalentView_Mount_C"}
+local function visibleOther()
+    for _, cls in ipairs(others) do
+        local list = FindAllOf(cls) or {}
+        for i, w in ipairs(list) do
+            if i > 4 then break end
+            if valid(w) and not w:GetFullName():find("Default__", 1, true) and w:IsInViewport() and w:IsVisible() then return cls end
+        end
+    end
+    return nil
+end
+local quiet = 0
 function M.read()
     local panels = FindAllOf("UMG_MountInterface_V2_C") or {}
     local inspected = 0
     for _, panel in ipairs(panels) do
         inspected = inspected + 1
         if inspected > 8 then break end
+        -- The tame window can sit inside a parent menu; then the panel itself is not "in viewport" but has a parent.
         if valid(panel) and not panel:GetFullName():find("Default__", 1, true)
-            and panel:IsInViewport() and panel:IsVisible() then
+            and panel:IsVisible() and (panel:IsInViewport() or valid(panel:GetParent())) then
             local actor = panel.LinkedMount
-            if not valid(actor) then return nil end
+            if not valid(actor) then M.why = "panel open, no linked animal" return nil end
             local id = actor:GetFullName()
-            if cache[id] then return cache[id] end
+            if cache[id] then M.why = "ok (cached)" return cache[id] end
             if bad[id] then return nil end
-            if pendingId ~= id then pendingId, pendingSeen = id, 1 return nil end
+            if pendingId ~= id then pendingId, pendingSeen = id, 1 M.why = "panel open, waiting" return nil end
             pendingSeen = pendingSeen + 1
             if pendingSeen < 2 then return nil end
             bad[id] = true                      -- set first: a failure below never retries this animal
-            local value = readOne(panel, actor)
-            if value then bad[id] = nil cache[id] = value end
+            local value, why = readOne(panel, actor)
+            if value then bad[id] = nil cache[id] = value M.why = "ok" else M.why = "read failed: " .. tostring(why) end
             return value
         end
     end
     pendingId, pendingSeen, cache = nil, 0, {}   -- panel closed: read again (once) next time it opens
+    quiet = quiet + 1
+    if quiet >= 5 then quiet = 0 local o = visibleOther() M.why = o and ("other animal window open: " .. o) or "no animal window" end
     return nil
 end
 
@@ -53,12 +71,13 @@ readOne = function(panel, actor)
     do do -- (kept from the earlier loop body)
             local species = actor.MountData.RowName:ToString()
             local class = StaticFindObject("/Script/Icarus.GeneticsComponent")
-            if not valid(class) then return nil end
+            if not valid(class) then return nil, "no genetics class" end
             local genetics = actor:GetComponentByClass(class)
-            if not valid(genetics) or not genetics.bHasGeneratedGenetics then return nil end
+            if not valid(genetics) then return nil, "no genetics component" end
+            if not genetics.bHasGeneratedGenetics then return nil, "genetics not generated" end
             local values = genetics.CreatureGenetics
             local count = values:GetArrayNum()
-            if count ~= 7 then return nil end
+            if count ~= 7 then return nil, "gene count " .. tostring(count) end
             local genes, visited = {}, 0
             values:ForEach(function(_, entry)
                 visited = visited + 1
@@ -70,7 +89,7 @@ readOne = function(panel, actor)
             end)
             local geneJson = {}
             for _, key in ipairs(keys) do
-                if genes[key] == nil then return nil end
+                if genes[key] == nil then return nil, "missing gene " .. key end
                 geneJson[#geneJson + 1] = quote(key) .. ':' .. genes[key]
             end
             local stats = {}

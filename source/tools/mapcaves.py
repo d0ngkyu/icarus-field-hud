@@ -1,6 +1,5 @@
 # Whole-map caves. job: from pass-A umap headers, list the export byte ranges to copy (cavejob.json).
 import sys, os, json, re
-sys.argv += ['/tmp']
 src = open(os.path.join(os.path.dirname(__file__), 'cavepref.py')).read()
 src = "\n".join(l for l in src.splitlines() if not l.startswith(("D = ", "man = ")))
 g = {'__name__': 'x'}; exec(src.split("if __name__ == '__main__':")[0], g)
@@ -21,6 +20,7 @@ def tiles(D):
     for m in man:
         b = decomp(open(os.path.join(D, m[0]), 'rb').read(), int(m[2]), [int(x) for x in m[3].split(',')]) if 'Oodle' in m[1] else open(os.path.join(D, m[0]), 'rb').read()
         yield m[0], b
+VOX = os.environ.get('VOX') == '1'
 def index(b):
     names, imps, exps, total = g['summary'](b)
     on = lambda i: g['objname'](imps, exps, i) or ''
@@ -28,7 +28,10 @@ def index(b):
     for i, e in enumerate(exps, 1):
         cn = on(e['cls']); o = exps[e['outer']-1] if e['outer'] > 0 else None
         oc = on(o['cls']) if o else ''
-        keep = ACT.match(cn) or (o and ACT.match(oc) and cn in ('SceneComponent', 'StaticMeshComponent') and e['name'] in ('DefaultSceneRoot', 'Mesh'))
+        if VOX:   # second pass: where each rock/ore voxel is and what it gives
+            keep = o and oc.startswith('BP_Voxel_') and cn in ('ProceduralMeshComponent', 'BP_HitableBehaviour_VoxelResource_C')
+        else:
+            keep = ACT.match(cn) or (o and ACT.match(oc) and cn in ('SceneComponent', 'StaticMeshComponent') and e['name'] in ('DefaultSceneRoot', 'Mesh'))
         if keep: rows.append(dict(i=i, c=cn, n=e['name'], o=o['name'] if o else '', s=e['size'], u=e['off'] - total))
     return rows, names, imps
 if __name__ == '__main__':
@@ -52,6 +55,6 @@ if __name__ == '__main__':
                 if run: job.append(dict(file=full, start=run[0] * B, len=(run[1] - run[0] + 1) * B))
                 run = [k, k]
         if run: job.append(dict(file=full, start=run[0] * B, len=(run[1] - run[0] + 1) * B))
-    json.dump(dict(id='b1', final=True, bundle=r'\.part\d+$', ranges=job), open(os.path.join(out, 'cavejob.json'), 'w'))
-    json.dump(idx, open(os.path.join(out, 'index.json'), 'w'))
+    json.dump(dict(id='b2' if VOX else 'b1', final=True, bundle=(r'\.b2\.part\d+$' if VOX else r'\.part\d+$'), ranges=job), open(os.path.join(out, 'cavejob.json'), 'w'))
+    json.dump(idx, open(os.path.join(out, 'index2.json' if VOX else 'index.json'), 'w'))
     print(len(idx), 'tiles', len(job), 'ranges', sum(r['len'] for r in job) // 1024, 'KB')
