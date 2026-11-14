@@ -467,12 +467,16 @@ const keyOf=(t,x,y)=>t+'@'+Math.round(x/500)+','+Math.round(y/500);
 // deep veins change ore from one prospect to the next: keep only the newest reading per spot
 // cave entrances: one per spot too; a reading that knows the cave size beats a plain "Cave"
 const caveRank=o=>(o[0]==='c:Cave'?0:1e15)+(o[4]||0);
-function tidyDeposits(mp){if(!mp||!mp.lm)return;
- for(const kind of ['d','c']){const flag=kind==='d'?'depTidy':'caveTidy';if(mp[flag])continue;const best={},score=kind==='d'?(o=>o[4]||0):caveRank;
-  for(const k in mp.lm){const o=mp.lm[k];if(o[0][0]!==kind)continue;const pk=keyOf(kind,o[1],o[2]);if(!best[pk]||score(o)>score(mp.lm[best[pk]]))best[pk]=k}
-  for(const k in mp.lm){const o=mp.lm[k];if(o[0][0]!==kind)continue;const pk=keyOf(kind,o[1],o[2]);
-   if(best[pk]!==k){if(mp.notes[k]&&!mp.notes[pk]&&!mp.notes[best[pk]])mp.notes[pk]=mp.notes[k];delete mp.notes[k];delete mp.lm[k];continue}
-   if(k!==pk){mp.lm[pk]=o;delete mp.lm[k];if(mp.notes[k]){mp.notes[pk]=mp.notes[k];delete mp.notes[k]}}}
+function tidyDeposits(mp){if(!mp||!mp.lm)return;mp.notes=mp.notes||{};
+ for(const kind of ['d','c']){const flag=kind==='d'?'depTidy':'caveTidy';if(mp[flag])continue;const groups={},score=kind==='d'?(o=>o[4]||0):caveRank;
+  // Snapshot before moving keys: writing a canonical key during enumeration can
+  // otherwise make a later iteration delete the winner we just moved there.
+  for(const [k,o] of Object.entries(mp.lm)){if(o[0][0]!==kind)continue;const pk=keyOf(kind,o[1],o[2]);
+   (groups[pk]||(groups[pk]=[])).push({k,o,note:mp.notes[k]})}
+  for(const [pk,entries] of Object.entries(groups)){let best=entries[0];for(const e of entries)if(score(e.o)>score(best.o))best=e;
+   const note=best.note||mp.notes[pk]||(entries.find(e=>e.note)||{}).note;
+   for(const e of entries){delete mp.lm[e.k];delete mp.notes[e.k]}
+   mp.lm[pk]=best.o;if(note)mp.notes[pk]=note}
   mp[flag]=1}}
 
 // ---------- recording ----------
