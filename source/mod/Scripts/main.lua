@@ -260,6 +260,14 @@ local function scanOres(keep)
     each({ "IcarusNPCGOAPCharacter" }, function(a)
         add("a", a:GetClass():GetFName():ToString(), a)
     end)
+    -- cave worms (and other "CRE" creatures) are not GOAP characters: list them for the cave danger note
+    if on("hazards") then
+        step("hazards")
+        each({ "BP_CRE_C" }, function(a)
+            add("a", a:GetClass():GetFName():ToString(), a)
+        end)
+        step("ores")
+    end
     local out, types = {}, 0
     LAST_ORES = {}
     for t, list in pairs(byType) do
@@ -678,7 +686,9 @@ local function autoTick()
     end
     local oreJ = nil
     if tick % 80 == 41 then
+        step("ores")
         local okO, list = pcall(scanOres, 40)
+        step("idle")
         if okO and type(list) == "table" and #list > 0 then oreJ = "[" .. table.concat(list, ",") .. "]" end
     end
     local fogJ = nil

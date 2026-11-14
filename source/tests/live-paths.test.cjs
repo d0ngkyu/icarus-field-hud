@@ -163,3 +163,22 @@ test('update writes a valid payload, skips unchanged/once files, rejects a bad c
   r = await u.update(dir, 'https://mock.invalid'); assert.equal(r.skipped.length, 1); assert.equal(downloads, before);
   assert.equal(fs.existsSync(path.join(path.dirname(dir), 'escaped.txt')), false);
 });
+test('an older (cached) manifest never replaces files from a newer update', async t => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hud-ver-test-')); t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+  const md = path.join(dir, 'Icarus', 'Binaries', 'Win64', 'ue4ss', 'Mods', 'IcarusHUD'); fs.mkdirSync(md, { recursive: true });
+  const body = v => Buffer.from('lua ' + v), sha = b => crypto.createHash('sha1').update(b).digest('hex');
+  let manifest;
+  const set = v => { const b = body(v); manifest = { version: v, files: [{ p: 'game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/main.lua', n: b.length, h: sha(b) }] }; };
+  const u = updater({ electron: { net: { fetch: async url => String(url).includes('manifest.json')
+    ? { ok: true, json: async () => manifest }
+    : { ok: true, arrayBuffer: async () => body(manifest.version) } } } }).module.exports;
+  const lua = path.join(md, 'main.lua');
+  set('2026.11.14.9'); await u.update(dir, 'https://mock.invalid');
+  assert.equal(fs.readFileSync(lua, 'utf8'), 'lua 2026.11.14.9');
+  assert.equal(fs.readFileSync(path.join(md, 'version.txt'), 'utf8').trim(), '2026.11.14.9');
+  set('2026.11.14.6'); const r = await u.update(dir, 'https://mock.invalid');
+  assert.equal(r.stale, '2026.11.14.9'); assert.equal(r.changed.length, 0);
+  assert.equal(fs.readFileSync(lua, 'utf8'), 'lua 2026.11.14.9');
+  set('2026.11.14.10'); await u.update(dir, 'https://mock.invalid');
+  assert.equal(fs.readFileSync(lua, 'utf8'), 'lua 2026.11.14.10');
+});
