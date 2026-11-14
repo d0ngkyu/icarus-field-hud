@@ -105,6 +105,11 @@ function writeSafe(dst, buf) {
 async function update(gameDir, baseUrl, log) {
   const man = await getJson(baseUrl + '/manifest.json');
   const res = { changed: [], skipped: [], appChanged: false, version: man.version, notes: man.notes || '', config: man.config || {} };
+  // a cached, older manifest must never put back files that a newer update already installed
+  const verFile = path.join(modDir(gameDir), 'version.txt');
+  let have = '';
+  try { have = fs.readFileSync(verFile, 'utf8').trim(); } catch (e) {}
+  if (have && verCmp(man.version, have) < 0) { res.stale = have; log && log('update skipped: site shows ' + man.version + ', installed ' + have); return res; }
   for (const f of man.files) {
     // one bad entry must not stop the rest of the update
     let dst = null;
@@ -126,7 +131,13 @@ async function update(gameDir, baseUrl, log) {
       log && log('update skipped ' + f.p + ': ' + e.message);
     }
   }
+  if (!res.skipped.length && man.version) { try { fs.writeFileSync(verFile, String(man.version) + '\r\n'); } catch (e) {} }
   return res;
+}
+function verCmp(a, b) {
+  const x = String(a || '').split('.').map(Number), y = String(b || '').split('.').map(Number);
+  for (let i = 0; i < Math.max(x.length, y.length); i++) { const d = (x[i] || 0) - (y[i] || 0); if (d) return d < 0 ? -1 : 1; }
+  return 0;
 }
 
 // a path the game's script can always open, even with Korean folder names (8.3 short form)
