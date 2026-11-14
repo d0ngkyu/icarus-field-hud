@@ -14,6 +14,7 @@ contextBridge.exposeInMainWorld('hudApp', {
   toggleCompact: () => ipcRenderer.invoke('toggleCompact'),
   minimize: () => ipcRenderer.invoke('minimize'),
   hide: () => ipcRenderer.invoke('hide'),
+  setActivityEnabled: on => ipcRenderer.invoke('setActivityEnabled',on),
   setTitle: id => ipcRenderer.invoke('setTitle',id),
   info: () => ipcRenderer.invoke('info'),
   checkUpdate: () => ipcRenderer.invoke('checkUpdate'),
