@@ -39,9 +39,10 @@ function usageInfo() {
 function sampleUsage(up, now = Date.now()) {
   const elapsed = usageSample === null ? 0 : now - usageSample;
   if (up === true && usageActive && elapsed > 0 && elapsed <= 10000) cfg.hudUseSeconds = usageInfo().seconds + elapsed/1000;
+  const wasActive = usageActive;
   usageSample = now;
   usageActive = up === true;
-  if (now - usageSavedAt >= 60000 || up !== true) { saveCfg(); usageSavedAt = now; }
+  if ((usageActive && now - usageSavedAt >= 60000) || (wasActive && !usageActive)) { saveCfg(); usageSavedAt = now; }
 }
 // End usage rank
 
