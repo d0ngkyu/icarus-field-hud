@@ -527,7 +527,7 @@ A/B/C 모두 종료 프로토콜, 업데이트 실패 표시, 개인 월드 격�
 - Codex stable .31, source 90e9b040c2b16b3e9f98282d0683f8a270aa7ef4 (PR17). 84개 통과, 명시 브랜치 URL 응답 검증. package.json updateUrl만 변경. 기존 PC는 기존 updater에 정상 주소를 전달하는 일회 복구 실행으로 설치하며 게임 상태 재검사/다운로드 hash/원자 교체를 유지.
 
 
-## 진행 중 · SOLO-RESIZE-021
+## 착수 기록 · SOLO-RESIZE-021 (아래 게시 결과 참조)
 - Codex / codex/solo-items / 독립 도구 0.3.2: 고정 창 해제, 기본 980x650, 창 크기에 맞춘 배치와 크기 기억. source/solo-items 및 standalone만 소유. HUD UPDATE-URL 작업과 별도. TASKS 동시 갱신 409 후 최신 기록 재조회·보존하여 재시도.
 
 
@@ -538,3 +538,10 @@ A/B/C 모두 종료 프로토콜, 업데이트 실패 표시, 개인 월드 격�
 ## UPDATE-URL-020 완료 / USAGE-RANK-021 진행
 - .31 Actions 43563556171 성공, source90e9b040, 배포7526ef7. 기존 /main도 .31 응답 확인. 복구 보조실행은 자동검토 blocked by policy(세부없음)로 실행 안 됨. 현재 게임 실행 확인으로 설치 보류. Claude .30 적용 기록 확인. 기본 안전 업데이트로 다음 종료 후 .31 이상 적용.
 - Codex source/app/main.js 누적 사용 집계와 source/mod/hud/index.html 상단 배지/업데이트 문구 담당. 사용자 요청 사용시간 LV+칭호, 기존 Lv.1 생존 새내기 제거. 게임과 HUD 동시실행 시간(기존3초 게임확인 재사용), 분당 저장, 장기 정지/오프라인 제외. 로컬 누적치로 시작, 과거시간 추정 없음. 업데이트 버튼 패치 왔슈?로 분리. 다른 UI 섹터 변경 없음.
+
+
+## SOLO-RESIZE-021 · 0.3.2 게시 완료 / PC 설치 대기
+- 고정 창을 Sizable로 변경, 최대화/복원 활성, 기본 client980x650·최소860x580. 창에 맞춰 버튼/글꼴/목록/배경을 같은 기준 좌표에서 배치, 반복 확대축소 누적 오차 방지. window-size.txt에 마지막 일반 창 크기 저장 및 다음 실행 화면 범위 제한. 새 탭도 현재 크기로 배치, 검색 목록 열폭 보완. 게임 기능 변경 없음.
+- 최종 layout-test 통과: 4개 크기 왕복 × 8탭의 컨트롤 경계, 미적용 체력200 값/dirty 유지, Sizable/MaximizeBox 확인. Windows 실제 새 작은 창과 최대화 접근성 확인. 다른 창 및 사용자 입력으로 전체 스크린샷/마우스 드래그 검증은 제한됨. 모든 DPI 조합 검증 아님.
+- source128b808fb82c5922017c02e81cf6512e287f69c3, manifest02df110095befadf2f7550a3b03f0378cd9a06b6. 원격 ZIP 재다운로드 SHA256 2bd76cf584bb3ec672c00fad6387124b3c18b17846aa956e5dcf2d7f8555d521 일치, 실 CDN0.3.2 확인. 원격 fetch 후 source 의미 diff 없음. 출력 IcarusSoloTools-0.3.2.zip.
+- PC: 작업 중 Icarus 게임 실행 시작 확인. 기존 안전 정책으로 설치본0.3.1 교체는 수행하지 않음. 새0.3.2 빌드 창을 실행해 둠(즉시 크기 조절 가능). 게임 종료 후 도구를 닫고 바탕화면 실행기로 열면 기존 자동 updater가0.3.2 적용. 실제 PC0.3.2 설치 완료로 주장하지 않음. 게임/HUD 종료·설치 파일 강제 교체 없음. 독립 채널 배포 소유 해제.
