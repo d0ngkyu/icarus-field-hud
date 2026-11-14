@@ -18,8 +18,10 @@ add(M + 'Keybinds/Scripts/main.lua', UP + '/ue4ss/Mods/Keybinds/Scripts/main.lua
 H = '/home/claude/mod/'
 add(M + 'IcarusHUD/enabled.txt', H + 'enabled.txt')
 add(M + 'IcarusHUD/Scripts/main.lua', H + 'Scripts/main.lua')
+add(M + 'IcarusHUD/Scripts/animals.lua', H + 'Scripts/animals.lua')
 add(M + 'IcarusHUD/Scripts/bp_names.lua', UP + '/ue4ss/Mods/IcarusHUD/Scripts/bp_names.lua')
 add(M + 'IcarusHUD/hud/index.html', H + 'hud/index.html')
+add(M + 'IcarusHUD/hud/animals.js', H + 'hud/animals.js')
 add(M + 'IcarusHUD/hud/icons.webp', H + 'hud/icons.webp')
 for f in sorted(os.listdir(H + 'hud/fonts')): add(M + 'IcarusHUD/hud/fonts/' + f, H + 'hud/fonts/' + f)
 for f in sorted(os.listdir(H + 'hud/maps')): add(M + 'IcarusHUD/hud/maps/' + f, H + 'hud/maps/' + f)
