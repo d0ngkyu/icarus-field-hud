@@ -393,3 +393,7 @@
 - 소스/불변 ZIP 커밋 c939e63e3f4f1fc0cc6d361b6026fd67a47546fa, manifest 게시 0546a755aa6de1f5c927da21ed9be01b232525cf. 원격 ZIP 재다운로드 SHA256 a9a5a15fd69d11bbeaf1d36bb7cb8f98d85f14fa2e550e0d076716845920c297, 내부9개 전부 검증. 실 CDN manifest 0.3.0 확인. source diff는 두 라이선스의 CRLF/LF 차이만 있고 나머지 일치(의미 비교 전체 일치).
 - PC 실제 설치: %LOCALAPPDATA%/Programs/IcarusSoloTools 9개 파일 hash/크기 일치. 사용자 요청 바탕화면 ‘아이카루스 싱글 도구.exe’(실행기) 생성, SHA256 360CB67D429C98468495B4311E894A33C4F8C8FF46E64E2EE5F4DC69DF45A36B. 설치본 --self-test 통과. 출력 IcarusSoloTools-0.3.0.zip. 작업 마지막 확인 시 실제 게임의 998 PAK 없음: 도구가 실제 조절값을 적용한 것으로 주장하지 않음.
 - 완료 범위: 도구/업데이트 채널/바탕화면 설치. 다음: 사용자 별도 싱글 월드에서 작은 변경 적용·아이템1개 확인, 길동무와 실제 동시사용 검증. SAVE-FIX/HUD stable/Claude beta 소유권 변경 없음. 자동 AI 실행/상시 agent 감시는 추가하지 않음.
+
+
+## 진행 중 · THREE-REVIEW-018
+- Codex · 사용자 명시 요청으로 3개 독립 검토 에이전트: 안정성/호스트 저장·종료, 사용성/디자인·성능, 데이터 정확성/배포. main be8fd13 및 stable .29 기준 읽기 검토와 합성 재현, 이후 상호 반박 후 우선순위 합의. 제품/설치 파일·게임 조작 없음, 검토 문서/기록만 담당. SOLO-SUITE 별도 작업 보존. 실제 검증과 의심을 구분하며 에이전트 수를 독립성/정확성 보장으로 표현하지 않음.
