@@ -1,3 +1,6 @@
 *.exe
 self-test.txt
 error.txt
+suite-test.txt
+test-work/
+release/

@@ -15,7 +15,7 @@ public class Item {
     public string name {get;set;}
     public string english {get;set;}
 }
-public class ItemTool : Form {
+public partial class ItemTool : Form {
     static readonly string Base = AppDomain.CurrentDomain.BaseDirectory;
     static readonly Encoding Utf8 = new UTF8Encoding(false);
     readonly TextBox game = new TextBox(), search = new TextBox();
@@ -93,16 +93,15 @@ public class ItemTool : Form {
     }
     public ItemTool() {
         catalog=LoadCatalog();
-        Text="ICARUS · 아이템 보급소";
+        Text="ICARUS · 싱글 도구";
         ClientSize=new Size(1040,800); FormBorderStyle=FormBorderStyle.FixedSingle;MaximizeBox=false;
         StartPosition=FormStartPosition.CenterScreen;
         Font=new Font("맑은 고딕",10); BackColor=Color.FromArgb(14,19,25);ForeColor=Color.FromArgb(232,237,242);DoubleBuffered=true;
         AutoScaleMode=AutoScaleMode.None;
         var brand=TextLabel("I C A R U S   /   F I E L D   S U P P L Y",30,24,600,22);brand.ForeColor=gold;brand.Font=new Font("Segoe UI",9,FontStyle.Bold);
-        TextLabel("아이템 보급소",27,54,640,48).Font=new Font("맑은 고딕",26,FontStyle.Bold);
-        TextLabel("탐험에 필요한 것을 찾고, 다음 여정을 준비하세요.",30,113,700,25).ForeColor=muted;
+        TextLabel("아이카루스 싱글 도구",27,51,640,44).Font=new Font("맑은 고딕",23,FontStyle.Bold);
         var badge=TextLabel("●  SINGLE PLAYER",814,48,198,30);badge.ForeColor=gold;badge.TextAlign=ContentAlignment.MiddleRight;badge.Font=new Font("Segoe UI",10,FontStyle.Bold);
-        var version=TextLabel("DESKTOP EDITION   /   0.2",784,84,228,24);version.ForeColor=muted;version.TextAlign=ContentAlignment.MiddleRight;version.Font=new Font("Segoe UI",9);
+        var version=TextLabel("DESKTOP EDITION   /   "+Updater.CurrentVersion,784,84,228,24);version.ForeColor=muted;version.TextAlign=ContentAlignment.MiddleRight;version.Font=new Font("Segoe UI",9);
         game.Text=@"C:\Program Files (x86)\Steam\steamapps\common\Icarus";
         TextLabel("게임 연결",48,666,130,24).Font=new Font("맑은 고딕",10,FontStyle.Bold);
         TextLabel("처음 한 번, 게임을 종료한 상태에서 모드를 설치하세요.",170,666,790,24).ForeColor=muted;
@@ -168,7 +167,7 @@ public class ItemTool : Form {
         message.Text="준비됨  ·  아이템을 선택해 보급 요청을 준비하세요.";
         message.ForeColor=muted;message.Font=new Font("맑은 고딕",9);Add(message,28,762,984,32);
         timer.Interval=1000;timer.Tick+=(o,e)=>ReadStatus();timer.Start();
-        FormClosed+=(o,e)=>{timer.Dispose();rowHeight.Dispose();};FilterItems();
+        FormClosed+=(o,e)=>{timer.Dispose();rowHeight.Dispose();};FilterItems();InitializeSuite();
     }
     void FilterItems() {
         string q=search.Text.Trim();list.BeginUpdate();list.Items.Clear();
@@ -199,12 +198,17 @@ public class ItemTool : Form {
     }
     [STAThread] public static int Main(string[] args) {
         try {
+            if(args.Length==3&&args[0]=="--apply-update"){Updater.RunHelper(args);return 0;}
             if(args.Contains("--self-test")){SelfTest();return 0;}
+            if(args.Contains("--suite-test")){SuiteTests.Run(Base);return 0;}
             Application.EnableVisualStyles();Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new ItemTool());return 0;
+            bool created;using(var mutex=new System.Threading.Mutex(true,"Local\\IcarusSoloTools",out created)){
+                if(!created){MessageBox.Show("싱글 도구가 이미 실행 중입니다. 작업 표시줄에서 열어 주세요.","아이카루스 싱글 도구");return 0;}
+                Application.Run(new ItemTool());mutex.ReleaseMutex();return 0;
+            }
         } catch(Exception ex) {
             File.WriteAllText(Path.Combine(Base,"error.txt"),ex.ToString(),Utf8);
-            if(!args.Contains("--self-test")) MessageBox.Show(ex.Message,"실행 오류");
+            if(!args.Contains("--self-test")&&!args.Contains("--suite-test")) MessageBox.Show(ex.Message,"실행 오류");
             return 1;
         }
     }
