@@ -15,6 +15,7 @@ const saveCfg = () => { try { fs.mkdirSync(path.dirname(cfgFile()), { recursive:
 const UPD = require('./updater.js');
 const PKG = (() => { try { return require('./package.json'); } catch (e) { return {}; } })();
 const UPDATE_URL = process.env.HUD_UPDATE_URL || PKG.updateUrl || '';
+function installedVersion(){try{return fs.readFileSync(path.join(UPD.modDir(gameDir),'version.txt'),'utf8').trim()||PKG.contentVersion||'';}catch(e){return PKG.contentVersion||'';}}
 let gameDir = null, lastUpd = null, lastLiveAt = 0, doctor = null;
 let lastNoteAt = 0;
 const sendDiag = n => { lastNoteAt = Date.now(); ulog('diag: ' + n.text); if (win && !win.isDestroyed()) win.webContents.send('diag', n); };
@@ -185,7 +186,7 @@ ipcMain.handle('toggleTop', () => toggleTop());
 ipcMain.handle('toggleCompact', () => toggleCompact());
 ipcMain.handle('minimize', () => win.minimize());
 ipcMain.handle('hide', () => win.hide());
-ipcMain.handle('info', () => ({ usage: usageInfo(), version: (lastUpd && lastUpd.version) || PKG.contentVersion || '', app: app.getVersion(), game: gameDir, last: lastUpd && { at: lastUpd.at, changed: lastUpd.changed.length } }));
+ipcMain.handle('info', () => ({ usage: usageInfo(), version: installedVersion(), app: app.getVersion(), game: gameDir, last: lastUpd && { at: lastUpd.at, changed: lastUpd.changed.length } }));
 // ---------- problem check ----------
 ipcMain.handle('diagStatus', () => (doctor ? doctor.status() : null));
 ipcMain.handle('setSafe', (_e, on) => { if (doctor) doctor.setSafeMode(!!on); return doctor ? doctor.status() : null; });
@@ -273,7 +274,7 @@ async function start() {
   try {
     const { Doctor } = require('./diag.js');
     doctor = new Doctor(gameDir, UPD.modDir(gameDir), app.getPath('userData'), ulog);
-    const look = () => { try { doctor.keepLog(); const n = doctor.check((lastUpd && lastUpd.version) || PKG.contentVersion || ''); if (n) sendDiag(n); } catch (e) { ulog('diag failed: ' + e.message); } };
+    const look = () => { try { doctor.keepLog(); const n = doctor.check(installedVersion()); if (n) sendDiag(n); } catch (e) { ulog('diag failed: ' + e.message); } };
     setTimeout(look, 4000); setInterval(look, 30000);
   } catch (e) { ulog('diag not started: ' + e.message); }
   // on the PC that builds updates only: copy map level files out of the game, outside the game process
@@ -327,7 +328,7 @@ function watchGame() {
       if (up) { seen = true; gone = 0; return; }
       if (!seen || cfg.closeWithGame === false || ++gone < 2) return;
       let note = null;
-      try { if (doctor) note = doctor.check((lastUpd && lastUpd.version) || PKG.contentVersion || ''); }
+      try { if (doctor) note = doctor.check(installedVersion()); }
       catch (e) { ulog('exit diagnosis failed; original game crash files remain: ' + e.message); }
       if (note) ulog('exit diagnosis: ' + note.text);
       try { if (doctor) fs.writeFileSync(path.join(app.getPath('userData'), 'last-exit-report.txt'), doctor.report({reason:'game closed'})); }
