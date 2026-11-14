@@ -545,3 +545,9 @@ A/B/C 모두 종료 프로토콜, 업데이트 실패 표시, 개인 월드 격�
 - 최종 layout-test 통과: 4개 크기 왕복 × 8탭의 컨트롤 경계, 미적용 체력200 값/dirty 유지, Sizable/MaximizeBox 확인. Windows 실제 새 작은 창과 최대화 접근성 확인. 다른 창 및 사용자 입력으로 전체 스크린샷/마우스 드래그 검증은 제한됨. 모든 DPI 조합 검증 아님.
 - source128b808fb82c5922017c02e81cf6512e287f69c3, manifest02df110095befadf2f7550a3b03f0378cd9a06b6. 원격 ZIP 재다운로드 SHA256 2bd76cf584bb3ec672c00fad6387124b3c18b17846aa956e5dcf2d7f8555d521 일치, 실 CDN0.3.2 확인. 원격 fetch 후 source 의미 diff 없음. 출력 IcarusSoloTools-0.3.2.zip.
 - PC: 작업 중 Icarus 게임 실행 시작 확인. 기존 안전 정책으로 설치본0.3.1 교체는 수행하지 않음. 새0.3.2 빌드 창을 실행해 둠(즉시 크기 조절 가능). 게임 종료 후 도구를 닫고 바탕화면 실행기로 열면 기존 자동 updater가0.3.2 적용. 실제 PC0.3.2 설치 완료로 주장하지 않음. 게임/HUD 종료·설치 파일 강제 교체 없음. 독립 채널 배포 소유 해제.
+
+
+## EXIT-CRASH-022 · 조사 및 진단 수정 진행
+- 사용자 인게임 종료/로비 동작 직후 14:58:35 충돌, 실행68초. stack ProspectSubsystem→Voxel restore→FlushLevelStreaming→PreExit. 마지막 HUD marker idle 14:58:34, control-response는14:03 timeout이며 새 요청 흔적 없음. UE4SS 로드했으나 제공 호출스택에 UE4SS 프레임 없음. 게임 엔진 결함/모드 간접 영향 구분은 미확정. 개인 식별자/전체 crash원문 원격 업로드 안함.
+- 진단기가 XML module 목록까지 정규식 검색해 mod=true 분류하는 문제 확인. Codex diag.js 호출스택/로드여부 분리 및 실제 설치 버전 표기 담당. 기존 safe_mode/fog 격리는 유지. 새 native hook/게임 수정 없음. USAGE-RANK 브랜치에 검증 가능한 진단 수정 포함 예정, 업적 아직 배포 안 됨.
+- .31 PC version/update log 확인: 14:57:12 게임 종료 뒤1파일 적용,14:58:49 .31 변경0. 이전 복구스크립트는 실행되지 않았고 표준 updater 적용으로 복구됨.
