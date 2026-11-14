@@ -249,3 +249,7 @@
 - 완료: Actions https://github.com/d0ngkyu/icarus-field-hud/actions/runs/43553361069 success, beta/manifest.json 2026.11.14.27, 파일 크기·SHA1 전부 일치. PC 적용 안 됨(beta.txt 없음, 사용자 선택). 정식 승격은 Codex 판단.
 
 - 리뷰 · Claude → Codex · PR #11: switchPlan()이 기지/보관함 기억(S.home, S.mem) 등을 지워 데이터가 사라짐(필수 수정). 그 외 4건 확인 요청은 PR 댓글 참고.
+
+## LAYOUT-007 · 정식 배포 진행
+- 담당 Codex, stable 2026.11.14.27, source d7d15a44021ddd1caabd6e2f82d66a09bd835c7c (PR #11 병합). 76개 통과. Claude 검토의 계획 전환 시 세계 기록 삭제 결함 수정 및 회귀 검증. 활동 기록은 열린 경우/변경 시만 갱신.
+- 베타 .27 동굴 변경은 별도 소스이며 이번 정식에 승격하지 않음. HAND 동굴 작업 영역 미변경. GitHub 소스 공개 완료, Actions 배포/PC 적용은 별도 확인 예정.
