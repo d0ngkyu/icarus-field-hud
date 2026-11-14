@@ -359,7 +359,7 @@
 - 실제 게임 종료 확인 후 기존 HUD를 열어 업데이트 클릭. 현재 CDN 응답은 아직 .28이며 PC 적용 확인 진행 중. 서버/세이브 쓰기 명령이나 강제 종료 없음. 실제 저장 완료 보장은 아직 미검증.
 
 
-## 진행 중 · SOLO-SUITE-015
+## SOLO-SUITE-015 · 착수 기록 (아래 완료 참조)
 - Codex · codex/solo-items · 사용자 요청: 프로그램 수정 시 자동 다운로드/교체 및 체력 한도, 스태미나 소모, 산소/허기/갈증, 인벤토리 무게, 내구도, 달리기 속도 탭 추가. 독립 source/solo-items/ 및 standalone/ 배포 경로만 소유. 기존 HUD stable/SAVE-FIX 영역과 분리. 설치 data.pak에서 기본 능력치, 행동 스태미나 비용, 내구도 테이블을 읽어 검증 중. 종료 후 적용형 데이터 모드와 원복, 검증된 자동 업데이트 구현 예정. 실게임 수치 반영은 별도 확인.
 
 
@@ -382,3 +382,14 @@
 - PR #15: 흑연/샴페인 골드 나침반 I 생성 아이콘, source/app/icon.png(256px)와 design/hud-gold.ico(16~256px 7종) 원격 보관. Git blob 7fca2ba25216ac9da3dcc097fdd98b4da02da8d2 / 70f552cf035565309346e9744e30509b6a631849 로컬과 일치. 바탕화면 실행기 소스 source/tools/HudLauncher.cs 보관.
 - 사용자 바탕화면 이카루스 HUD.exe 아이콘 실제 교체, 이전 exe workspace 백업. --check exit0, exe에서 추출한 32px 아이콘 시각 확인. 새 exe SHA256 FF4F98E6C54F2BABD71AA64F35E6EA83AE1C1924654745C3890EDB68D2B7C46D. Explorer 캐시의 즉시 갱신 여부는 직접 확인하지 않음.
 - 내장 image_gen 생성, 투명 PNG 보존 및 다중 크기 ICO 패키징. 출력 outputs/icarus-hud-gold.png, icarus-hud.ico. 앱 창/트레이 아이콘은 다음 정식 묶음 배포 시 적용; 현재 stable .29 변경 없음. 게임/서버 실행 또는 종료 안 함. 본 작업 소유 해제.
+
+
+## SOLO-SUITE-015 · 개인용 0.3.0 제작·원격 공개·PC 설치 (2026-11-14)
+- 사용자: 개인 혼자 사용, 기존 길동무와 충돌 최소화/가벼움/어린이도 쉬운 조작, 바탕화면 exe, 수정 완료마다 자동 다운로드·교체. 참고 사이트 https://www.wemod.com/ko/cheats/icarus-trainers 직접 확인. 기능 목록/간단한 제어를 참고하되 무적/무한 내구도/실시간 기능으로 과장하지 않음. 세부 source/solo-items/REFERENCE.md.
+- 구현: 아이템/체력/스태미나/생존/무게/내구도/달리기/설정 8탭. 기본/절반/소모없음/2배 등 버튼과 슬라이더. 체력 기본 최대치 1~3배, 행동 비용0~100%, 산소/음식/물 기본 소모0~100%, 휴대 한도1~5배, 장비 최대 내구도1~5배, 달리기1~2배. 원본 data.pak 읽기→별도 998-IcarusSoloTools_P.pak 생성, 게임/서버 종료 가드, 타 PAK 테이블 충돌 검사, own hash/게임 업데이트 검사, 백업/기본값 복원. 캐릭터 세이브 직접 편집 없음. 멀티 사용 전 원복 안내.
+- 길동무 분리: 기존 HUD 파일/설정/배포 채널 변경 없음, 별도 모드·상태 폴더. HUD Lua에서 F11/도구명 충돌 문자열 없음 확인. Native .NET 앱, 웹 서버/Electron/상시 게임 스캔 없음. UI 응답 대기용1초 timer는 요청 없으면 즉시 반환, 업데이트 시작 시/15분마다. UI 조작/자동화 중 메모리 약80~118MiB 관측; 통제된 idle/FPS/장시간 동시사용 시험은 아니므로 성능 무영향/무충돌 보장하지 않음.
+- 자동 업데이트: codex/solo-items/standalone/manifest.json, 불변 commit ZIP 주소, 패키지 및 9개 파일 SHA256/크기/허용 경로 검증, 종료 helper의 교체/복구. 게임 실행/설정 편집/아이템 요청 중 교체 보류. 별도 사용자 설정 유지. 기존 own Lua 모드는 다음 앱 시작 때 게임 종료 상태에서만 갱신. 배포 절차 source/solo-items/RELEASE.md 및 Package.ps1. 이후 이 도구 수정 완료 시 version 증가·검증·새 불변 package·manifest 게시를 수행한다.
+- 검증: 실행 파일 자체 검사 통과, suite 12개 결과(실제 설치 데이터 매핑, 걷기/탈것/배치물 유지, 가상 설치 PAK 생성·읽기·기본값 원복, 실행 가드/외부변경 보호, 업데이트 ZIP/각파일/정상 교체/중간실패 복구/변조·경로·중복 차단). Lua 생성 모의5개는 앞선 결과, 이번 Lua 변경 없음. Windows 실제 탭/접근성 확인; 사용자 입력으로 UI 클릭 자동화가 중단되어 생존 탭 전체 조작은 미확인. 실게임 수치 반영/아이템 지급은 미검증.
+- 소스/불변 ZIP 커밋 c939e63e3f4f1fc0cc6d361b6026fd67a47546fa, manifest 게시 0546a755aa6de1f5c927da21ed9be01b232525cf. 원격 ZIP 재다운로드 SHA256 a9a5a15fd69d11bbeaf1d36bb7cb8f98d85f14fa2e550e0d076716845920c297, 내부9개 전부 검증. 실 CDN manifest 0.3.0 확인. source diff는 두 라이선스의 CRLF/LF 차이만 있고 나머지 일치(의미 비교 전체 일치).
+- PC 실제 설치: %LOCALAPPDATA%/Programs/IcarusSoloTools 9개 파일 hash/크기 일치. 사용자 요청 바탕화면 ‘아이카루스 싱글 도구.exe’(실행기) 생성, SHA256 360CB67D429C98468495B4311E894A33C4F8C8FF46E64E2EE5F4DC69DF45A36B. 설치본 --self-test 통과. 출력 IcarusSoloTools-0.3.0.zip. 작업 마지막 확인 시 실제 게임의 998 PAK 없음: 도구가 실제 조절값을 적용한 것으로 주장하지 않음.
+- 완료 범위: 도구/업데이트 채널/바탕화면 설치. 다음: 사용자 별도 싱글 월드에서 작은 변경 적용·아이템1개 확인, 길동무와 실제 동시사용 검증. SAVE-FIX/HUD stable/Claude beta 소유권 변경 없음. 자동 AI 실행/상시 agent 감시는 추가하지 않음.
