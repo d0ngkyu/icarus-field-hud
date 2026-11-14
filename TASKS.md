@@ -230,3 +230,7 @@
 - 원격 fetch 뒤 .26 manifest의 30개 파일 전부 크기/SHA1 확인: root files와 releases/stable/2026.11.14.26/files 모두 일치. 베타 updater/단일 workflow 준비 완료; 첫 beta 공개는 담당 Claude가 동일 workflow로 진행(현재 beta manifest 미발행). beta.txt 없는 기본 PC는 정식만 받음.
 - PC 읽기 확인: version.txt .25, beta.txt 없음. .26 PC 설치 적용은 아직 확인 안 됨. 실행 중 설치 파일 수동 교체/프로세스 종료 안 함. 다음 안전 업데이트에서 적용. 실게임/실제 베타 설치 시험 아님.
 - 실제 Actions는 순차 실행·해시/버전 검증 성공. 동시 두 요청의 실실행 부하 시험은 하지 않았으며 GitHub concurrency queue:max 설정 사용. 동일 계정에서 AI 이름별 접근 통제는 협업 규칙 한계. 최신 절차 RELEASE-CHANNELS.md.
+
+## LAYOUT-007 · Codex 진행
+- 사용자 요청: 전체 레이아웃 간결화, 코치 목표 앞/뒤 선택과 서버별 계획, 최근 기록 별도 탭, 제작/네비 재구성, 지도 도구 설명, 동물 자동 저장·불러오기/방사형 스탯/1~8 확률 게이지, 설정 정리, 항상 위 버튼과 탭별 상태표시 수정.
+- 기준 ed6cff3/.26, codex/layout-refresh. 소유: HUD layout.js/css 신규 및 index.html 연결, animals.js, Electron 항상 위 동작, 관련 시험. 동굴 데이터/함수와 위험한 native 읽기 범위는 변경하지 않음. 제작 자료는 현재 bag/near 합산이라 작업대 실시간 완성으로 오인시키지 않도록 자동 준비완료 표시 제거·준비 계획으로 간소화 예정. 위험 native 수집 확대 없이 UI에서 정확히 구분.
