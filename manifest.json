@@ -1,6 +1,6 @@
 {
- "version": "2026.11.14.24",
- "notes": "동굴 레벨에 광석 수 반영, 수중 동굴 = 입구가 물속, 동굴 이름 간단하게",
+ "version": "2026.11.14.25",
+ "notes": "v1: 경로 저장·방문 안개·동물 교배 확률·설정 접기(Codex PR #9), 수중 동굴 바로잡기·손으로 만든 동굴 추가·동굴 '물 있음' 표시",
  "config": {},
  "files": [
   {
@@ -67,13 +67,13 @@
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/index.html",
-   "n": 951620,
-   "h": "f48036ff551684faa7e2a5918cd0ba04c78e6ca6"
+   "n": 960799,
+   "h": "a4b3fca82f602b8f47b2833365be45304ddfb523"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/animals.js",
-   "n": 17264,
-   "h": "ecb57802d5c58f19788ff985627bfcda105cae0f"
+   "n": 35142,
+   "h": "666f288ae55faab1da09b6132162a445edd7e55d"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/icons.webp",

@@ -198,3 +198,10 @@
 - 최종 Node+Fengari 69개 통과, 합성 브라우저 6탭/경로2.13km 저장 유지/안개/설정/출생 확률 확인. 모델20쌍×12,000회 Node 199ms, 실제 FPS 아님. 실제 게임·유전공식 적중 검증/배포 남음.
 - 세부 근거와 가정·v1 마감 조건: V1-POLISH-REVIEW.md. GamesOMG의 공개 서버 분석을 근사 구현한 모델이며 현재 설치본 바이너리와 검증하지 않았음. 평균/최대치%를 출생 확률로 사용하지 않음. 실측 관측은 보조 검증.
 
+
+## 2026-11-14 12:20 · Claude · 2026.11.14.25 배포 (v1 PR #9 + 동굴 수정)
+- PR #9(codex/v1-ready b321a69) main에 병합(TASKS.md 충돌만 양쪽 보존). Node 69개 통과, animals_read_once 통과.
+- 사용자 비교(icarusintel)로 확인한 동굴 오류 수정:
+  - F15 호숫가 CF_SML_001이 "수중"으로 잘못 표시 → 자동 생성 동굴은 입구가 호수 윤곽 안 + 수면 1m 아래일 때만 수중(사실상 없음). icarusintel "PROPERTIES: WATER" = 동굴 안 물 → "물 있음"으로 따로 표시(row[10]).
+  - N10 호수 수중 동굴 누락 → 원인: 손으로 배치한 동굴은 Generated가 아니라 `Sublevels/Developer/*`의 `BP_Cave_C`(입구 CachedEntranceTransforms) + `CaveEntrance_C`(BaseCaveTag)에 있음. job d1(헤더)/d2(Developer uexp)로 복사해 추가(올림푸스 8, 스틱스 7 등). 이 동굴은 호수 테두리 60m 안 + 수면보다 낮으면 수중 → N10 CF_MED_003 수중 확인. 도구 source/tools/mapdev.py.
+- 배포: GitHub main/manifest 2026.11.14.25 = 배포 완료. PC 적용: 게임 실행 중이라 HUD 파일만 직접 반영(아래 기록), 앱 업데이트는 게임 종료 후 자동.
