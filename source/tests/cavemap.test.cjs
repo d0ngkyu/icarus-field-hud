@@ -1,6 +1,6 @@
 // Whole-map cave list (from the game's map files): every cave has exactly one level 1-4, and the map caves draw.
 const test = require('node:test'); const assert = require('node:assert'); const fs = require('fs'); const path = require('path');
-const html = fs.readFileSync(path.join(__dirname, '../mod/hud/index.html'), 'utf8');
+const html = fs.readFileSync(path.join(__dirname, '../mod/hud/index.html'), 'utf8').replace(/\r\n/g,'\n');
 const CAVEMAP = JSON.parse(html.match(/const CAVEMAP=(\{.*?\});\n/)[1]);
 test('every main map has its caves, one level each', () => {
   for (const m of ['Terrain_016', 'Terrain_017', 'Terrain_019', 'Terrain_021', 'Terrain_022']) {

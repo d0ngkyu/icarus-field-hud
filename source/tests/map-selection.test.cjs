@@ -5,12 +5,12 @@ const html=fs.readFileSync(path.join(__dirname,'../mod/hud/index.html'),'utf8').
 function harness(){
  const nodes=new Map(),noop=()=>{};
  const ctx=new Proxy({createRadialGradient:()=>({addColorStop:noop}),measureText:()=>({width:10})},{get:(o,k)=>o[k]||noop,set:(o,k,v)=>(o[k]=v,true)});
- const node=id=>{if(!nodes.has(id))nodes.set(id,{value:'',style:{},dataset:{},classList:{toggle:noop,add:noop,remove:noop,contains:()=>true},addEventListener:noop,getContext:()=>ctx,getBoundingClientRect:()=>({width:800,height:600}),setPointerCapture:noop});return nodes.get(id)};
+ const node=id=>{if(!nodes.has(id))nodes.set(id,{value:'',style:{},dataset:{},classList:{toggle:noop,add:noop,remove:noop,contains:()=>true},events:{},setAttribute(k,v){this[k]=v},addEventListener(k,f){this.events[k]=f},getContext:()=>ctx,getBoundingClientRect:()=>({width:800,height:600}),setPointerCapture:noop});return nodes.get(id)};
  let now=1000;const clock=class extends Date{static now(){return now}};
  const c=vm.createContext({S:{},I:{},D:{},Date:clock,console,save:noop,draw:noop,allBoxes:()=>[],addLog:noop,nm:x=>x,en:x=>x,esc:x=>x,document:{body:node("body"),getElementById:node,createElement:node,querySelector:()=>node('query'),addEventListener:noop},window:{addEventListener:noop},Image:class{},setInterval:noop,setTimeout:noop,clearTimeout:noop,requestAnimationFrame:noop});
  let code=html.slice(html.indexOf('(()=>{\n// ===== interactive map:'),html.indexOf('</script>',html.indexOf('// ===== interactive map:')));
  assert.ok(code.length>1000);
- code=code.replace(/\}\)\(\);\s*$/, 'window.test={session,M,selectMap,wpButton,dedupCaves,resize,drawMap,V,fitMap};})();');
+ code=code.replace(/\}\)\(\);\s*$/, 'window.test={session,M,selectMap,wpButton,dedupCaves,resize,drawMap,V,fitMap,addRoutePoint,finishPath,pathDistance,markSeen,drawVisitedFog};})();');
  vm.runInContext(code,c);return {c,t:c.window.test,node,tick:n=>{now=n},ingest:m=>c.window.__mapIngest(m)};
 }
 test('offline browsing and independent per-world pins, paths and views',()=>{
@@ -33,4 +33,13 @@ test('actual world transition isolates and restores remembered base and containe
 test('all inline scripts parse and offline map renders with no native calls',()=>{
  for(const m of html.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/g))if(!m[0].includes('application/json'))new vm.Script(m[1]);
  const h=harness();h.t.resize();h.t.drawMap();assert.match(h.node('mapworld').textContent,/미접속/);assert.equal(h.node('mtme').disabled,true);
+});
+test('route tools show first point, reject duplicate points, save and allow explicit cancel',()=>{
+ const {t,node}=harness();t.resize();t.V.L.paths=0;node('mtpath').onclick();t.addRoutePoint(0,0);assert.equal(node('routefinish').disabled,true);t.addRoutePoint(10000,0);t.addRoutePoint(10000,0);assert.equal(node('routefinish').disabled,false);assert.match(node('routestatus').textContent,/점 2개/);t.finishPath();assert.equal(t.M().paths.length,1);assert.equal(t.M().paths[0].pts.length,2);assert.equal(t.V.L.paths,1);assert.equal(t.pathDistance(t.M().paths[0].pts),100);assert.equal(node('routebar').hidden,true);node('mtpath').onclick();t.addRoutePoint(1,2);node('routecancel').onclick();assert.equal(t.M().paths.length,1);
+});
+test('visited cells change fog revision once, not on repeated stationary telemetry',()=>{
+ const {t}=harness(),m=t.M();t.markSeen(m,0,0);const rev=m.seenRev;assert.equal(rev,9);t.markSeen(m,0,0);assert.equal(m.seenRev,rev);t.markSeen(m,10000,0);assert.equal(m.seenRev,12);t.markSeen(m,NaN,0);assert.equal(m.seenRev,12);
+});
+test('establishing a connection on the viewed map preserves an unfinished route',()=>{
+ const h=harness();h.node('mtpath').onclick();h.t.addRoutePoint(0,0);h.ingest({w:'Terrain_016',t:1});h.tick(2000);h.ingest({w:'Terrain_016',t:2});h.t.addRoutePoint(100,100);h.t.finishPath();assert.equal(h.t.M().paths.length,1);assert.equal(h.t.M().paths[0].pts.length,2);
 });
