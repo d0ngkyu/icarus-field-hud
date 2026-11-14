@@ -289,3 +289,9 @@
 - COMPACT-008 기존 작업/배포 소유권 유지. 기존 HUD/설치 게임 파일 변경 없음. 다음: 허용된 범위에서 패키징/UI 검증, 사용자의 별도 싱글 환경에서 실제 반영 확인. 제재 회피를 보장하지 않는다.
 
 - COMPACT-008 검토 공개: https://github.com/d0ngkyu/icarus-field-hud/pull/12 · source b0731c3931ddf2d18ea67a4bea84efb258d03323 · 81개 검사 통과, 검증 로컬 tree와 원격 일치. 최종 화면 회귀 후 stable 배포 예정. 로컬 SDK 기반 수동 저장/종료는 모의 검사만; 실제 서버 저장/종료 미시험. game_control 단계 진단 차단 추가. SOLO-TUNER 별도 작업 보존.
+
+
+## SOLO-TUNER-010 · 소스 보관/미완료 단계 (2026-11-14)
+- 소폭 편의 조정 소스: https://github.com/d0ngkyu/icarus-field-hud/tree/codex/solo-tuner/source/solo-tuner . 체력/스태미나/무게 +0~25%, 속도 +0~10%, 백업·복원·실행 중 쓰기 차단. 실제 PAK를 쓰는 가상 설치 시험 포함 4개 통과(skip 0). 경험치/재능/실시간/감지 회피 기능 없음. 실제 설치 게임/세이브 수정 없음.
+- 자동 승인 검토가 실행 패키지 생성+로컬 서버 실행 명령을 blocked by policy로 거부(세부 이유 미제공). 패키징·실제 UI·인게임 적용 미완료이며 이를 우회 실행하지 않음. 기본 Git push도 인증 프롬프트 불가로 실패하여 허용된 GitHub 커넥터로 소스를 보관, 원격 README 재조회 확인. 최초 소스 커밋 05ab078a862e693cd8026a9c1256c68c9830ff9b; 이후 README에 소스만 보관 상태를 명시.
+- WeMod 실시간 기능 목록은 확인했으나 Icarus 계정정지 우회/제재 면제 근거는 확인 못 함. 소폭 변경이 감지 회피를 뜻하지 않음. 기존 COMPACT-008/HUD/배포 소유권 유지. 다음: 허용 범위의 패키징/UI 및 싱글 실게임 검증.
