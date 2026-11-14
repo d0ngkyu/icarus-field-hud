@@ -663,6 +663,10 @@ local function readFog(force)
     return string.format('{"cx":%.0f,"cy":%.0f,"ts":%.0f,"o":%d,"r":["%s"]}', cx, cy, ts, o, table.concat(out, '","'))
 end
 
+-- No native references survive a tick. Errors disable this reader for the session.
+local animalReader, animalFailed, lastAnimal = nil, false, nil
+local okAnimal, loadedAnimal = pcall(require, "animals")
+if okAnimal then animalReader = loadedAnimal else log("animal reader unavailable: " .. tostring(loadedAnimal)) end
 WORLD_READY = false
 local function autoTick()
     local t0 = os.clock()
@@ -714,14 +718,22 @@ local function autoTick()
         step("idle")
         if okP then progJ = pj else log("progress read failed: " .. tostring(pj)) end
     end
-    if not poseChanged and not withInv and not progJ and not lmJ and not oreJ and not fogJ then return end
+    local animalJ = nil
+    if tick % 4 == 0 and WORLD_READY and on("animals") and animalReader and not animalFailed then
+        step("animals")
+        local okA, value = pcall(animalReader.read)
+        step("idle")
+        if not okA then animalFailed = true log("animal reader disabled for session: " .. tostring(value))
+        elseif value or lastAnimal then animalJ = value or "null" lastAnimal = value end
+    end
+    if not poseChanged and not withInv and not progJ and not lmJ and not oreJ and not fogJ and not animalJ then return end
     if pose then lastPose = pose end
     seq = seq + 1
     local f = openOut()
     if not f then return end
-    f:write(string.format('window.__icarusLive&&window.__icarusLive({"t":%d,"auto":true,"w":"%s"%s%s%s%s%s%s});\n', seq, worldName(), oreJ and (',"ore":' .. oreJ) or "",
+    f:write(string.format('window.__icarusLive&&window.__icarusLive({"t":%d,"auto":true,"w":"%s"%s%s%s%s%s%s%s});\n', seq, worldName(), oreJ and (',"ore":' .. oreJ) or "",
         pose and (',"p":' .. pose) or "", withInv and (',"inv":{"bag":' .. lastBagJson .. '}') or "",
-        progJ and (',"prog":' .. progJ) or "", lmJ and (',"lm":' .. lmJ) or "", fogJ and (',"fog":' .. fogJ) or ""))
+        progJ and (',"prog":' .. progJ) or "", lmJ and (',"lm":' .. lmJ) or "", fogJ and (',"fog":' .. fogJ) or "", animalJ and (',"animal":' .. animalJ) or ""))
     f:close()
 end
 
@@ -1168,7 +1180,7 @@ if LAUNCH_APP and MODDIR then
         local f = io.open(exe, "rb")
         if f then
             f:close()
-            os.execute('start "" "' .. exe .. '"')
+            os.execute('start "" "' .. exe .. '" --icarus-auto')
             log("started HUD program")
         end
     end)

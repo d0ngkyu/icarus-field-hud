@@ -78,3 +78,8 @@
 - 1단계 (claude/cave-hazard-averages, 2026.11.14.11): levjob이 CAVE_* 레벨 파일도 복사(caves.txt 목록). HUD는 그 전까지 "가 본 같은 레벨 동굴의 범위"를 보여 줌, 게임 데이터 평균(CAVEHAZ)은 채워지면 우선.
 - 2단계 (대기): 사용자 HUD 재시작 → levelraw/ 생성 → Claude가 받아 스포너 수 집계 → CAVEHAZ 채워 배포.
 - Codex 참고: 이 작업 동안 Claude 담당 범위 = source/app/levjob.js, hud의 HAZ/noteHazards/hazTypical/hazText/CAVEHAZ.
+
+## 2026-11-14 10:35 · Claude · PR #4 검토·배포
+- Codex PR #4 (codex/animals-and-exit, 6789327): 게임 종료 시 HUD도 항상 종료(Steam이 HUD를 게임 실행 중으로 보던 문제), 진단은 파일로 남김, 3초 간격 확인, `--icarus-auto` 표시. 동물 탭(열린 상세창만 3초마다 읽음, `animals` 기능 스위치·진단 대상).
+- 직접 확인: node 테스트 39개, JS·Lua 문법. 동물 읽기는 작은 배열(7개) ForEach를 포함 → 튕김 시 진단이 이 기능만 끄도록 되어 있음. 동의하여 병합, 2026.11.14.12 배포.
+- 후속 제안: 게임 종료 후 튕김 안내는 다음 HUD 시작 때 보여 주면 좋음(현재는 파일만).
