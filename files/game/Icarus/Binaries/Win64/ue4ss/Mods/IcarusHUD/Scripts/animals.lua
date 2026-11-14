@@ -3,13 +3,14 @@
 local M = {}
 local keys = {"Vitality", "Endurance", "Muscle", "Agility", "Hardiness", "Toughness", "Utility"}
 local function valid(o) return o and o:IsValid() end
+local function same(a,b) return valid(a) and valid(b) and a:GetFullName()==b:GetFullName() end
 local function text(t)
     if t == nil then return "" end
     if type(t) == "string" then return t end
     return t:ToString()
 end
 local function quote(s)
-    s = tostring(s or ""):sub(1, 300)
+    s = tostring(s or ""):sub(1, 4000)
     return '"' .. s:gsub('[%z\1-\31\\"]', function(c)
         if c == '\\' then return '\\\\' end
         if c == '"' then return '\\"' end
@@ -19,7 +20,7 @@ end
 -- Fewer native reads = fewer chances to crash: the genetics list is read once per opening of a panel, only after
 -- its panel has stayed open for two checks in a row (fully built), and never again after a bad read.
 local cache, bad, pendingId, pendingSeen = {}, {}, nil, 0
-local readOne
+local readOne, liveDetails
 function M.reset()
     cache, bad, pendingId, pendingSeen = {}, {}, nil, 0
 end
@@ -50,7 +51,7 @@ function M.read()
             local actor = panel.LinkedMount
             if not valid(actor) then M.why = "panel open, no linked animal" return nil end
             local id = actor:GetFullName()
-            if cache[id] then M.why = "ok (cached)" return cache[id] end
+            if cache[id] then M.why = "ok (live UI, cached genes)" return liveDetails(panel, actor, cache[id]) end
             if bad[id] then return nil end
             if pendingId ~= id then pendingId, pendingSeen = id, 1 M.why = "panel open, waiting" return nil end
             pendingSeen = pendingSeen + 1
@@ -58,7 +59,7 @@ function M.read()
             bad[id] = true                      -- set first: a failure below never retries this animal
             local value, why = readOne(panel, actor)
             if value then bad[id] = nil cache[id] = value M.why = "ok" else M.why = "read failed: " .. tostring(why) end
-            return value
+            return value and liveDetails(panel, actor, value) or nil
         end
     end
     pendingId, pendingSeen, cache = nil, 0, {}   -- panel closed: read again (once) next time it opens
@@ -92,21 +93,55 @@ readOne = function(panel, actor)
                 if genes[key] == nil then return nil, "missing gene " .. key end
                 geneJson[#geneJson + 1] = quote(key) .. ':' .. genes[key]
             end
-            local stats = {}
+            return '{"id":' .. quote(actor:GetFullName())
+                .. ',"species":' .. quote(species) .. ',"sex":' .. tostring(tonumber(genetics.CreatureSex) or 0)
+                .. ',"genes":{' .. table.concat(geneJson, ',') .. '}'
+        end
+    end
+    return nil
+end
+-- Only plain JSON is cached. Reacquire UI widgets every sample; never retain UObjects.
+liveDetails = function(panel, actor, base)
+            local stats, tips, detail = {}, {}, {}
             local display = panel.UMG_StatDisplayMount
-            if valid(display) then
-                for _, key in ipairs({"Health", "Stamina", "MeleeDamage", "MovementSpeed", "SprintSpeed", "WeightCapacity"}) do
+            if valid(display) and display.Initialised and same(display.TargetActor,actor) then
+                for _, key in ipairs({"Health", "HealthRegen", "Stamina", "StaminaRegen", "MeleeDamage", "MovementSpeed", "SprintSpeed", "WeightCapacity", "ColdRes", "HeatRes", "FallRes", "FireRes", "MeleeRes", "PoisonRes", "ProjectileRes"}) do
                     local item = display[key]
                     if valid(item) and valid(item.StatValue) then
                         stats[#stats + 1] = quote(key) .. ':' .. quote(text(item.StatValue:GetText()))
                     end
                 end
             end
-            return '{"id":' .. quote(actor:GetFullName()) .. ',"name":' .. quote(text(actor.MountName))
-                .. ',"species":' .. quote(species) .. ',"sex":' .. tostring(tonumber(genetics.CreatureSex) or 0)
-                .. ',"genes":{' .. table.concat(geneJson, ',') .. '},"stats":{' .. table.concat(stats, ',') .. '}}'
-        end
+            local geneticsUI = panel.Umg_GeneticsDisplay
+            if valid(geneticsUI) and same(geneticsUI.LinkedActor,actor) then
+                local valuesUI = geneticsUI.Umg_GeneticValues
+                if valid(valuesUI) then for _, key in ipairs(keys) do
+                    local item = valuesUI[key]
+                    if valid(item) then tips[#tips+1] = quote(key) .. ':' .. quote(text(item['Built Tooltip'])) end
+                end end
+            end
+            local extra = panel.UMG_StatsWindow
+            if valid(extra) and extra:IsVisible() and same(extra.BoundActor,actor) and valid(extra.Container) then
+                local count = math.min(extra.Container:GetChildrenCount(), 8)
+                local category = "능력치"
+                for i=0,count-1 do
+                    local list = extra.Container:GetChildAt(i)
+                    if valid(list) and list:GetFullName():match('^UMG_StatList_C ') and valid(list.Stats) then
+                        local n = math.min(list.Stats:GetChildrenCount(), 96)
+                        for j=0,n-1 do
+                            if #detail >= 96 then break end
+                            local item = list.Stats:GetChildAt(j)
+                            if valid(item) and item:IsVisible() then
+                                local cls = item:GetFullName()
+                                if cls:match('^UMG_StatTitleCategory_C ') and valid(item.TitleText) then category=text(item.TitleText:GetText())
+                                elseif cls:match('^UMG_StatTitle_C ') and valid(item.TitleText) and valid(item.StatValue) then
+                                    detail[#detail+1]='{"group":'..quote(category)..',"label":'..quote(text(item.TitleText:GetText()))..',"value":'..quote(text(item.StatValue:GetText()))..'}'
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+            return base .. ',"name":' .. quote(text(actor.MountName)) .. ',"stats":{' .. table.concat(stats, ',') .. '},"tooltips":{' .. table.concat(tips, ',') .. '},"details":[' .. table.concat(detail, ',') .. ']}'
     end
-    return nil
-end
 return M

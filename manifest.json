@@ -1,10 +1,10 @@
 {
- "version": "2026.11.14.33",
+ "version": "2026.11.14.34",
  "channel": "stable",
- "source": "02ff7205fb38f0d4fa7961840fcd56d7b42948c2",
- "notes": "생활 업적 30개 추가 · 전체 화면 클릭/이동/자리비움 집계 · 작은 업적 카드 · 1~9 탭 단축키",
+ "source": "1b97300578a66d1c556fd30dc3bc331cb685dd10",
+ "notes": "동물 현재 능력치·효과 툴팁, 칸 너비 조절, 개인화·테마 보상, 총79개 업적과 인게임 추정 집계, 수동 저장·종료 보호 개선",
  "config": {},
- "filesPath": "releases/stable/2026.11.14.33/files",
+ "filesPath": "releases/stable/2026.11.14.34/files",
  "files": [
   {
    "p": "game/Icarus/Binaries/Win64/dwmapi.dll",
@@ -55,13 +55,13 @@
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/Scripts/main.lua",
-   "n": 45840,
-   "h": "f1280f42915978ff7a73e9c90aacb7b9a64e7d42"
+   "n": 46115,
+   "h": "fbae1fcb7c2dbaea3c0b2e3ca0ea1b1b466637d9"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/Scripts/animals.lua",
-   "n": 5737,
-   "h": "bac2b7d6b37a004bc5fa8d456129bf49fb842ac3"
+   "n": 8354,
+   "h": "58b2451629911ca478da0e58d060ed1c1cc5bbb4"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/Scripts/bp_names.lua",
@@ -70,13 +70,13 @@
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/index.html",
-   "n": 959907,
-   "h": "713ef4badbadfe5071b51d6fbd366dac56c2e577"
+   "n": 959945,
+   "h": "481db290a7500378e72175b11aa20885e36a0ad7"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/animals.js",
-   "n": 43055,
-   "h": "1f0208530a28b14fcd8b950b4c7a1e5350d4b215"
+   "n": 47350,
+   "h": "f0fa225c6da5c6f880474783b872dc4f843fcdab"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/icons.webp",
@@ -125,8 +125,8 @@
   },
   {
    "p": "app/main.js",
-   "n": 24104,
-   "h": "b6b7689d5cb12d1a1a9e8c5b665f9527ecd1257a"
+   "n": 24791,
+   "h": "9ca591f85cfcd0e3c444c0b81cebe5c083759bd8"
   },
   {
    "p": "app/updater.js",
@@ -165,23 +165,23 @@
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/layout.css",
-   "n": 18419,
-   "h": "c4a419e3d884b536d67bf81f1b1aadb9e648faba"
+   "n": 20351,
+   "h": "ea13c7f01a8fb4350dc29d96e46928ec78d380f2"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/layout.js",
-   "n": 29497,
-   "h": "95f36fb50c93aa833671be3ede3af4ad253011de"
+   "n": 33418,
+   "h": "645e65c738c53f0ecc63b38c9f76803584750e76"
   },
   {
    "p": "app/game-control.js",
-   "n": 4526,
-   "h": "7a0f6242290df8a91b3a74f4fc78094f78d33805"
+   "n": 4608,
+   "h": "e3fafb12c93d9c459c5d0f892fd8893ff0051e4e"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/Scripts/game_control.lua",
-   "n": 3247,
-   "h": "d9a96d3f6c1b10dfa4c513386ddc060edcd98681"
+   "n": 3637,
+   "h": "2f9da4f57f32b8cd808f59c08c9c12141fcb9121"
   },
   {
    "p": "app/save-evidence.js",
@@ -190,18 +190,23 @@
   },
   {
    "p": "app/ActivityCounter.exe",
-   "n": 7168,
-   "h": "6dd9ff31e0ab4c21f886217027cd10b75a85e60f"
+   "n": 8704,
+   "h": "83ace951f4597a2c7e87a1539513fc179e150535"
   },
   {
    "p": "app/activity.js",
-   "n": 4295,
-   "h": "b17426740be0fc611fdf165360a6e7218b6e9d3e"
+   "n": 8426,
+   "h": "65a3f6906de29898376b216cbe718c760967f201"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/tab-keys.js",
    "n": 667,
    "h": "428e1502ba37a5daf3e7a2a3852de293a13e68e9"
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/personalize.js",
+   "n": 9330,
+   "h": "35eb45de7d2595c3692f1ea5892b0f168c72da86"
   }
  ]
 }

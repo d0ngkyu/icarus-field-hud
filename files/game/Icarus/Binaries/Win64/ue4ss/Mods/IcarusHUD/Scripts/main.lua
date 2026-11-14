@@ -36,7 +36,9 @@ end)
 -- Quarantine native fog-array reads until their crash cause is understood.
 -- A longer interval and Lua pcall do not make a native access violation safe.
 -- Keep this independent of the desktop doctor and its persisted settings.
-local function on(feat) return feat ~= "fog" and not SAFE and not FEAT_OFF[feat] end
+-- Explicit host controls and the currently opened animal UI remain available in
+-- safe mode. World scans/fog stay blocked; per-feature fault blocks still apply.
+local function on(feat) return feat ~= "fog" and (not SAFE or feat == "game_control" or feat == "animals") and not FEAT_OFF[feat] end
 -- what the mod is busy with right now: if the game falls over, the HUD program reads this to know why
 local lastStep = nil
 local function step(name)
@@ -1021,6 +1023,6 @@ if DEVMODE then
     else ExecuteWithDelay(15000, function() pcall(jobs) end) end
 end
 
-if SAFE then log("SAFE MODE: only crafting, inventory and waypoints are on") end
+if SAFE then log("SAFE MODE: crafting, inventory, waypoints, visible animal UI and manual game control allowed; per-feature blocks remain") end
 for k in pairs(FEAT_OFF) do log("feature switched off after a crash: " .. k) end
 log("loaded. F7 = waypoint, F8 = show, F9 = add, F10 = refresh inventory + navigation")
