@@ -7,7 +7,8 @@ const path = require('node:path');
 const vm = require('node:vm');
 const html = fs.readFileSync(path.resolve(__dirname, '../mod/hud/index.html'), 'utf8');
 const a = html.indexOf('const HAZ='), b = html.indexOf('// ---------- recording ----------');
-const ctx = {}; vm.runInNewContext(html.slice(a, b) + ';globalThis.noteHazards=noteHazards;globalThis.hazText=hazText;', ctx);
+const c1 = html.indexOf('const CAVEB='), c2 = html.indexOf('// NCO-style rank badge');
+const ctx = {}; vm.runInNewContext(html.slice(c1, c2) + html.slice(a, b) + ';globalThis.noteHazards=noteHazards;globalThis.hazText=hazText;', ctx);
 
 test('counts cave creatures for the nearest cave within 150 m', () => {
   const mp = { lm: { 'c@1,1': ['c:CF_MED_005', 500, 500, 0], 'c@100,100': ['c:Cave', 50000, 50000, 0] } };
@@ -24,4 +25,13 @@ test('counts cave creatures for the nearest cave within 150 m', () => {
   ctx.noteHazards(mp, [['a:BP_CRE_CaveWorm_C', 1500, 900, 0]], now + 40 * 60000);
   assert.equal(mp.haz['c@1,1'].n['동굴웜'], 1, 'a new visit starts over');
   assert.match(ctx.hazText(mp, 'c@100,100'), /아직 모름/);
+});
+
+test('an unvisited cave shows the usual range from visited caves of the same level', () => {
+  const mp = { lm: {
+    'c@1,1': ['c:CF_MED_005', 0, 0, 0], 'c@9,9': ['c:AC_MED_002', 90000, 90000, 0],
+    'c@5,5': ['c:CF_MED_001', 50000, 0, 0], 'c@7,7': ['c:CF_SML_003', 0, 70000, 0] },
+    haz: { 'c@1,1': { at: Date.now(), n: { '동굴웜': 2 } }, 'c@9,9': { at: Date.now(), n: { '동굴웜': 4, '벌': 1 } } } };
+  assert.equal(ctx.hazText(mp, 'c@5,5'), '보통 동굴웜 2~4, 벌 0~1 (가 본 Lv.2 동굴 2곳 기준)');
+  assert.match(ctx.hazText(mp, 'c@7,7'), /아직 모름/);
 });

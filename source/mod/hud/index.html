@@ -489,9 +489,20 @@ function noteHazards(mp,list,now){mp.haz=mp.haz||{};const caves=[];for(const k i
   if(best){(got[best]||(got[best]={}))[kind]=(got[best][kind]||0)+1}}
  for(const k in got){const was=mp.haz[k];const fresh=was&&now-was.at<30*60000;const n=fresh?{...was.n}:{};
   for(const kind in got[k])n[kind]=Math.max(n[kind]||0,got[k][kind]);mp.haz[k]={at:now,n}}}
-function hazText(mp,key){const h=mp.haz&&mp.haz[key];if(!h)return'위험: 아직 모름 (가까이 가면 기록)';
- const parts=Object.entries(h.n).map(([k,v])=>k+' '+v);const when=new Date(h.at);const ago=Math.round((Date.now()-h.at)/60000);
- return'위험: '+(parts.length?parts.join(', '):'본 것 없음')+' · '+(ago<60?ago+'분 전':ago<1440?Math.round(ago/60)+'시간 전':when.toLocaleDateString())+' 확인'}
+// typical numbers per cave level, from the game's own cave levels (filled in once those are read; empty until then)
+const CAVEHAZ={};
+const range=v=>v.length?(Math.min(...v)===Math.max(...v)?String(v[0]):Math.min(...v)+'~'+Math.max(...v)):'';
+// "usually": the game's table if known, otherwise what was seen in other caves of the same level on this map
+function hazTypical(mp,size){if(!size)return'';const lv=size===4?'Lv.M':'Lv.'+size;
+ if(CAVEHAZ[size])return'보통 '+Object.entries(CAVEHAZ[size]).map(([k,v])=>k+' '+v).join(', ')+' ('+lv+' 동굴 평균)';
+ const per={};let n=0;for(const k in (mp.haz||{})){const o=mp.lm[k];if(!o||caveInfo(o[0].slice(2)).size!==size)continue;n++;
+  for(const kind in mp.haz[k].n)(per[kind]||(per[kind]=[])).push(mp.haz[k].n[kind])}
+ if(!n)return'';const parts=Object.entries(per).map(([k,v])=>{while(v.length<n)v.push(0);return k+' '+range(v)});
+ return'보통 '+(parts.length?parts.join(', '):'위험 생물 적음')+' (가 본 '+lv+' 동굴 '+n+'곳 기준)'}
+function hazText(mp,key){const h=mp.haz&&mp.haz[key];const o=mp.lm[key];const size=o?caveInfo(o[0].slice(2)).size:0;
+ if(!h){const typ=hazTypical(mp,size);return typ||'위험: 아직 모름 (가까이 가면 기록)'}
+ const parts=Object.entries(h.n).map(([k,v])=>k+' '+v);const ago=Math.round((Date.now()-h.at)/60000);
+ return'위험: '+(parts.length?parts.join(', '):'본 것 없음')+' · '+(ago<60?ago+'분 전':ago<1440?Math.round(ago/60)+'시간 전':new Date(h.at).toLocaleDateString())+' 확인'}
 
 // ---------- recording ----------
 window.__mapIngest=m=>{

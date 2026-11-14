@@ -1,6 +1,6 @@
 {
- "version": "2026.11.14.10",
- "notes": "동굴에 마우스를 올리면 근처에서 본 위험 생물(동굴웜·벌·거미 등) 수가 나옵니다. 오래된 업데이트가 새 파일을 덮어쓰지 않게 했습니다.",
+ "version": "2026.11.14.11",
+ "notes": "안 가 본 동굴도 같은 규모 동굴에서 본 위험 생물 범위(예: 동굴웜 2~4)를 보여 줍니다.",
  "config": {},
  "files": [
   {
@@ -62,8 +62,8 @@
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/index.html",
-   "n": 876053,
-   "h": "91dc1c2122a4a2e1bfa174492722228f853c24e0"
+   "n": 877141,
+   "h": "45bac57921206991fcbbd374c54f161ab357c9e5"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/icons.webp",
@@ -132,8 +132,8 @@
   },
   {
    "p": "app/levjob.js",
-   "n": 1183,
-   "h": "87ef9ff7add3b408c88cca72720ca175059b5848"
+   "n": 1567,
+   "h": "e4900629710109468d946fcc3107d865f9c90fa1"
   },
   {
    "p": "app/diag.js",

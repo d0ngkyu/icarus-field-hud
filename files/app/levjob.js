@@ -11,12 +11,16 @@ try {
   log('start');
   // write down where the map level files sit, so the pattern can be checked later
   const seen = [];
+  const caves = [];
   const want = (d, f) => {
     if (/\.umap$/i.test(f) && /Maps\//i.test(d) && seen.length < 400) seen.push(d + f);
+    // cave levels (CAVE_CF_MED_005 ...): their placed creature spawners tell how many worms/bees a cave usually has
+    if (/^CAVE_[A-Z]{2}_[A-Z]+_\d+[A-Za-z0-9_]*\.(umap|uexp)$/i.test(f)) { if (/\.umap$/i.test(f) && caves.length < 2000) caves.push(d + f); return true; }
     return /Maps\//i.test(d) && /^(Terrain|Outpost)_\d+(_[A-Za-z0-9]+)?\.(umap|uexp)$/i.test(f);
   };
   const n = extractRaw(pakDir, outDir, want, log);
   try { fs.writeFileSync(path.join(outDir, 'levels.txt'), seen.join('\n')); } catch (e) {}
+  try { fs.writeFileSync(path.join(outDir, 'caves.txt'), caves.join('\n')); } catch (e) {}
   fs.writeFileSync(path.join(outDir, 'done.txt'), String(n));
   log('done ' + n);
 } catch (e) { log('error ' + (e && e.stack || e)); }
