@@ -13,7 +13,7 @@
     }
     const stats = {};
     for (const k of ['Health','Stamina','MeleeDamage','MovementSpeed','SprintSpeed','WeightCapacity']) if (typeof a.stats?.[k] === 'string') stats[k] = clean(a.stats[k]);
-    return { id:clean(a.id), name:clean(a.name)||'이름 없는 동물', species:clean(a.species), sex:[1,2].includes(a.sex)?a.sex:0, genes, stats };
+    return { id:clean(a.id), aliases:(Array.isArray(a.aliases)?a.aliases:[]).filter(x=>typeof x==='string').slice(-20), name:clean(a.name)||'이름 없는 동물', species:clean(a.species), sex:[1,2].includes(a.sex)?a.sex:0, genes, stats };
   }
   function thresholds(t) {
     return t && Number.isInteger(t.low) && Number.isInteger(t.high) && t.low >= 0 && t.low < t.high && t.high <= 10 ? {low:t.low, high:t.high} : {low:3,high:8};
@@ -89,7 +89,17 @@
     return {percent,hits,n,margin,likely,likelyPercent:counts[likely]/n*100};
   }
   function exactStages(result,key){return Array.from({length:8},(_,i)=>({value:i+1,...birthChance(result,key,i+1,'exact')}));}
-  const model={labels,keys,normalize,thresholds,grade,compare,observation,observedRate,birthOrder,simulateGenes,birthEstimate,birthChance,exactStages};
+
+  function offspringSummary(result,base){
+    const weak=keys.filter(k=>base.genes[k]===Math.min(...keys.map(k=>base.genes[k])));
+    const stats=Object.fromEntries(keys.map(k=>{const h=result.hist[birthOrder.indexOf(k)],mean=h.reduce((s,n,i)=>s+n*i,0)/result.trials;return[k,{mean,delta:mean-base.genes[k],improve:h.slice(base.genes[k]+1).reduce((a,b)=>a+b,0)/result.trials*100}]}));
+    return {stats,weak,weakGain:weak.reduce((sum,k)=>sum+stats[k].delta,0)/weak.length,weakChance:weak.reduce((sum,k)=>sum+stats[k].improve,0)/weak.length};
+  }
+  function reconnectionCandidates(records,current){
+    current=normalize(current);if(!current)return [];
+    return records.map((a,i)=>({a:normalize(a),i})).filter(({a})=>a&&a.id!==current.id&&a.species===current.species&&a.sex===current.sex&&keys.every(k=>a.genes[k]===current.genes[k])).map(x=>x.i);
+  }
+  const model={offspringSummary,reconnectionCandidates,labels,keys,normalize,thresholds,grade,compare,observation,observedRate,birthOrder,simulateGenes,birthEstimate,birthChance,exactStages};
   if(typeof module!=='undefined' && module.exports) module.exports=model;
   if(!root || !root.document) return;
   root.IcarusAnimals=model;
@@ -130,6 +140,11 @@
     host.querySelector('[data-limits]').innerHTML='<table><tr><th>유전 스탯</th><th>낮음 이하</th><th>높음 이상</th></tr>'+keys.map(k=>{const t=thresholds(db.limits[k]);return `<tr><td>${labels[k]}</td><td><input aria-label="${labels[k]} 낮음" data-limit="${k}" data-bound="low" type="number" min="0" max="9" value="${t.low}"></td><td><input aria-label="${labels[k]} 높음" data-limit="${k}" data-bound="high" type="number" min="1" max="10" value="${t.high}"></td></tr>`;}).join('')+'</table>';
     host.querySelector('[data-pairs]').insertAdjacentHTML('afterend',`<details><summary>추정 조건 · 재능 보정</summary><div><label>양쪽 부모의 유전자 돌연변이 확률 합계 (%)<input type="number" data-mutation min="0" max="100" step="1" value="${db.mutation||0}" aria-label="돌연변이 확률 합계"></label><p class="muted">기본 0%는 추가 재능·혈통 보정이 없다는 가정입니다. 자동으로 읽지 않습니다. Wildcard·Genetic Volatility·혈통 보정을 합산해 입력하세요.</p><select data-predictmode hidden><option value="exact">정확한 수치</option></select><p class="muted">GamesOMG의 2026-10-22 서버 분석 규칙을 근사 계산합니다. 현재 설치 버전과 일치 여부는 미검증입니다. 유전 합계 상한 60, 개별 상한 10 가정. 화면의 7개 모두 9 이상(합계 63)은 이 모델에서 불가능합니다.</p></div><div><label>관측 조건 이름 <input data-context maxlength="100" value="${esc(db.context||'기본')}" aria-label="관측 조건 이름"></label><p class="muted">게임 버전·교배 재능·혈통 등 조건이 바뀌면 이름을 바꾸세요. 같은 조건 이름·종류·부모 7개 유전 수치가 일치하는 기록만 집계합니다. 목표는 각 스탯의 ‘높음 이상’ 기준입니다.</p></div></details>
       <details><summary>태어난 새끼 관측 기록</summary><p class="muted">위 기준 동물과 아래 상대를 부모로 선택한 뒤, 태어난 새끼의 상세창을 여세요. 부모 정보는 교배 당시 값으로 저장해 두세요. 좋은 결과와 나쁜 결과 모두 기록해야 편향을 줄일 수 있습니다.</p><label>다른 부모 <select data-partner></select></label><p><label><input type="checkbox" data-confirm>지금 상세창의 동물이 이 부모에게 태어난 새끼임을 확인</label></p><button data-record>현재 새끼 결과 기록</button> <button data-undo>마지막 관측 삭제</button><p data-observation-count class="muted"></p></details>`);
+    let focusStat=keys[0],pairChoice='';
+    const pairSection=host.querySelector('[data-pairs]').closest('section');
+    pairSection.querySelector('h2').nextElementSibling.textContent='상대를 골라 약점 보완과 수치별 출생 확률을 비교하세요.';
+    const management=doc.createElement('details');management.innerHTML='<summary>저장 동물 검색 · 관리</summary>';const searchLabel=host.querySelector('[data-search]').closest('label');management.append(searchLabel,host.querySelector('[data-delete]'));host.querySelector('[data-save]').parentElement.after(management);
+    const pickers=doc.createElement('div');pickers.className='pair-pickers';const baseLabel=host.querySelector('[data-base]').closest('label'),targetLabel=host.querySelector('[data-target]').closest('label');baseLabel.before(pickers);pickers.append(baseLabel,targetLabel);
     const context=()=>host.querySelector('[data-context]').value.trim();
     const percentage=(p,hits,n)=>n?`${p.toFixed(1)}% (${hits}/${n}마리)`:'관측 부족 (0마리)';
     const simulationCache=new Map(),pendingSimulations=new Map();let predictionWorker=null,workerUrl=null,jobId=0;
@@ -153,7 +168,7 @@
     }
     root.addEventListener('beforeunload',()=>{if(predictionWorker)predictionWorker.terminate();});
     const probText=(hits,n)=>hits===0?'<0.1%':hits===n?'>99.9%':'약 '+(hits/n*100).toFixed(1)+'%';
-    function rateTable(){return '<h4>새끼 스탯 추정치</h4><div data-prediction><p class="muted">출생 확률 계산 중…</p></div>';}
+    function rateTable(){return '<div data-prediction><p class="muted">출생 확률 계산 중…</p></div>';}
     async function fillPrediction(detail,base,partner){
       const slot=detail.querySelector('[data-prediction]');if(!slot||slot.dataset.started)return;slot.dataset.started='1';
       const goals=Object.fromEntries(keys.map(k=>[k,thresholds(db.limits[k]).high])),mode=host.querySelector('[data-predictmode]').value;
@@ -162,10 +177,14 @@
         const result=await prediction(base,partner);
         if(!slot.isConnected)return;
         const impossible=Object.values(goals).reduce((a,b)=>a+b,0)>result.maxPoints;
-        slot.innerHTML=`<div class="stat-cards"><div class="stat-card"><small>더 균형 좋은 새끼가 나올 확률</small><b class="high">${esc(probText(result.improved,result.trials))}</b></div><div class="stat-card"><small>모든 스탯 목표 달성</small><b>${impossible?'0%':esc(probText(result.allGoals,result.trials))}</b></div></div><p class="muted">각 숫자와 <strong>정확히 같은 스탯</strong>으로 태어날 모델 추정 확률입니다.</p>${keys.map(k=>{const stages=exactStages(result,k),peak=Math.max(...stages.map(x=>x.hits));return `<div class="prob-row"><div class="prob-row-head"><b>${labels[k]}</b><small>수치별 출생 확률</small></div><div class="prob-track">${stages.map(c=>`<button type="button" class="${c.hits===peak?'peak':''}" style="--strength:${.25+.75*c.hits/Math.max(1,peak)}" title="${labels[k]} ${c.value}로 태어날 확률 ${(c.percent).toFixed(1)}%"><b>${c.value}</b><small>${c.hits===0?'&lt;0.1':c.percent.toFixed(1)}%</small></button>`).join('')}</div><div class="prob-outliers">그 밖의 수치 · ${[0,9,10].map(v=>v+': '+birthChance(result,k,v,'exact').percent.toFixed(1)+'%').join(' · ')}</div></div>`}).join('')}<details><summary>계산 기준</summary><p class="muted">12,000회 모델 계산 · 추가 돌연변이 ${mutationAssumption}% 가정. 실제 게임 검증 전이며 재능·혈통에 따라 달라질 수 있습니다. 가장 낮은 스탯이 상승하거나 같은 최저값에서 합계가 오르면 균형 발전으로 계산합니다. ‘추정 조건’에서 보정값을 조절하세요.</p></details><details data-actual><summary>실제 새끼 기록과 비교</summary><div></div></details>`;
+        const summary=offspringSummary(result,base);
+        const paint=()=>{const k=focusStat,st=summary.stats[k],stages=exactStages(result,k),peak=Math.max(...stages.map(x=>x.hits));
+        slot.innerHTML=`<div class="breeding-verdict"><b>약점 보완 · ${summary.weak.map(k=>labels[k].split(' ')[0]).join(' / ')}</b><p>예상 평균 ${summary.weakGain>=0?'+':''}${summary.weakGain.toFixed(2)} · 약점별 개선 확률 평균 ${summary.weakChance.toFixed(1)}%</p><small>기준 동물의 최저 스탯 기준 · 여러 약점의 동시 개선 확률은 아닙니다.</small></div><div class="stat-cards"><div class="stat-card"><small>균형 발전 확률</small><b>${esc(probText(result.improved,result.trials))}</b></div><div class="stat-card"><small>모든 목표 달성</small><b>${impossible?'0%':esc(probText(result.allGoals,result.trials))}</b></div></div><div class="prob-row"><label>살펴볼 스탯<select data-focus-stat>${keys.map(x=>`<option value="${x}"${x===k?' selected':''}>${labels[x]}</option>`).join('')}</select></label><p><b>${labels[k]}</b> · 부모 ${base.genes[k]} / ${partner.genes[k]} → 새끼 평균 <b>${st.mean.toFixed(2)}</b> (${st.delta>=0?'+':''}${st.delta.toFixed(2)})</p><div class="prob-track">${stages.map(c=>`<button type="button" class="${c.hits===peak?'peak':''}" style="--strength:${.25+.75*c.hits/Math.max(1,peak)}" title="${c.value}로 태어난 모의 새끼 ${c.hits}/${result.trials}"><b>${c.value}</b><small>${c.percent.toFixed(1)}%</small></button>`).join('')}</div><div class="prob-outliers">그 밖의 수치 · ${[0,9,10].map(v=>v+': '+birthChance(result,k,v,'exact').percent.toFixed(1)+'%').join(' · ')}</div><p class="muted">1~8 각각과 정확히 같은 수치의 출생 빈도 · 기준보다 높을 확률 ${st.improve.toFixed(1)}%</p></div><details><summary>전체 스탯 예상 평균 · 계산 기준</summary><table><tr><th>스탯</th><th>기준</th><th>새끼 평균</th><th>개선 확률</th></tr>${keys.map(k=>`<tr><td>${labels[k]}</td><td>${base.genes[k]}</td><td>${summary.stats[k].mean.toFixed(2)}</td><td>${summary.stats[k].improve.toFixed(1)}%</td></tr>`).join('')}</table><p class="muted">${result.trials.toLocaleString()}회 모의 출생 평균 · 돌연변이 ${mutationAssumption}% 가정. 게임 규칙과의 차이는 반복 계산으로 없어지지 않습니다. 0.0%는 이번 계산에서 해당 결과가 없었다는 뜻일 수 있습니다.</p></details><details data-actual><summary>실제 새끼 기록과 비교</summary><div></div></details>`;
+        const extra=doc.createElement('details');extra.innerHTML='<summary>평균 수치 · 실제 기록 · 계산 근거</summary>';for(const d of [...slot.querySelectorAll(':scope > details')])extra.append(d);slot.append(extra);
+        slot.querySelector('[data-focus-stat]').onchange=e=>selectStat(e.target.value);
+        const actual=slot.querySelector('[data-actual]');actual.ontoggle=()=>{if(!actual.open)return;const r=observedRate(db.observations,base,partner,limits,condition);actual.querySelector('div').textContent=r?.n?'같은 조건의 실제 기록 '+r.n+'마리 · 전체 목표 달성 '+r.all.percent.toFixed(1)+'%':'태어난 새끼를 기록하면 실제 결과와 비교할 수 있습니다.'};};
+        slot._paintPrediction=paint;paint();
 
-        const actual=slot.querySelector('[data-actual]');let loaded=false;
-        actual.addEventListener('toggle',()=>{if(!actual.open||loaded)return;loaded=true;const r=observedRate(db.observations,base,partner,limits,condition);actual.querySelector('div').innerHTML=r&&r.n?`<p class="muted">실제 새끼 ${r.n}마리${r.n<30?' · 표본 적음':''}</p><table><tr><th>목표</th><th>실제 달성률</th></tr>${keys.map(k=>`<tr><td>${labels[k]} ${r.stats[k].goal} 이상</td><td>${percentage(r.stats[k].percent,r.stats[k].hits,r.n)}</td></tr>`).join('')}</table>`:'<p class="muted">새끼 결과를 추가하면 모델과 실제 결과를 비교할 수 있습니다.</p>';});
       }catch(error){if(slot.isConnected)slot.textContent='확률 계산 실패 · 탭을 다시 열어 주세요.';}
     }
     const rankValue=r=>!r?0:target?birthChance(r,target,thresholds(db.limits[target]).high).percent:r.improved/r.trials*100;
@@ -183,9 +202,12 @@
       renderPairs();
     }
 
+    function selectStat(k){if(!keys.includes(k))return;focusStat=k;host.querySelectorAll('[data-prediction]').forEach(n=>n._paintPrediction?.());host.querySelectorAll('[data-stat]').forEach(n=>n.classList.toggle('selected',n.dataset.stat===k));}
+    host.addEventListener('click',e=>{const b=e.target.closest('[data-stat]');if(b)selectStat(b.dataset.stat)});
+    host.addEventListener('keydown',e=>{const b=e.target.closest('[data-stat]');if(b&&['Enter',' '].includes(e.key)){e.preventDefault();selectStat(b.dataset.stat)}});
     function radar(a){
       const pt=(i,r)=>[220+Math.sin(i*Math.PI*2/7)*r,190-Math.cos(i*Math.PI*2/7)*r],points=r=>keys.map((k,i)=>pt(i,r).join(',')).join(' '),color=n=>`hsl(${12+n*14},45%,62%)`;
-      return `<svg class="radar" viewBox="0 0 440 400" role="img" aria-label="7개 유전 스탯 방사형 차트">${[.2,.4,.6,.8,1].map(f=>`<polygon points="${points(f*125)}" fill="none" stroke="#344552" stroke-width="1"/>`).join('')}${keys.map((k,i)=>{const next=(i+1)%7,p=pt(i,a.genes[k]*12.5),q=pt(next,a.genes[keys[next]]*12.5),axis=pt(i,125),label=pt(i,163);return `<defs><linearGradient id="gene-fill-${i}" gradientUnits="userSpaceOnUse" x1="220" y1="190" x2="${p[0]}" y2="${p[1]}"><stop stop-color="#293a49" stop-opacity=".2"/><stop offset="1" stop-color="${color(a.genes[k])}" stop-opacity=".65"/></linearGradient></defs><line x1="220" y1="190" x2="${axis[0]}" y2="${axis[1]}" stroke="#344552"/><polygon points="220,190 ${p.join(',')} ${q.join(',')}" fill="url(#gene-fill-${i})"/><line x1="${p[0]}" y1="${p[1]}" x2="${q[0]}" y2="${q[1]}" stroke="${color(a.genes[k])}" stroke-width="2"/><circle cx="${p[0]}" cy="${p[1]}" r="4" fill="${color(a.genes[k])}"/><text x="${label[0]}" y="${label[1]}" text-anchor="middle">${labels[k].split(' ')[0]}</text><text class="value" style="fill:${color(a.genes[k])}" x="${label[0]}" y="${label[1]+20}" text-anchor="middle">${a.genes[k]}<tspan font-size="10" fill="#8295a6"> / 10</tspan></text>`}).join('')}</svg>`;
+      return `<svg class="radar" viewBox="0 0 440 400" role="group" aria-label="7개 유전 스탯 방사형 차트">${[.2,.4,.6,.8,1].map(f=>`<polygon points="${points(f*125)}" fill="none" stroke="#344552" stroke-width="1"/>`).join('')}${keys.map((k,i)=>{const next=(i+1)%7,p=pt(i,a.genes[k]*12.5),q=pt(next,a.genes[keys[next]]*12.5),axis=pt(i,125),label=pt(i,163);return `<g data-stat="${k}" role="button" tabindex="0" aria-label="${labels[k]} 확률 보기"><defs><linearGradient id="gene-fill-${i}" gradientUnits="userSpaceOnUse" x1="220" y1="190" x2="${p[0]}" y2="${p[1]}"><stop stop-color="#293a49" stop-opacity=".2"/><stop offset="1" stop-color="${color(a.genes[k])}" stop-opacity=".65"/></linearGradient></defs><line x1="220" y1="190" x2="${axis[0]}" y2="${axis[1]}" stroke="#344552"/><polygon points="220,190 ${p.join(',')} ${q.join(',')}" fill="url(#gene-fill-${i})"/><line x1="${p[0]}" y1="${p[1]}" x2="${q[0]}" y2="${q[1]}" stroke="${color(a.genes[k])}" stroke-width="2"/><circle cx="${p[0]}" cy="${p[1]}" r="4" fill="${color(a.genes[k])}"/><text x="${label[0]}" y="${label[1]}" text-anchor="middle">${labels[k].split(' ')[0]}</text><text class="value" style="fill:${color(a.genes[k])}" x="${label[0]}" y="${label[1]+20}" text-anchor="middle">${a.genes[k]}<tspan font-size="10" fill="#8295a6"> / 10</tspan></text></g>`}).join('')}</svg>`;
     }
     function renderCurrent(){
       const fresh=current && Date.now()-observedAt<12000;
@@ -194,9 +216,16 @@
       host.querySelector('[data-count]').textContent='저장 '+db.animals.length+'마리 · 관측 '+db.observations.length+'건';
       const a=fresh?current:(selected!==''?db.animals[Number(selected)]:null);
       if(!a){host.querySelector('[data-current]').innerHTML='<div class="animal-empty"><b>동물 등록 방법</b><p>1. 게임에서 동물 상세창을 엽니다.<br>2. 스탯이 나타나면 ‘처음 등록하기’를 누릅니다.<br>3. 다음부터는 저장된 동물을 골라 바로 확인합니다.</p></div>';return;}
-      host.querySelector('[data-current]').innerHTML=`<div class="animal-title"><h3>${esc(a.name)}</h3><span class="badge ${fresh?'':'saved'}">${fresh?'상세창 연결됨':'저장된 기록'}</span></div><p class="muted" style="overflow-wrap:anywhere">${sex(a)} · ${esc(a.species)} · 유전 합계 <strong>${keys.reduce((sum,k)=>sum+a.genes[k],0)} / 70</strong></p>${radar(a)}<div class="gene-key"><span style="--key:#d88474">낮음</span><span style="--key:#c6b87a">보통</span><span style="--key:#72cbb0">높음</span></div><details><summary>현재 능력치 · 장비와 버프 포함</summary>${Object.keys(a.stats).length?'<div class="stat-cards">'+Object.entries(a.stats).map(([k,v])=>`<div class="stat-card"><small>${statNames[k]}</small><b>${esc(v)}</b></div>`).join('')+'</div>':'<p class="muted">상세창에서 현재 능력치를 아직 읽지 못했습니다.</p>'}</details>`;
+      host.querySelector('[data-current]').innerHTML=`<div class="animal-title"><h3>${esc(a.name)}</h3><span class="badge ${fresh?'':'saved'}">${fresh?'상세창 연결됨':'저장된 기록'}</span></div><p class="muted" style="overflow-wrap:anywhere">${sex(a)} · ${esc(a.species)} · 유전 합계 <strong>${keys.reduce((sum,k)=>sum+a.genes[k],0)} / 70</strong></p>${radar(a)}<div class="stat-picker">${keys.map(k=>`<button data-stat="${k}" class="${focusStat===k?'selected':''}">${labels[k].split(' ')[0]} <b>${a.genes[k]}</b></button>`).join('')}</div><div data-reconnect></div><div class="gene-key"><span style="--key:#d88474">낮음</span><span style="--key:#c6b87a">보통</span><span style="--key:#72cbb0">높음</span></div><details><summary>현재 능력치 · 장비와 버프 포함</summary>${Object.keys(a.stats).length?'<div class="stat-cards">'+Object.entries(a.stats).map(([k,v])=>`<div class="stat-card"><small>${statNames[k]}</small><b>${esc(v)}</b></div>`).join('')+'</div>':'<p class="muted">상세창에서 현재 능력치를 아직 읽지 못했습니다.</p>'}</details>`;
+      renderReconnect();
     }
 
+    function renderReconnect(){
+      const box=host.querySelector('[data-reconnect]');if(!box||!current||Date.now()-observedAt>=12000||db.animals.some(a=>a.id===current.id))return;
+      const candidates=reconnectionCandidates(db.animals,current);if(!candidates.length){box.textContent='재접속 시 이름을 고유하게 지어 두면 저장 기록을 구분하기 쉽습니다.';return;}
+      box.innerHTML='<p class="muted">같은 종류·성별·유전 수치의 기록이 있습니다. 실제 같은 동물인지 확인한 뒤 연결하세요.</p><select data-reconnect-to>'+candidates.map(i=>'<option value="'+i+'">'+esc(db.animals[i].name)+'</option>').join('')+'</select><button data-reconnect-button>같은 동물로 연결</button>';
+      box.querySelector('button').onclick=()=>{if(!current||Date.now()-observedAt>=12000)return;const i=Number(box.querySelector('select').value);if(!reconnectionCandidates(db.animals,current).includes(i))return;const old=db.animals[i];db.animals[i]={...normalize(current),aliases:[...(old.aliases||[]),old.id].slice(-20)};if(!save()){db.animals[i]=old;return;}selected=String(i);save();status('저장 동물에 새 접속 ID를 연결했습니다.');renderCurrent();renderPairs();};
+    }
     function renderPairs(){
       const select=host.querySelector('[data-base]');
       select.innerHTML='<option value="">동물을 저장하고 선택하세요</option>'+db.animals.map((a,i)=>(!filter||i===Number(selected)&&selected!==''||(a.name+' '+a.species).toLowerCase().includes(filter))?`<option value="${i}">${esc(a.name)} (${sex(a)} · ${esc(a.species)})</option>`:'').join('');
@@ -212,11 +241,13 @@
       const openPartners=new Set([...host.querySelectorAll('[data-pair][open]')].map(d=>d.dataset.pair));
       const pairs=base?db.animals.map((a,i)=>({a,i,result:i!==Number(selected)?compare(base,a,target):null})).filter(x=>x.result).sort((a,b)=>rankings?rankValue(rankings.get(b.i))-rankValue(rankings.get(a.i))||b.result.score-a.result.score:b.result.score-a.result.score).slice(0,8):[];
       const container=host.querySelector('[data-pairs]');
-      container.innerHTML=pairs.length?pairs.map(({a,result,i},rank)=>`<details data-pair="${i}"${openPartners.has(String(i))||(!openPartners.size&&rank===0)?' open':''}><summary>${rank+1}. ${esc(a.name)}<span class="pair-sub">${rankings?(target?'중점 목표 달성 약 '+rankValue(rankings.get(i)).toFixed(1)+'%':'균형 발전 확률 '+probText(rankings.get(i).improved,rankings.get(i).trials)):'확률 계산 준비 중'} · 부모 평균 ${result.total.toFixed(1)}</span></summary><div data-pair-body></div></details>`).join(''):'<div class="animal-empty"><b>교배 비교 준비</b><p>기준 동물을 선택하세요. 같은 종류의 암컷과 수컷을 각각 저장하면 비교 후보가 나타납니다.</p></div>';
+      const chosenPair=pairs.find(p=>String(p.i)===pairChoice)||pairs[0];const shown=chosenPair?[chosenPair]:[];
+      container.innerHTML=pairs.length?shown.map(({a,result,i},rank)=>`<details data-pair="${i}"${rank===0?' open':''}><summary>${rank+1}. ${esc(a.name)}<span class="pair-sub">${rankings?(target?'중점 목표 달성 약 '+rankValue(rankings.get(i)).toFixed(1)+'%':'균형 발전 확률 '+probText(rankings.get(i).improved,rankings.get(i).trials)):'확률 계산 준비 중'}${rankings?' · 약점 평균 '+(offspringSummary(rankings.get(i),base).weakGain>=0?'+':'')+offspringSummary(rankings.get(i),base).weakGain.toFixed(2):''} · 부모 평균 ${result.total.toFixed(1)}</span></summary><div data-pair-body></div></details>`).join(''):'<div class="animal-empty"><b>교배 비교 준비</b><p>기준 동물을 선택하세요. 같은 종류의 암컷과 수컷을 각각 저장하면 비교 후보가 나타납니다.</p></div>';
+      if(pairs.length){container.insertAdjacentHTML('afterbegin','<label>교배 상대<select data-pair-select>'+pairs.map((p,n)=>'<option value="'+p.i+'"'+(p===chosenPair?' selected':'')+'>'+ (n+1)+'. '+esc(p.a.name)+(rankings?' · '+(target?'중점 목표 ':'균형 발전 ')+rankValue(rankings.get(p.i)).toFixed(1)+'%':'')+'</option>').join('')+'</select></label>');container.querySelector('[data-pair-select]').onchange=e=>{pairChoice=e.target.value;renderPairs()};}
       for(const detail of container.querySelectorAll('[data-pair]')){
        const pair=pairs.find(p=>String(p.i)===detail.dataset.pair);let rendered=false;
        const fill=()=>{if(!detail.open||rendered)return;rendered=true;const {a,result}=pair;detail.querySelector('[data-pair-body]').innerHTML=rateTable(base,a)+`<details><summary>부모별 유전 수치 비교</summary><table><tr><th>유전 스탯</th><th>기준</th><th>상대</th><th>평균</th></tr>${keys.map(k=>`<tr><td>${labels[k]}</td><td>${base.genes[k]}</td><td>${a.genes[k]}</td><td class="${grade(result.means[k],db.limits[k])}">${result.means[k].toFixed(1)}</td></tr>`).join('')}</table><p class="muted">부모 평균은 새끼의 보장 수치나 확률이 아닙니다.</p></details>`;};
-       detail.addEventListener('toggle',()=>{fill();if(detail.open)fillPrediction(detail,base,pair.a)});fill();if(detail.open)fillPrediction(detail,base,pair.a);
+       detail.addEventListener('toggle',()=>{if(detail.open){for(const other of container.querySelectorAll('[data-pair]'))if(other!==detail)other.open=false;fill();fillPrediction(detail,base,pair.a)}});fill();if(detail.open)fillPrediction(detail,base,pair.a);
       }
       if(base)startRanking(base);else{rankGeneration++;rankKey='';rankings=null;host.querySelector('[data-rank-status]').textContent='';}
 
@@ -249,7 +280,7 @@
       if(!save()){db.animals=previous;return;}
       selected=String(old>=0?old:db.animals.length-1);save();status('등록했습니다. 다음 실행 때 자동으로 불러옵니다.');clearConfirmation();renderCurrent();renderPairs();
     };
-    host.querySelector('[data-base]').onchange=e=>{selected=e.target.value;save();clearConfirmation();current=null;renderCurrent();renderPairs();};
+    host.querySelector('[data-base]').onchange=e=>{selected=e.target.value;pairChoice='';save();clearConfirmation();current=null;renderCurrent();renderPairs();};
     host.querySelector('[data-target]').onchange=e=>{target=e.target.value;renderPairs();};
     host.querySelector('[data-delete]').onclick=()=>{if(selected===''||!confirmDelete('[data-delete]',selected))return;const previous=db.animals.slice();db.animals.splice(Number(selected),1);if(!save()){db.animals=previous;return;}selected='';clearConfirmation();renderCurrent();renderPairs();};
     host.querySelector('[data-limits]').onchange=e=>{
@@ -262,7 +293,7 @@
     root.__animalIngest=m=>{
       if(!Object.prototype.hasOwnProperty.call(m,'animal'))return;
       const next=normalize(m.animal), sig=JSON.stringify(next);if(sig!==signature)clearConfirmation();observedAt=Date.now();current=next;
-      if(next&&sig!==signature){const i=db.animals.findIndex(a=>a.id&&a.id===next.id);if(i>=0){db.animals[i]=next;save();if(active&&!doc.hidden)renderPairs();}}
+      if(next&&sig!==signature){const i=db.animals.findIndex(a=>a.id&&a.id===next.id);if(i>=0){db.animals[i]={...next,aliases:db.animals[i].aliases||[]};save();if(active&&!doc.hidden)renderPairs();}}
       if(active && !doc.hidden && sig!==signature)renderCurrent();signature=sig;
     };
     root.__animalsShown=()=>{if(active)return;active=true;renderCurrent();renderPairs();};

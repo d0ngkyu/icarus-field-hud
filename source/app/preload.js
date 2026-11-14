@@ -5,6 +5,7 @@ ipcRenderer.on('state', (_e, st) => { if (onState) onState(st); });
 ipcRenderer.on('upd', (_e, u) => { if (onUpd) onUpd(u); else pendingUpd = u; });
 ipcRenderer.on('diag', (_e, n) => { if (onDiag) onDiag(n); else pendingDiag.push(n); });
 contextBridge.exposeInMainWorld('hudApp', {
+  gameControl: action => ipcRenderer.invoke('gameControl', action),
   state: () => ipcRenderer.invoke('state'),
   toggleTop: () => ipcRenderer.invoke('toggleTop'),
   toggleCompact: () => ipcRenderer.invoke('toggleCompact'),

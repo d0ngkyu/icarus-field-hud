@@ -704,7 +704,9 @@ local okAnimal, loadedAnimal = pcall(require, "animals")
 if okAnimal then animalReader = loadedAnimal else log("animal reader unavailable: " .. tostring(loadedAnimal)) end
 WORLD_READY = false
 local sessionId, sessionTicks = nil, 0
+local gameControl = nil
 local function resetSession()
+    if gameControl then gameControl.reset() end
     WORLD_READY = false
     sessionTicks = 0
     bagInvs, lastBag, lastBagJson, lastPose = nil, "", "{}", nil
@@ -714,6 +716,7 @@ local function resetSession()
     lastAnimal = nil
     if animalReader and animalReader.reset then animalReader.reset() end
 end
+pcall(function() gameControl = dofile(MODDIR .. '/Scripts/game_control.lua') end)
 local function autoTick()
     local t0 = os.clock()
     step("tick")
@@ -726,6 +729,12 @@ local function autoTick()
     sessionTicks = sessionTicks + 1
     WORLD_READY = sessionTicks > 60
     if not WORLD_READY then step("idle") return end
+    if gameControl then
+        step('game_control')
+        local ok = pcall(gameControl.tick, MODDIR, pawn, world, on('game_control'))
+        if not ok then gameControl.reset() end
+        step('idle')
+    end
     local bagChanged = false
     if tick % 4 == 0 then bagChanged = scanBag() end
     local pose = poseJson()
