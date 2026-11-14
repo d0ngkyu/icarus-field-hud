@@ -1,6 +1,6 @@
 {
- "version": "2026.11.14.7",
- "notes": "지도의 동굴을 규모별 Lv.1~3과 계급장 아이콘으로 표시합니다. 메가 동굴은 M 표시.",
+ "version": "2026.11.14.8",
+ "notes": "게임을 끄면 HUD도 약 20초 뒤 같이 꺼집니다 (트레이 메뉴에서 끌 수 있음). 튕겼을 때는 안내를 보여 주려고 켜 둡니다.",
  "config": {},
  "files": [
   {
@@ -63,7 +63,7 @@
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/index.html",
    "n": 874209,
-   "h": "1843a52231efa0b0d32782127be9888e1eda8c4c"
+   "h": "1f2dc73dae1d18f0bd9046d4909f1759940f6131"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/icons.webp",
@@ -112,8 +112,8 @@
   },
   {
    "p": "app/main.js",
-   "n": 13946,
-   "h": "14ae3ea4d5fa9ec5d0307669db786f80785a828d"
+   "n": 15442,
+   "h": "31c8b0627d219fdf5f2093d94a0c106c49761539"
   },
   {
    "p": "app/updater.js",

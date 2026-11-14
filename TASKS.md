@@ -39,3 +39,7 @@
 - 변경 (claude/cave-levels → main, 2026.11.14.7): hud `caveInfo`/`drawRank`/`drawCave` — 작은=갈매기 1개 Lv.1, 중간=2개 Lv.2, 큰=3개 Lv.3, 메가=3개+빨간 M Lv.M. 규모 모르면 회색·레벨 없음. 동굴 입구(c)를 위치 기준 1개로 합치고 규모 아는 기록 우선(메모 유지).
 - mod: 동굴 입구 액터의 전체 이름에서 `CAVE_XX_SIZE_NN` 추출 (이미 호출하던 GetFullName만 사용, 새 네이티브 읽기 없음). 처음 3개 이름을 로그에 남김.
 - 검증: 아이콘 화면 캡처(크롬), JS·Lua 문법, node 테스트 20개. **미확인**: 실제 게임에서 입구 이름에 규모가 들어 있는지, 메가 동굴의 실제 이름(MEGA로 추정). 다음 접속 후 UE4SS.log의 "cave entrance:" 줄로 확인.
+
+## 2026-11-14 09:55 · Claude · 게임 끄면 HUD도 같이 종료 (사용자 요청)
+- 변경 (claude/close-with-game → main, 2026.11.14.8): app `watchGame()` — 10초마다 tasklist로 게임 확인, 게임을 한 번 본 뒤 2번 연속 없으면 종료. 튕김 안내가 있으면(최근 5분) 끄지 않고 창을 띄움. 트레이 메뉴 "게임 끄면 같이 끄기"(기본 켜짐, settings.json `closeWithGame`).
+- 검증: 새 테스트 4개(source/tests/close-with-game.test.cjs) 포함 총 24개 통과. 실제 Windows 동작은 사용자 확인 필요.

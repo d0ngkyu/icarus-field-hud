@@ -8,7 +8,7 @@ if (!app.requestSingleInstanceLock()) { app.quit(); }
 app.disableHardwareAcceleration();
 
 const cfgFile = () => path.join(app.getPath('userData'), 'settings.json');
-let cfg = { top: false, compact: false, full: { width: 1400, height: 900 }, small: { width: 460, height: 760 }, hud: null };
+let cfg = { top: false, compact: false, closeWithGame: true, full: { width: 1400, height: 900 }, small: { width: 460, height: 760 }, hud: null };
 try { cfg = Object.assign(cfg, JSON.parse(fs.readFileSync(cfgFile(), 'utf8'))); } catch (e) {}
 const saveCfg = () => { try { fs.mkdirSync(path.dirname(cfgFile()), { recursive: true }); fs.writeFileSync(cfgFile(), JSON.stringify(cfg, null, 1)); } catch (e) {} };
 
@@ -16,7 +16,8 @@ const UPD = require('./updater.js');
 const PKG = (() => { try { return require('./package.json'); } catch (e) { return {}; } })();
 const UPDATE_URL = process.env.HUD_UPDATE_URL || PKG.updateUrl || '';
 let gameDir = null, lastUpd = null, lastLiveAt = 0, doctor = null;
-const sendDiag = n => { ulog('diag: ' + n.text); if (win && !win.isDestroyed()) win.webContents.send('diag', n); };
+let lastNoteAt = 0;
+const sendDiag = n => { lastNoteAt = Date.now(); ulog('diag: ' + n.text); if (win && !win.isDestroyed()) win.webContents.send('diag', n); };
 const hudFile = () => gameDir && path.join(UPD.modDir(gameDir), 'hud', 'index.html');
 const logFile = () => path.join(app.getPath('userData'), 'update.log');
 const ulog = t => { try { fs.appendFileSync(logFile(), new Date().toISOString() + ' ' + t + '\n'); } catch (e) {} };
@@ -122,6 +123,7 @@ function buildTray() {
     { label: 'HUD 열기', click: showWin },
     { label: '항상 위에 표시', type: 'checkbox', checked: cfg.top, click: () => { toggleTop(); win.webContents.send('state', state()); } },
     { label: '작게 보기', type: 'checkbox', checked: cfg.compact, click: () => { toggleCompact(); win.webContents.send('state', state()); } },
+    { label: '게임 끄면 같이 끄기', type: 'checkbox', checked: cfg.closeWithGame !== false, click: m => { cfg.closeWithGame = m.checked; saveCfg(); } },
     { label: '업데이트 확인', click: () => runUpdate(true) },
     { type: 'separator' },
     { label: '종료', click: () => { quitting = true; app.quit(); } },
@@ -219,6 +221,34 @@ async function start() {
     }
   } catch (e) {}
   setInterval(() => runUpdate(false), 30 * 60 * 1000);
+  watchGame();
+}
+
+// close together with the game: once the game has been seen running, quit after it has been gone for ~20 s.
+// A crash note keeps the window open so the person can read it.
+function gameUp() {
+  return new Promise(res => require('child_process').execFile('tasklist', ['/FI', 'IMAGENAME eq Icarus-Win64-Shipping.exe', '/NH'],
+    { windowsHide: true }, (e, out) => res(e ? null : /Icarus-Win64-Shipping/i.test(out || ''))));
+}
+function watchGame() {
+  if (process.platform !== 'win32') return;
+  let seen = false, gone = 0, busy = false;
+  setInterval(async () => {
+    if (busy || quitting) return;
+    busy = true;
+    try {
+      const up = await gameUp();
+      if (up === null) return;            // could not ask Windows: do nothing
+      if (up) { seen = true; gone = 0; return; }
+      if (!seen || cfg.closeWithGame === false || ++gone < 2) return;
+      let note = null;
+      try { if (doctor) note = doctor.check((lastUpd && lastUpd.version) || PKG.contentVersion || ''); } catch (e) {}
+      if (note) sendDiag(note);
+      if (note || Date.now() - lastNoteAt < 5 * 60000) { showWin(); seen = false; return; }
+      ulog('game closed: closing the HUD too');
+      quitting = true; app.quit();
+    } finally { busy = false; }
+  }, 10000);
 }
 app.whenReady().then(start);
 
