@@ -264,3 +264,12 @@
 
 ## 진행 중
 - COMPACT-008 · Codex · codex/compact-companion · 2026-11-14: layout.js/css, animals.js, 신규 UI helper/tests; index.html은 탭 연결/검색/문구 영역만. 지도/동굴 데이터·Lua 미소유. 코치 압축/정확한 상태, 작은 선택형 동물 차트·단일 스탯 분포·시뮬레이션 약점 보완, 안전한 동물 재연결, 전체 아이템 탐색, 기존 수신 정보 기반 캐릭터 탭, 요청한 8개 탭 순서, 기록 그룹/검색, 한글 별칭 구현. 새 native 수집 없이 초기 캐릭터 탭 제공. 정식 담당 Codex, 배포 잠금은 추후 별도 기록.
+
+
+## STAT-CHECK-009 · Codex · 수치 수정 가능성 조사 (2026-11-14)
+- 범위: 사용자 요청에 따른 읽기 전용 조사 완료. 게임/세이브/설치 모드 변경 및 배포 없음. COMPACT-008 작업과 소유권 유지.
+- PC Characters.json의 이중 JSON 구조를 파싱하여 XP, XP_Debt, Talents(RowName/Rank) 확인. 직접 Level/미사용 포인트/기본 체력·속도 필드는 없음. 개인 세이브 원문/식별자 업로드 안 함.
+- 설치 Content/Data/data.pak에서 D_CharacterStartingStats.json Base_Stats 확인: BaseMaximumHealth_+=300, BaseMaximumStamina_+=200, BaseWeightCapacity_+=100, BaseMovementSpeed_+=355. 장비/음식/재능 적용 전 기본값이며 현재 HUD 최종값이 아님.
+- D_CharacterGrowth.json Player가 경험치/재능/설계도/솔로 성장 곡선을 참조함. 대응 C_PlayerExperienceGrowth, C_PlayerTalentGrowth, C_PlayerBlueprintGrowth, C_SoloTalentGrowth의 uasset/uexp가 pakchunk0_s20에 존재함을 인덱스로 확인. 곡선 수치 디코딩/재패킹/적용 시험 미실행.
+- 결론: XP와 습득 재능은 저장 데이터 수정 대상. 미사용 포인트 증가는 단순 저장 필드 편집으로 확정하지 않으며 성장 곡선 조정 필요 여부 검증 대상. 네 가지 기본 능력치는 데이터 모드 후보이며 특정 캐릭터만 적용하는 범위는 별도 설계 필요.
+- 조사 중 게임 프로세스 실행 확인; 종료/메모리 접근 없음. 실제 인게임 반영·멀티플레이 전파 범위 미검증. 다음: 사용자가 변경 범위/목표값을 지정하면 종료 상태 백업 후 별도 구현 및 검증. 본 요청은 가능성 조사만.
