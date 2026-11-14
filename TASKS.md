@@ -613,3 +613,8 @@ A/B/C 모두 종료 프로토콜, 업데이트 실패 표시, 개인 월드 격�
 - Lua mock12개 통과(호스트허용, 원격차단,2인/관전자/무효GameMode/nil/0인원, 다음 요청 인원변경, 상태4필드 포함). exe 자체/연결/4크기x8탭 레이아웃 검사 통과. GetNumPlayers/GetNumSpectators API 근거 CONNECTION.md. 실제 게임 버전에서 새 경로 실행/가방 지급은 아직 미확인.
 - source ef27cddebe7f1afea96c78c142826862b08902cc, manifest92a6fe865fd0c4ae22ca231712bd5357857bb95a. 원격ZIP SHA2561931bd4cf8204a10d8460f3db000073bf4eeabd5341d21b52da9bdac7145609e 및9개 내부 크기/hash 검증. 실CDN0.3.4, 원격fetch 후 source 의미diff 없음. outputs/IcarusSoloTools-0.3.4.zip.
 - PC 게임 실행중 PID21648, 설치본0.3.3 유지. 설치 파일 교체/게임종료/세이브수정 안함. 다음: 게임 정상종료→도구 재실행·0.3.4 업데이트→싱글 호스트 재입장→돌1개 F11로 실제 지급 확인. 이전 미성공 요청은 자동 재실행하지 않음. 독립 채널 배포 소유 해제, 인게임 검증 대기.
+
+
+## ANIMAL-LIVE-026 / MANUAL-CONTROL-027 · 진행 중
+- Codex codex/animal-live-details 동물 섹터(animals.lua/js), main.lua 동물/수동요청 분기, game-control.js/lua 및 해당UI/시험 담당. 현재상세창 실시간 능력치·게임순서VIR FIT PHY REF TGH ADP INS·유전효과툴팁·좌유전/우현재능력치/하교배계획. 게임데이터 근거확인 후 숫자 표시.
+- 사용자 명시 요청: 안전모드에서도 월드수동저장/저장후종료 활성. 전체안전모드 해제 없이 명시요청 경로만 분리, 호스트/안정화/저장중/실패/만료 검사 유지·보완. 실제게임/종료 성공은 시험전. 게임중파일교체/서버종료 금지 유지. stable단일배포 예정.
