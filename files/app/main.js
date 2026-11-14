@@ -89,12 +89,13 @@ function createWindow(hud) {
   }, 3000);
   win.on('closed', () => clearInterval(pageTimer));
   win.on('closed', () => clearInterval(timer));
-  win.once('ready-to-show', () => win.show());
+  liveWindow.once('ready-to-show', () => {if(!liveWindow.isDestroyed())liveWindow.show()});
   let t = null;
   const remember = () => { clearTimeout(t); t = setTimeout(() => {
-    if (!win || win.isMinimized() || win.isMaximized()) return;
-    const nb = win.getBounds(); if (cfg.compact) cfg.small = nb; else cfg.full = nb; saveCfg();
+    if (liveWindow.isDestroyed() || liveWindow.isMinimized() || liveWindow.isMaximized()) return;
+    const nb = liveWindow.getBounds(); if (cfg.compact) cfg.small = nb; else cfg.full = nb; saveCfg();
   }, 400); };
+  liveWindow.on('closed', () => { clearTimeout(t); if(win===liveWindow)win=null; });
   win.on('move', remember); win.on('resize', remember);
   win.on('close', e => { if (!quitting) { e.preventDefault(); win.hide(); } });
   win.webContents.setWindowOpenHandler(({ url }) => { shell.openExternal(url); return { action: 'deny' }; });
@@ -119,13 +120,13 @@ function toggleCompact() {
   }
   saveCfg(); buildTray(); return state();
 }
-function showWin() { if (!win) return; if (win.isMinimized()) win.restore(); win.show(); win.focus(); }
+function showWin() { if (!win || win.isDestroyed()) return; if (win.isMinimized()) win.restore(); win.show(); win.focus(); }
 
 function buildTray() {
   if (!tray) {
     tray = new Tray(nativeImage.createFromPath(iconPath).resize({ width: 16, height: 16 }));
     tray.setToolTip('Icarus Field HUD');
-    tray.on('click', () => (win && win.isVisible() ? win.hide() : showWin()));
+    tray.on('click', () => (win && !win.isDestroyed() && win.isVisible() ? win.hide() : showWin()));
   }
   tray.setContextMenu(Menu.buildFromTemplate([
     { label: 'HUD 열기', click: showWin },
@@ -142,7 +143,7 @@ let gameControlAction=null;
 ipcMain.handle('gameControl',async (_e,action)=>{
  if(updateTask||restartPending)return {message:'HUD 업데이트가 끝난 뒤 다시 눌러 주세요.'};
  if(action==='exit'){const answer=await dialog.showMessageBox(win,{type:'warning',message:'호스트 게임을 종료할까요?',detail:'접속한 친구들도 연결이 끊깁니다. 게임에서 Esc 메뉴를 연 상태에서 저장 처리 확인 후 종료를 요청합니다.',buttons:['취소','저장 후 종료'],defaultId:0,cancelId:0});if(answer.response!==1)return {message:'종료 요청을 취소했습니다.'};}
- if(!gameControlAction)gameControlAction=require('./game-control.js').createControl({modDir:()=>gameDir&&UPD.modDir(gameDir),gameUp,openExternal:url=>shell.openExternal(url)});
+ if(!gameControlAction)gameControlAction=require('./game-control.js').createControl({modDir:()=>gameDir&&UPD.modDir(gameDir),gameUp,openExternal:url=>shell.openExternal(url),saveRoot:process.env.LOCALAPPDATA?path.join(process.env.LOCALAPPDATA,"Icarus","Saved","PlayerData"):null,progress:p=>{if(win&&!win.isDestroyed())win.webContents.send("game-progress",p)}});
  return gameControlAction(action);
 });
 ipcMain.handle('state', () => state());

@@ -1,10 +1,10 @@
 {
- "version": "2026.11.14.28",
+ "version": "2026.11.14.29",
  "channel": "stable",
- "source": "f05e1600d3c389424d3b774b4d8fd331128586b1",
- "notes": "길동무 · 한눈에: 캐릭터 탭, 작은 동물 차트·약점 보완 확률, 기록 검색, 호스트 저장·종료 버튼",
+ "source": "9680db38fdbf0548f95a9fa0abbff04a73b54f15",
+ "notes": "길동무 · 한눈에: 저장 요청 진행 및 완료 미확인 구분, 닫힌 HUD 창 타이머 오류 수정",
  "config": {},
- "filesPath": "releases/stable/2026.11.14.28/files",
+ "filesPath": "releases/stable/2026.11.14.29/files",
  "files": [
   {
    "p": "game/Icarus/Binaries/Win64/dwmapi.dll",
@@ -71,7 +71,7 @@
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/index.html",
    "n": 960984,
-   "h": "8d6246f500fdb5822f32805df9557ffa917337e3"
+   "h": "b342fdbd854936a42ee8a3b48d4e61bdaab40644"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/animals.js",
@@ -125,8 +125,8 @@
   },
   {
    "p": "app/main.js",
-   "n": 19444,
-   "h": "ef38c85ddfd64da339c56679a5156472bb3d2fcd"
+   "n": 19844,
+   "h": "2c3829393392c434391e9752f3478c1455134113"
   },
   {
    "p": "app/updater.js",
@@ -135,8 +135,8 @@
   },
   {
    "p": "app/preload.js",
-   "n": 1690,
-   "h": "78dd2e5377f3464d3dc71ffcc38c3f583402ef25"
+   "n": 1844,
+   "h": "d07a5613e00557425c79d98a12fe4703689c6eef"
   },
   {
    "p": "app/extract.js",
@@ -170,18 +170,23 @@
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/layout.js",
-   "n": 23012,
-   "h": "ca12fe821446bb61748fc517aa07bd8fb6a50926"
+   "n": 23121,
+   "h": "d738830b7f52ee71225c4974a328146cd3bea098"
   },
   {
    "p": "app/game-control.js",
-   "n": 3002,
-   "h": "fc5ebd10b6ed2dc9af0dc161038eb7b10b387802"
+   "n": 4526,
+   "h": "7a0f6242290df8a91b3a74f4fc78094f78d33805"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/Scripts/game_control.lua",
-   "n": 3041,
-   "h": "2672ecd85e11ce226aa3c941f54d4e7d80f0e75c"
+   "n": 3247,
+   "h": "d9a96d3f6c1b10dfa4c513386ddc060edcd98681"
+  },
+  {
+   "p": "app/save-evidence.js",
+   "n": 805,
+   "h": "ff3638b72b6873662bc4d67046e6aa9d9747abce"
   }
  ]
 }
