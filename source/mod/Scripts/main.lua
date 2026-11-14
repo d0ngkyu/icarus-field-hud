@@ -582,6 +582,7 @@ end
 
 -- the game's own map fog: which map tiles you have uncovered (same as the in-game map)
 local lastFogSig, fogAt = nil, -1000
+local FOG_EVERY = 800  -- ticks of 750 ms = 10 minutes
 fogNow = false
 local function readFog(force)
     if not lastPose then return nil end
@@ -665,10 +666,16 @@ local function autoTick()
         if okO and type(list) == "table" and #list > 0 then oreJ = "[" .. table.concat(list, ",") .. "]" end
     end
     local fogJ = nil
-    if (tick > 60 and tick % 80 == 13) or (fogNow and tick > 20) then
+    -- reading the game's fog table crashed the game once (2026-11-14 08:55, step "fog"), so read it
+    -- rarely: once after the world loads, then every 10 minutes, or on F10 (at most once a minute)
+    local fogFirst = fogAt < 0 and lastPose ~= nil and tick > 60
+    local fogDue = fogFirst or (fogAt >= 0 and tick % FOG_EVERY == 13) or (fogNow and tick > 20 and tick - fogAt >= 80)
+    if fogNow and not fogDue and tick - fogAt < 80 then fogNow = false end
+    if fogDue then
+        fogAt = tick
         step("fog")
         local okF, fj = true, nil
-        if on("fog") then okF, fj = pcall(readFog, tick < 160 or fogNow) end
+        if on("fog") then okF, fj = pcall(readFog, fogFirst or fogNow) end
         step("idle")
         fogNow = false
         if okF then fogJ = fj else log("map fog read failed: " .. tostring(fj)) end
