@@ -1,10 +1,10 @@
 {
- "version": "2026.11.14.32",
+ "version": "2026.11.14.33",
  "channel": "stable",
- "source": "af5e91ad7f08f472d7c57cf1ef6633dba2b331cf",
- "notes": "누적 사용 LV·기본 칭호20·히든 칭호4·업적 탭 추가, 종료 충돌 진단 오판 및 설치 버전 표시 수정. 게임 엔진 종료 충돌 원인은 조사 중.",
+ "source": "02ff7205fb38f0d4fa7961840fcd56d7b42948c2",
+ "notes": "생활 업적 30개 추가 · 전체 화면 클릭/이동/자리비움 집계 · 작은 업적 카드 · 1~9 탭 단축키",
  "config": {},
- "filesPath": "releases/stable/2026.11.14.32/files",
+ "filesPath": "releases/stable/2026.11.14.33/files",
  "files": [
   {
    "p": "game/Icarus/Binaries/Win64/dwmapi.dll",
@@ -70,8 +70,8 @@
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/index.html",
-   "n": 959872,
-   "h": "aec312e33ddc433b2eb86cbcb4cb3cc7dd9ea3c2"
+   "n": 959907,
+   "h": "713ef4badbadfe5071b51d6fbd366dac56c2e577"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/animals.js",
@@ -125,8 +125,8 @@
   },
   {
    "p": "app/main.js",
-   "n": 23278,
-   "h": "3babea42272051e84d15d516aa794cfb1f2a80fb"
+   "n": 24104,
+   "h": "b6b7689d5cb12d1a1a9e8c5b665f9527ecd1257a"
   },
   {
    "p": "app/updater.js",
@@ -135,8 +135,8 @@
   },
   {
    "p": "app/preload.js",
-   "n": 1841,
-   "h": "793ed13613e1e398c8c3529a59a3896ed90150fd"
+   "n": 1946,
+   "h": "ef8efa2fc3f3ae6aa09a6415593a41342a73aeee"
   },
   {
    "p": "app/extract.js",
@@ -165,13 +165,13 @@
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/layout.css",
-   "n": 16650,
-   "h": "352b77bcaee31decfb6edc143cf95f8b4d79966a"
+   "n": 18419,
+   "h": "c4a419e3d884b536d67bf81f1b1aadb9e648faba"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/layout.js",
-   "n": 25654,
-   "h": "34775e8c50c02fa5c706ad083538a00f849da9e2"
+   "n": 29497,
+   "h": "95f36fb50c93aa833671be3ede3af4ad253011de"
   },
   {
    "p": "app/game-control.js",
@@ -187,6 +187,21 @@
    "p": "app/save-evidence.js",
    "n": 805,
    "h": "ff3638b72b6873662bc4d67046e6aa9d9747abce"
+  },
+  {
+   "p": "app/ActivityCounter.exe",
+   "n": 7168,
+   "h": "6dd9ff31e0ab4c21f886217027cd10b75a85e60f"
+  },
+  {
+   "p": "app/activity.js",
+   "n": 4295,
+   "h": "b17426740be0fc611fdf165360a6e7218b6e9d3e"
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/tab-keys.js",
+   "n": 667,
+   "h": "428e1502ba37a5daf3e7a2a3852de293a13e68e9"
   }
  ]
 }

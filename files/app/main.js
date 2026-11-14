@@ -28,6 +28,7 @@ const onScreen = b => b && b.x !== undefined && screen.getAllDisplays().some(d =
 });
 
 // Usage rank: reuse the existing game watcher; never scan the game for this badge.
+let activityTracker = null;
 let usageSample = null, usageActive = false, usageSavedAt = 0, usageSession = 0;
 const usageTitles = [[1,'갓 내린 신입'],[2,'돌멩이 수집가'],[3,'모닥불 지박령'],[5,'동굴 전세입자'],[7,'나무꾼 출신'],[10,'폭풍 단골손님'],[13,'광맥 감별사'],[16,'제작대 집주인'],[20,'이카루스 현지인'],[25,'보급품 감별사'],[30,'귀환 연기 전문가'],[35,'산소통 단골'],[40,'행성 고인물'],[50,'동굴 건물주'],[60,'폭풍과 맞담배'],[70,'귀환선 환불러'],[80,'행성 명예주민'],[90,'개척자 원로'],[95,'지구가 어딘데'],[100,'이 행성 건물주']];
 const usageNumber = n => Number.isFinite(n) && n > 0 ? n : 0;
@@ -40,16 +41,16 @@ function usageInfo() {
     {id:'secret-thirty',title:'처음엔 재미없다 했잖아',goal:108000,value:seconds,description:'누적 30시간 함께 사용',hint:'첫인상은 오래가지 않죠'},
     {id:'secret-return',title:'귀환 버튼 어디 갔지',goal:180000,value:seconds,description:'누적 50시간 함께 사용',hint:'지구행 표를 어디 뒀더라'}
   ].map(x=>({...x,hidden:true,unlocked:x.value>=x.goal}));
-  const achievements=[...titles,...secrets], automatic=titles.filter(t=>t.unlocked).pop();
+  const achievements=[...titles,...secrets,...(activityTracker?activityTracker.info().achievements:[])], automatic=titles.filter(t=>t.unlocked).pop();
   const selected=achievements.find(t=>t.id===cfg.hudTitleId&&t.unlocked)||automatic;
   const next=titles.find(t=>!t.unlocked);
-  return {seconds,level,title:selected.title,selectedId:selected.id,automatic:!achievements.some(t=>t.id===cfg.hudTitleId&&t.unlocked),achievements:achievements.map(t=>t.hidden&&!t.unlocked?{id:t.id,hidden:true,unlocked:false,title:'???',hint:t.hint}:t),nextTitle:next?.title||null,nextTitleSeconds:next?Math.max(0,next.goal-seconds):0,nextLevelSeconds:level<100?Math.max(0,level*3600-seconds):0};
+  return {activity:activityTracker?activityTracker.info():null,seconds,level,title:selected.title,selectedId:selected.id,automatic:!achievements.some(t=>t.id===cfg.hudTitleId&&t.unlocked),achievements:achievements.map(t=>t.hidden&&!t.unlocked?{id:t.id,hidden:true,unlocked:false,title:'???',hint:t.hint}:t),nextTitle:next?.title||null,nextTitleSeconds:next?Math.max(0,next.goal-seconds):0,nextLevelSeconds:level<100?Math.max(0,level*3600-seconds):0};
 }
 function sampleUsage(up, now = Date.now()) {
   const elapsed = usageSample === null ? 0 : now - usageSample;
   const valid = up === true && usageActive && elapsed > 0 && elapsed <= 10000;
   if (valid) {
-    cfg.hudUseSeconds = usageInfo().seconds + elapsed/1000;
+    cfg.hudUseSeconds = usageNumber(cfg.hudUseSeconds) + elapsed/1000;
     usageSession += elapsed/1000;
     cfg.hudMaxSession = Math.max(usageNumber(cfg.hudMaxSession),usageSession);
     if(new Date(now).getHours()<5)cfg.hudNightSeconds=usageNumber(cfg.hudNightSeconds)+elapsed/1000;
@@ -180,6 +181,7 @@ ipcMain.handle('gameControl',async (_e,action)=>{
  if(!gameControlAction)gameControlAction=require('./game-control.js').createControl({modDir:()=>gameDir&&UPD.modDir(gameDir),gameUp,openExternal:url=>shell.openExternal(url),saveRoot:process.env.LOCALAPPDATA?path.join(process.env.LOCALAPPDATA,"Icarus","Saved","PlayerData"):null,progress:p=>{if(win&&!win.isDestroyed())win.webContents.send("game-progress",p)}});
  return gameControlAction(action);
 });
+ipcMain.handle('setActivityEnabled', (_e,on) => {if(activityTracker)activityTracker.enable(on===true);return usageInfo();});
 ipcMain.handle('setTitle', (_e,id) => { if(id==='auto'||usageInfo().achievements.some(t=>t.id===id&&t.unlocked)){cfg.hudTitleId=id==='auto'?null:id;saveCfg();}return usageInfo(); });
 ipcMain.handle('state', () => state());
 ipcMain.handle('toggleTop', () => toggleTop());
@@ -202,7 +204,7 @@ ipcMain.handle('diagReport', () => {
 ipcMain.handle('checkUpdate', () => runUpdate(true).then(r => !!r));
 
 app.on('second-instance', showWin);
-app.on('before-quit', () => { saveCfg(); quitting = true; });
+app.on('before-quit', () => { if(activityTracker)activityTracker.stop();saveCfg(); quitting = true; });
 app.on('window-all-closed', () => {});
 // ---------- start: find the game, install on first run, then keep up to date ----------
 let updateTask = null, restartPending = false;
@@ -231,7 +233,7 @@ async function performUpdate(manual) {
     if (r.appChanged) {
       restartPending = true;
       ulog('program files changed, restarting');
-      setTimeout(() => { quitting = true; app.relaunch(); app.exit(0); }, 2500);
+      setTimeout(() => { quitting = true; if(activityTracker)activityTracker.stop();app.relaunch(); app.exit(0); }, 2500);
     }
     return r;
   } catch (e) {
@@ -269,6 +271,7 @@ async function start() {
     UPD.registerApp(gameDir);
     setTimeout(() => runUpdate(false), 5000);
   }
+  activityTracker=require('./activity.js').create({state:cfg,save:saveCfg});activityTracker.boot();
   createWindow(hudFile()); buildTray();
   // keep an eye out for crashes: look every 30 s (cheap: a few folder listings)
   try {
