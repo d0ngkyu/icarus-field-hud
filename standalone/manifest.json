@@ -1,53 +1,53 @@
 {
+  "size": 2522252,
+  "version": "0.3.4",
+  "packageUrl": "https://raw.githubusercontent.com/d0ngkyu/icarus-field-hud/ef27cddebe7f1afea96c78c142826862b08902cc/standalone/releases/0.3.4/package.zip",
+  "sha256": "1931bd4cf8204a10d8460f3db000073bf4eeabd5341d21b52da9bdac7145609e",
   "files": [
     {
       "size": 267264,
-      "sha256": "704136b7ba208f500e3f33756524b8f3481df4adaafdfbaaa9417bfa9b93ff87",
-      "path": "IcarusSoloItems.exe"
+      "path": "IcarusSoloItems.exe",
+      "sha256": "c8bef2a9a03d05f010d00c6c8b845ba67bac4c4290311031fc75e200e8f28a0e"
     },
     {
       "size": 187392,
-      "sha256": "5b86176306670f82277b8e0a0cdfcc1ff2fa11c4061fa478dd04e15af3f29ca2",
-      "path": "DesktopLauncher.exe"
+      "path": "DesktopLauncher.exe",
+      "sha256": "bba90178a5b43e35dcbe8e2716641bd002e88955bde85cc5d4a1a3ec83bc7011"
     },
     {
       "size": 440750,
-      "sha256": "ecdf3005b08351af6d7861f836d26ae4525e6e6488d0ccf6766008e0b345d01f",
-      "path": "catalog.json"
+      "path": "catalog.json",
+      "sha256": "ecdf3005b08351af6d7861f836d26ae4525e6e6488d0ccf6766008e0b345d01f"
     },
     {
-      "size": 5264,
-      "sha256": "bce5fdde21c0bde70f9add46d9647c1adfa09f4eab44e56e8e54c0eaab0a6a00",
-      "path": "README.md"
+      "size": 5614,
+      "path": "README.md",
+      "sha256": "26c5f8845c02e8d22b0e9b01c7d8a48227ce048c25d9c9a6439dfce50221f242"
     },
     {
-      "size": 4395,
-      "sha256": "759bdfbdb36cbb185fc5d04cd5b4bd8ee999505610972d063cc9c652ef97227e",
-      "path": "Scripts/main.lua"
+      "size": 5216,
+      "path": "Scripts/main.lua",
+      "sha256": "eb42b709fefcb09549a41b97d8ce60f8ad0b0555a9f630dc2d9c82cbfa1126ba"
     },
     {
       "size": 91788,
-      "sha256": "8d64940a4efceb48c1208e6734f206ea486cc452b16fc53eb0a61e8bf1bfdc46",
-      "path": "Scripts/catalog.lua"
+      "path": "Scripts/catalog.lua",
+      "sha256": "8d64940a4efceb48c1208e6734f206ea486cc452b16fc53eb0a61e8bf1bfdc46"
     },
     {
       "size": 4541952,
-      "sha256": "fcd538e5994b9bb833622d425ae346f4e0692f02d4b0025114a559f9b6286022",
-      "path": "tools/repak.exe"
+      "path": "tools/repak.exe",
+      "sha256": "fcd538e5994b9bb833622d425ae346f4e0692f02d4b0025114a559f9b6286022"
     },
     {
       "size": 1095,
-      "sha256": "a5d6edefbaef9f29630341b86722c4039844b7b520d79b1a3bfd6b87cab62db6",
-      "path": "tools/LICENSE-MIT"
+      "path": "tools/LICENSE-MIT",
+      "sha256": "a5d6edefbaef9f29630341b86722c4039844b7b520d79b1a3bfd6b87cab62db6"
     },
     {
       "size": 9899,
-      "sha256": "20fe7b00e904ed690e3b9fd6073784d3fc428141dbd10b81c01fd143d0797f58",
-      "path": "tools/LICENSE-APACHE"
+      "path": "tools/LICENSE-APACHE",
+      "sha256": "20fe7b00e904ed690e3b9fd6073784d3fc428141dbd10b81c01fd143d0797f58"
     }
-  ],
-  "packageUrl": "https://raw.githubusercontent.com/d0ngkyu/icarus-field-hud/09928acff2904fc7726a6774cac282989ae6a0c6/standalone/releases/0.3.3/package.zip",
-  "size": 2521679,
-  "version": "0.3.3",
-  "sha256": "5870a19dd47b3a7c5bd2f54c356c8423e202b8ec909a09d99f61b223ac6a94df"
+  ]
 }
