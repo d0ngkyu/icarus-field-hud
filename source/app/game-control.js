@@ -11,6 +11,9 @@ function createControl({modDir,gameUp,openExternal,now=Date.now,sleep=ms=>new Pr
    if(action==='start'){if(up)return {message:'이미 게임이 실행 중입니다.'};await openExternal('steam://rungameid/1149460');return{message:'Steam에 게임 시작을 요청했습니다.'};}
    if(!up)throw Error('게임이 실행 중이 아닙니다.');
    const dir=modDir();if(!dir)throw Error('게임 설치 경로를 확인하지 못했습니다.');
+   if(fs.existsSync(path.join(dir,'safe_mode.txt')))throw Error(messages.disabled);
+   let off='';try{off=fs.readFileSync(path.join(dir,'features_off.txt'),'utf8')}catch{}
+   if(off.split(/\s+/).includes('game_control'))throw Error(messages.disabled);
    const id=crypto.randomBytes(12).toString('hex'),request=path.join(dir,'control-request.txt'),response=path.join(dir,'control-response.txt');
    fs.writeFileSync(request+'.tmp',id+'|'+Math.floor(now()/1000)+'|'+action);fs.renameSync(request+'.tmp',request);
    const start=now();while(now()-start<50000){await sleep(500);let raw='';try{raw=fs.readFileSync(response,'utf8')}catch{}const [got,status]=raw.split('|');if(got!==id||status==='save_requested')continue;if(!messages[status])throw Error('알 수 없는 게임 응답');return {status,message:messages[status]};}
