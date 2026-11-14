@@ -1,6 +1,6 @@
 {
- "version": "2026.11.14.12",
- "notes": "게임을 끄면 HUD도 확실히 같이 꺼집니다. 동물 탭이 생겼습니다: 탈것 상세창을 열면 유전 능력치와 부모 비교를 보여 줍니다.",
+ "version": "2026.11.14.13",
+ "notes": "개발용: 동굴 파일 분석 준비 (일반 사용자에게는 변화 없음)",
  "config": {},
  "files": [
   {
@@ -68,7 +68,7 @@
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/index.html",
    "n": 877347,
-   "h": "b221b96c15c5eef05ebf68cafa1f27b2096e63cc"
+   "h": "9462ba27e1b889a58ad674df8f4b1fb2a5cd6ce3"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/animals.js",
@@ -122,8 +122,8 @@
   },
   {
    "p": "app/main.js",
-   "n": 16182,
-   "h": "78636cd78bd6b6fde9c1a02486ed23e3055a5e51"
+   "n": 16181,
+   "h": "9dab86f4c278f837bcb080480aa6191c770c9f09"
   },
   {
    "p": "app/updater.js",
@@ -142,8 +142,8 @@
   },
   {
    "p": "app/levjob.js",
-   "n": 1567,
-   "h": "e4900629710109468d946fcc3107d865f9c90fa1"
+   "n": 1582,
+   "h": "04cf88adc6401595f272cc3cd3d1d5953d60169a"
   },
   {
    "p": "app/diag.js",

@@ -223,7 +223,7 @@ async function start() {
   } catch (e) { ulog('diag not started: ' + e.message); }
   // on the PC that builds updates only: copy map level files out of the game, outside the game process
   try {
-    const md = UPD.modDir(gameDir), out = path.join(md, 'levelraw');
+    const md = UPD.modDir(gameDir), out = path.join(md, 'caveraw');
     if (fs.existsSync(path.join(md, 'dev.txt')) && !fs.existsSync(path.join(out, 'done.txt'))) {
       const { Worker } = require('worker_threads');
       setTimeout(() => { try { new Worker(path.join(__dirname, 'levjob.js'), { workerData: { pakDir: path.join(gameDir, 'Icarus', 'Content', 'Paks'), outDir: out } }).on('error', e => ulog('level copy failed: ' + e.message)); } catch (e) { ulog('level copy failed: ' + e.message); } }, 20000);
