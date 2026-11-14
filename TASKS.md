@@ -221,3 +221,6 @@
 ## CHANNELS-006 · 구현
 - 정식 Codex/베타 Claude 역할 반영. updater beta.txt 선택·정식 복귀·채널별 버전 하한, 불변 다운로드 경로 구현. game 실행 안전 검사 유지. Node 저장소 빌더와 단일 Actions(queue:max) 추가. Git blob 기반 검사·채널별 버전/이력 되돌림 차단·일괄 Git 커밋 공개.
 - Node+Fengari 73개 통과. 모의 채널 전환/다운그레이드/실행 중 보류·실파일 빌드 시험. Actions 실제 실행 및 PC 적용은 아직 미확인. RELEASE-CHANNELS.md 참조.
+
+## CHANNELS-006 · 정식 배포 진행
+- 담당 Codex, source c71038968b8c473fd1a814d9b44ddab6da3cbdd1 (PR #10 병합 확인), stable 2026.11.14.26 예정. 73개 검사 통과/소스 원격 tree 일치. 단일 Actions 첫 실배포 실행 중. 게임 설치본 직접 변경 없음. Claude beta 후속 배포는 RELEASE-CHANNELS.md 절차 사용.
