@@ -24,7 +24,7 @@
   - 모드: `...\Icarus\Icarus\Binaries\Win64\ue4ss\Mods\IcarusHUD\`
     - `Scripts\main.lua`, `Scripts\bp_names.lua`, `hud\index.html`, `hud\icons.webp`, `hud\fonts\`, `hud\maps\*.webp`, `hud\live.js`
   - 사용자 본인의 프로그램: `...\Mods\IcarusHUD\app\IcarusHUD.exe` (코드는 `app\resources\app\*.js`, asar 없음)
-    - 같은 위치에 0바이트 `app.asar`가 남아 있습니다. Electron은 `app` 폴더를 먼저 읽으므로 무해합니다.
+    - **2026-11-14 실측 정정:** 설치본 app.asar는 13,219바이트이며 v1.0.1 옛 코드가 들어 있었습니다. 최신 app/ 폴더가 있어도 업데이트/진단이 작동하지 않았습니다. archive를 app.asar.legacy-20261114로 백업 이동한 뒤 일반 실행하니 최신 업데이트·진단이 작동했습니다. 새 패키지에서도 옛 archive를 제외하세요. 상세: REVIEW-ANIMALS-EXIT.md.
   - 친구들은 zip(Release `v1.0`)을 아무 데나 풀고 실행합니다. 프로그램이 게임 폴더를 찾아 모드를 설치합니다.
 
 ## 3. 구성과 데이터 흐름
