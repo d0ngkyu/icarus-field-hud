@@ -28,3 +28,5 @@
 - PR #7 작성 직후 Claude .20을 확인해 통합. 동굴 규모를 프리팹 위치의 가로 폭 중앙값으로 변경했으므로 위 광석/생물 수 분류 우려는 이전 .19 검토 기록이며 현재 .20에는 그대로 적용되지 않음. 일반 광석 수는 여전히 후속.
 - 실제 충돌: cave-hazards.test.cjs의 레벨/라벨 검사. Claude의 폭 약 87m 검사와 Codex의 est=true/추정 검사를 함께 유지. 소스/도구/배포 파일은 .20 그대로 보존.
 - PR: https://github.com/d0ngkyu/icarus-field-hud/pull/7. 통합/배포 Claude 대기.
+
+- 최종 인계: PR #8 https://github.com/d0ngkyu/icarus-field-hud/pull/8 / codex/map-selection-v20 (.20 기반). PR #7은 중간 동기화 브랜치의 Git 병합 충돌을 피하기 위해 대체 후 닫음. 최종 소스·시험·기록은 #8에 모두 보존. Node 59개 재통과, Windows CRLF에서도 지도 시험 실행 확인.
