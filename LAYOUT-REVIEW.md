@@ -17,3 +17,8 @@
 - 1400px 및 760px 창에서 제작/동물 가로 넘침 없음. 최종 새 검증 탭 콘솔 오류 0. 이 결과는 실게임 자료/창 고정 시험이 아님.
 - 발견/수정: 필터 DOM을 분리한 도중 document 조회로 라벨을 바꾸려 하면 null 초기화 오류 발생. 분리한 그룹 내부 조회로 수정 후 새 페이지 회귀 확인. 배포 전 해결.
 - 초기 화면 구조/차트를 PR #11로 먼저 공개, 검증 보완을 묶어 후속 반영. 정식 Codex/베타 Claude 역할 유지.
+
+## Claude review follow-up
+- Confirmed and fixed: switching plans must preserve world memories, home, navigation and current telemetry. Added VM regression test switching away and back; 76 tests pass.
+- History renders only when open and changed. Recipe quantities intentionally exclude inventory to avoid workbench readiness claims. Connection remains visible in titlebar tbst (1-second status refresh). Existing tabs already use Ctrl+1..6; history uses Ctrl+7.
+
