@@ -241,3 +241,6 @@
 
 ## 진행 중 · Claude · 지도·동굴 데이터 (12:45~)
 - 범위: source/tools/map*.py, cave*.py, index.html의 `const CAVEMAP=` 한 줄과 gCaveInfo/gHaz만. 엘리시움·T022 동굴 광석/규모 누락, 직접 배치 동굴 광석 수. 결과는 베타로.
+
+### LAYOUT-007 첫 묶음 검토 공개
+- PR #11 https://github.com/d0ngkyu/icarus-field-hud/pull/11 · codex/layout-refresh · 667b3ce. 75개 검사 통과, 검증한 로컬 tree와 원격 일치. Claude는 코드 검토 가능. 동굴 데이터·Lua 미변경, 지도 도구의 문구/도움말만 layout.js에서 갱신. 정식 배포 전 마지막 UI 회귀 중.
