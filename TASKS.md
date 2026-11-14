@@ -361,3 +361,7 @@
 
 ## 진행 중 · SOLO-SUITE-015
 - Codex · codex/solo-items · 사용자 요청: 프로그램 수정 시 자동 다운로드/교체 및 체력 한도, 스태미나 소모, 산소/허기/갈증, 인벤토리 무게, 내구도, 달리기 속도 탭 추가. 독립 source/solo-items/ 및 standalone/ 배포 경로만 소유. 기존 HUD stable/SAVE-FIX 영역과 분리. 설치 data.pak에서 기본 능력치, 행동 스태미나 비용, 내구도 테이블을 읽어 검증 중. 종료 후 적용형 데이터 모드와 원복, 검증된 자동 업데이트 구현 예정. 실게임 수치 반영은 별도 확인.
+
+
+## 진행 중 · UPDATE-COPY-016
+- Codex · codex/playful-updates · HUD index.html 업데이트 버튼/설정 버전 문구만 소유. 버전 별칭 Lv.1 생존 새내기, 업데이트 상태별 재치 있는 문구. 단순 문구만 별도 연속 배포하지 않고 다음 기능/수정 묶음에 포함. SAVE-FIX-013 배포 성공 후 PC 조작은 사용자 Esc로 중단, 마지막 PC .28 확인 기록으로 정정하며 배포 잠금 해제. SOLO-SUITE 영역 보존.
