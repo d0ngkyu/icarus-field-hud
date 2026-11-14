@@ -19,19 +19,20 @@ for mapn, caves in C.items():
     lakes = C.get(mapn + '#lake', []); rows = []
     for cv in caves:
         ents = [world(cv, t) for t in cv['ent']] or [(cv['x'], cv['y'], cv['z'])]
-        pass
+        # underwater = an entrance sits inside a lake outline and below its surface
+        uwl = any(inside(e[:2], lk) and e[2] < lk[0][2] + 500 for e in ents for lk in lakes)
         pre = (cv.get('prefab') or '').replace('CAVE_', '')
         info = PRE.get(pre)
-        if info: width, deep, haz, uw = info[0], info[1], info[2], bool(info[3])
+        if info: width, deep, haz = info[0], info[1], info[2]
         else:
-            width = round(max((2 * 32 * max(s[0], s[1]) for _, s in cv['vol']), default=0) / 100); deep = 0; haz = {}; uw = False
+            width = round(max((2 * 32 * max(s[0], s[1]) for _, s in cv['vol']), default=0) / 100); deep = 0; haz = {}
         ore = VOX.get(cv['id'] + '@' + cv['tile'])
         e0 = ents[0]
         # level: real width band, averaged with the ore-count band when the ore count is known (user's rule)
         wb = 1 if width < 60 else 2 if width < 100 else 3 if width < 150 else 4
         lv = wb if ore is None else math.floor((wb + (1 if ore < 25 else 2 if ore < 35 else 3 if ore < 55 else 4)) / 2 + .5)
-        rows.append([round(e0[0]), round(e0[1]), lv, width, ore, deep, int(uw), len(ents), pre, haz])
-        stats[(key, uw)] += 1
+        rows.append([round(e0[0]), round(e0[1]), lv, width, ore, deep, int(uwl), len(ents), pre, haz])
+        stats[(key, 'uw')] += uwl
     out[key] = rows
     stats.update((key, 'Lv%d' % r[2]) for r in rows)
 print(stats)
