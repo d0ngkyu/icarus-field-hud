@@ -1,6 +1,6 @@
 {
- "version": "2026.11.14.19",
- "notes": "동굴 아이콘을 바꿨습니다: 굵은 동굴 입구 모양, 레벨은 1·2·3·M 중 하나로만 표시.",
+ "version": "2026.11.14.20",
+ "notes": "동굴 레벨을 실제 동굴 폭 기준으로 바꿨습니다 (60m·100m·150m 기준). 동굴 정보에 폭과 심층 광맥 수가 나옵니다.",
  "config": {},
  "files": [
   {
@@ -67,8 +67,8 @@
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/index.html",
-   "n": 883243,
-   "h": "2e5bb7fc685ec7f54aefdffb995fbac79fa02791"
+   "n": 883588,
+   "h": "cc5706ee0428caed0159bf729e5acafc123e2ac4"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/animals.js",
