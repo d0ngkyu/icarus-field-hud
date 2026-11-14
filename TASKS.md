@@ -340,3 +340,7 @@
 
 ## SAVE-FIX-013 · 정식 배포 진행
 - Codex stable 2026.11.14.29, source 9680db38fdbf0548f95a9fa0abbff04a73b54f15 (PR #13), 검사 84개와 원격 source tree 일치 확인. 수동 저장 진행/10초 후 미확인/파일 갱신 구분, 저장 상태 true→false 판정 추가. 파일 갱신만으로 종료하지 않음. 닫힌 HUD 창의 400ms 위치 저장 타이머 취소/가드. 게임 실행 중 설치 교체/종료 없이 안전 updater 적용 대기.
+
+
+## 진행 중 · SOLO-ITEMS-UI-014
+- Codex · codex/solo-items · 사용자 요청: 아이템 생성기 디자인 개선. 독립 source/solo-items/ItemTool.cs UI 및 설명서만 소유. 네이비/골드, 검색 목록/선택 카드 분리, 수량 프리셋과 하단 연결 설정. 게임 생성 Lua/요청 프로토콜/기존 HUD/SAVE-FIX-013 영역은 변경하지 않음. 실제 Windows UI 확인 후 실행 파일 재패키징 예정.
