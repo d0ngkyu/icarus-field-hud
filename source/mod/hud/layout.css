@@ -56,3 +56,16 @@ button.achievement-card:disabled{opacity:1!important;cursor:default;color:#899da
 .achievement-card .eyebrow{font-size:9px}.achievement-card progress{height:3px;margin-top:auto}.achievement-progress{font-size:10px;color:#b2c2cb}
 #achievement-summary{font-size:13px;padding:5px 0}#activity-status{font-size:11px;color:#9fb7bd}
 .activity-setting{padding:12px 0;border-top:1px solid #293b46;margin-top:14px}
+
+/* Adjustable columns and live animal overview. */
+body.mapmode.refined #mapview{grid-template-columns:var(--panel-width,290px) 8px minmax(0,1fr);gap:4px}
+.column-grip{cursor:col-resize;touch-action:none;align-self:stretch;min-height:80px;border-radius:4px;background:linear-gradient(90deg,transparent 2px,#3e5363 3px,#3e5363 5px,transparent 6px)}
+.column-grip:hover,.column-grip:focus{background:#d1ad66;outline:1px solid #f0d48c}
+#mapside{min-width:0}#mapside label{white-space:nowrap}#maplayers{overflow-x:auto}
+.refined #pane-animals .animal-overview{grid-template-columns:var(--panel-width,360px) 8px minmax(0,1fr);gap:6px}
+.refined #pane-animals .breeding-plan{margin-top:14px}.refined #pane-animals .animal-live-stats{min-width:0}
+.animal-stat-groups{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-top:14px}
+.animal-stat-group{padding:10px;border:1px solid #2c414d;border-radius:6px}.animal-stat-group h3{font-size:13px;color:#dfc18b;margin:0 0 8px}.animal-stat-group dl{margin:0}.animal-stat-group dl>div{display:flex;gap:12px;justify-content:space-between;padding:5px 0;border-bottom:1px solid #ffffff0a;font-size:12px}.animal-stat-group dt{color:#adbfc9}.animal-stat-group dd{margin:0;text-align:right;color:#e6edf1;font-variant-numeric:tabular-nums}
+.gene-tooltip{position:fixed;z-index:9999;pointer-events:none;white-space:pre-line;max-width:280px;background:#101c23;border:1px solid #ba9a58;border-radius:6px;padding:12px;box-shadow:0 8px 24px #0009;color:#e4e8c8;font-size:13px;line-height:1.6}.gene-tooltip[hidden]{display:none}
+.refined #pane-animals .animal-live-stats .stat-cards{grid-template-columns:repeat(3,minmax(0,1fr))}.refined #pane-animals .animal-live-stats .stat-card b{font-size:19px}
+@media(max-width:740px){.refined #pane-animals .animal-overview{grid-template-columns:1fr}.animal-overview>.column-grip{display:none}.refined #pane-animals .animal-live-stats .stat-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}

@@ -5,8 +5,9 @@ local function valid(o) return o and o:IsValid() end
 function M.tick(dir, pawn, world, enabled)
     if not dir then return end
     local function reply(id, status)
-        local f = io.open(dir .. '/control-response.txt', 'w')
-        if f then f:write(id .. '|' .. status) f:close() end
+        local p=dir .. '/control-response.txt'
+        local f = io.open(p .. '.tmp', 'w')
+        if f then f:write(id .. '|' .. status) f:close() os.remove(p) os.rename(p .. '.tmp', p) end
     end
     local function mode()
         if not valid(pawn) or not valid(world) then return nil end
@@ -16,7 +17,9 @@ function M.tick(dir, pawn, world, enabled)
     end
     if pending then
         local p = pending
-        if os.time()-p.at > 45 then reply(p.id, 'timeout') pending=nil return end
+        -- Deadline belongs to the original request, not delayed acceptance.
+        -- Never quit after the desktop has already timed out.
+        if os.time() >= p.deadline then reply(p.id, 'timeout') pending=nil return end
         if not enabled then reply(p.id,'disabled') pending=nil return end
         local gm = mode()
         if not gm or world:GetFullName()~=p.world then reply(p.id,'world_changed') pending=nil return end
@@ -27,7 +30,8 @@ function M.tick(dir, pawn, world, enabled)
             if p.action=='exit' then
                 -- Let the game's own escape-menu quit flow handle shutdown.
                 local menu=FindFirstOf('UMG_EscapeMenu_C')
-                if not valid(menu) or not menu:IsVisible() or menu:GetWorld():GetFullName()~=p.world then reply(p.id,'open_escape') return end
+                local mw=valid(menu) and menu:GetWorld() or nil
+                if not valid(menu) or not menu:IsVisible() or not valid(mw) or mw:GetFullName()~=p.world then reply(p.id,'open_escape') return end
                 reply(p.id,'quit_requested')
                 menu:QuitGame()
             else reply(p.id,'save_processed') end
@@ -42,7 +46,7 @@ function M.tick(dir, pawn, world, enabled)
     local id, timestamp, action=raw:match('^(%w+)|(%d+)|(%a+)$')
     if not id or (action~='save' and action~='exit') then return end
     local now=os.time()
-    if math.abs(now-tonumber(timestamp))>15 then reply(id,'expired') return end
+    if now-tonumber(timestamp)>15 or tonumber(timestamp)-now>2 then reply(id,'expired') return end
     if not enabled then reply(id,'disabled') return end
     if now-lastRequest<10 then reply(id,'cooldown') return end
     local gm=mode()
@@ -50,9 +54,10 @@ function M.tick(dir, pawn, world, enabled)
     if gm.bCurrentUpdateProspectIsSaving then reply(id,'saving_busy') return end
     if action=='exit' then
         local menu=FindFirstOf('UMG_EscapeMenu_C')
-        if not valid(menu) or not menu:IsVisible() or menu:GetWorld():GetFullName()~=world:GetFullName() then reply(id,'open_escape') return end
+        local mw=valid(menu) and menu:GetWorld() or nil
+        if not valid(menu) or not menu:IsVisible() or not valid(mw) or mw:GetFullName()~=world:GetFullName() then reply(id,'open_escape') return end
     end
-    pending={id=id,action=action,at=now,world=world:GetFullName(),before=gm.LastProspectSaveStateTime,failures=gm.UpdateProspectStateFailedCounter}
+    pending={id=id,action=action,at=now,deadline=tonumber(timestamp)+40,world=world:GetFullName(),before=gm.LastProspectSaveStateTime,failures=gm.UpdateProspectStateFailedCounter}
     lastRequest=now
     reply(id,'save_requested')
     local ok=pcall(function() gm:ForceImmediateProspectSave() end)
