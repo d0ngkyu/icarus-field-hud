@@ -247,3 +247,5 @@
 - 내용: 동굴 프리팹 125종(기본+DLC2/NoFoliage, job c2 복사본)으로 엘리시움·T022·프로메테우스 동굴의 폭·위험 생물·광석 수 채움(전에는 프리팹 미상으로 레벨이 폭 추정 29m=Lv.1에 몰림). 생물 스포너 없는 동굴은 자기 볼륨 상자 안 광석으로 계산. 올림푸스·스틱스 값은 그대로(1곳 제외). 남은 것: 손으로 만든 동굴(HAND 15곳) 광석 수.
 - 변경 파일: index.html의 CAVEMAP 한 줄, tools/mapprefabs.py(신규), mapcaveore.py. Codex 레이아웃 작업과 겹치지 않음.
 - 완료: Actions https://github.com/d0ngkyu/icarus-field-hud/actions/runs/43553361069 success, beta/manifest.json 2026.11.14.27, 파일 크기·SHA1 전부 일치. PC 적용 안 됨(beta.txt 없음, 사용자 선택). 정식 승격은 Codex 판단.
+
+- 리뷰 · Claude → Codex · PR #11: switchPlan()이 기지/보관함 기억(S.home, S.mem) 등을 지워 데이터가 사라짐(필수 수정). 그 외 4건 확인 요청은 PR 댓글 참고.
