@@ -122,10 +122,10 @@ class Doctor {
       }
     } catch (e) {}
     const msg = (ctx.match(/<ErrorMessage>([\s\S]*?)<\/ErrorMessage>/) || [])[1] || (ctx.match(/Unhandled Exception:[^\r\n]*/) || [])[0] || '';
-    const stack = (ctx.match(/<(?:CallStack|PortableCallStack)>([\s\S]*?)<\/(?:CallStack|PortableCallStack)>/) || [])[1] || '';
+    const stack = [...ctx.matchAll(/<(?:CallStack|PortableCallStack)>([\s\S]*?)<\/(?:CallStack|PortableCallStack)>/g)].map(m=>m[1].trim()).filter(Boolean).join('\n');
     const complete = /<\/(?:CallStack|PortableCallStack)>/.test(ctx) || /Unhandled Exception:[^\r\n]+/.test(ctx);
     const all = msg + '\n' + stack + '\n' + ctx.slice(-20000);
-    return { complete, msg: msg.replace(/&apos;/g, "'").replace(/&quot;/g, '"').trim().slice(0, 300), mod: /UE4SS|dwmapi/i.test(all), stack: stack.slice(0, 4000), raw: ctx };
+    return { complete, msg: msg.replace(/&apos;/g, "'").replace(/&quot;/g, '"').trim().slice(0, 300), mod: /UE4SS|dwmapi/i.test(stack), loaderPresent: /UE4SS|dwmapi/i.test(all), phase: /UGameEngine::PreExit|FEngineLoop::Exit/.test(stack) ? 'exit' : 'unknown', stack: stack.slice(0, 4000), raw: ctx };
   }
 
   // look at what happened since last time and step around it; returns a short note for the user or null
@@ -143,10 +143,10 @@ class Doctor {
       // The live marker may belong to an older run, or to a run after the crash.
       // Only a preceding, nearby marker is evidence of what was running.
       const matchedStep = stepNow && stepNow.at > 0 && c.at >= stepNow.at && c.at - stepNow.at <= 120000;
-      const rec = { at: c.at, mod: info.mod, msg: info.msg, step: matchedStep ? stepNow.name : null, version };
+      const rec = { at: c.at, mod: info.mod, loaderPresent: info.loaderPresent, phase: info.phase, msg: info.msg, step: matchedStep ? stepNow.name : null, version };
       this.st.crashes.push(rec);
       this.log('crash found: ' + JSON.stringify(rec));
-      if (!info.mod) { note = { level: 0, text: '게임 충돌 기록에서 UE4SS 흔적을 확인하지 못했습니다. 원인은 아직 확정할 수 없습니다.' }; continue; }
+      if (!info.mod) { note = { level: 0, text: (info.phase==='exit'?'게임 종료 처리 중 충돌했습니다. ':'')+'호출 스택에 UE4SS 프레임이 없습니다. 모드 로드 여부만으로 원인을 판단하지 않으며, 기존 안전 설정은 유지합니다.' }; continue; }
       const recent = this.st.crashes.filter(x => x.mod && Date.now() - x.at < 3 * 86400e3).length;
       const f = featOf(rec.step || '');
       const off = this.featuresOff();

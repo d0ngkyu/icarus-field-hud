@@ -1020,15 +1020,17 @@ document.addEventListener('click',e=>{const c=e.target.dataset&&e.target.dataset
 const HUD_VERSION='__HUD_VERSION__';
 {const st=document.createElement('style');st.textContent='#tb .tbv{-webkit-app-region:no-drag;background:transparent;border:1px solid rgba(243,155,43,.45);color:#f3c27a;font:600 11px Oxanium,sans-serif;padding:2px 8px;margin-right:8px;cursor:pointer}#tb .tbv:hover{background:rgba(243,155,43,.15)}#tb .tbv.new{border-color:#4fd18b;color:#4fd18b}#tb .tbo{font:600 11px Oxanium,sans-serif;color:#4fd18b;margin-right:10px;letter-spacing:.06em;white-space:nowrap}#tb .tbo:empty{display:none}#tb .tbo::before{content:"●";margin-right:5px;font-size:9px;vertical-align:1px}';document.head.appendChild(st)}
 setTimeout(()=>{const A=window.hudApp;const vb=$('tbver');const pv=HUD_VERSION.startsWith('__')?'개발판':HUD_VERSION;
- const edition='Lv.1 생존 새내기';let updateMood='idle';
- const moods={idle:'새 패치 왔나? ⟳',checking:'패치 줍는 중…',latest:'넌 이미 최신형 ✓',applied:'나 방금 진화함! ✓',error:'패치가 길을 잃음 ↻'};
+ const edition='ICARUS HUD';let updateMood='idle';
+ const moods={idle:'패치 왔슈? ⟳',checking:'패치 줍는 중…',latest:'이미 풀장착 ✓',applied:'나 방금 진화함! ✓',error:'패치가 길을 잃음 ↻'};
  const paint=()=>{if(vb){vb.textContent=moods[updateMood];vb.title=edition+' · 빌드 '+pv+' · 클릭해서 업데이트 확인';}};
- const badge=document.createElement('span');badge.className='tbo';badge.textContent=edition;badge.title='프로그램 성장 단계 · 캐릭터 레벨과는 별개';if(vb)vb.before(badge);
+ const badge=document.createElement('span');badge.className='tbo';badge.textContent='Lv.1 갓 내린 신입';badge.title='게임과 HUD를 함께 사용한 시간으로 성장합니다';badge.id='usage-rank';if(vb)vb.before(badge);
  paint();
  if(!A||!A.info||!A.checkUpdate){$('updinfo').textContent='데이터 '+pv+' · 업데이트 기능은 HUD 프로그램을 트레이에서 종료하고 다시 켜면 나타납니다';$('updbtn').onclick=()=>location.reload();
   if(vb)vb.onclick=()=>location.reload();return}
  const check=async()=>{updateMood='checking';paint();try{const ok=await A.checkUpdate();if(!ok&&updateMood==='checking')updateMood='error';}catch(e){updateMood='error';toast('업데이트 확인 실패: '+e.message);}finally{paint();}};vb.onclick=check;
- const show=()=>A.info().then(i=>{paint();$('updinfo').textContent=edition+' · 빌드 '+(i.version||pv)+' · 프로그램 '+i.app+(i.last?' · 마지막 확인 '+new Date(i.last.at).toLocaleTimeString():'');});show();
+ const duration=s=>Math.floor(s/3600)+'시간 '+Math.floor(s%3600/60)+'분';
+ const paintUsage=u=>{badge.textContent='Lv.'+u.level+' '+u.title;badge.title='게임 + HUD 누적 '+duration(u.seconds)+' · '+(u.nextTitle?'다음 칭호 '+u.nextTitle+'까지 '+duration(u.nextTitleSeconds):'최고 칭호 달성')+' · 업적 탭에서 칭호 선택';};window.addEventListener('hud-usage',e=>paintUsage(e.detail));
+ const show=()=>A.info().then(i=>{if(i.usage){window.dispatchEvent(new CustomEvent('hud-usage',{detail:i.usage}));const u=i.usage;badge.textContent='Lv.'+u.level+' '+u.title;badge.title='게임 + HUD 누적 '+duration(u.seconds)+' · '+(u.nextTitle?'다음 칭호 '+u.nextTitle+'까지 '+duration(u.nextTitleSeconds):'최고 칭호 달성')+' · 캐릭터 레벨과 별개';}paint();$('updinfo').textContent=edition+' · 빌드 '+(i.version||pv)+' · 프로그램 '+i.app+(i.last?' · 마지막 확인 '+new Date(i.last.at).toLocaleTimeString():'');}).catch(()=>{});show();setInterval(()=>{if(!document.hidden)show()},60000);
  $('updbtn').textContent='새 패치 줍기 ⟳';$('updbtn').onclick=check;
  A.onUpd(u=>{if(u.error){updateMood='error';paint();toast('업데이트 확인 실패: '+u.error);return}
   if(u.changed&&u.changed.length){updateMood='applied';paint();const game=u.changed.some(p=>/\.lua$|\.dll$/.test(p)),page=u.changed.some(p=>/hud\//.test(p));
