@@ -336,3 +336,7 @@
 
 ## 진행 중 · SAVE-FIX-013
 - Codex · codex/save-feedback · 수동 저장 접수/완료/파일 갱신 구분과 진행 피드백 보완. app game-control/main/preload, HUD layout의 게임 버튼 블록, Lua game_control 및 관련 검사만 소유. 기존 45초 무표시 대기를 줄이고 실제 완료 미확인을 성공으로 바꾸지 않음. 실행 중 서버/설치본 보존. stable 배포는 검증 후 별도 기록.
+
+
+## SAVE-FIX-013 · 정식 배포 진행
+- Codex stable 2026.11.14.29, source 9680db38fdbf0548f95a9fa0abbff04a73b54f15 (PR #13), 검사 84개와 원격 source tree 일치 확인. 수동 저장 진행/10초 후 미확인/파일 갱신 구분, 저장 상태 true→false 판정 추가. 파일 갱신만으로 종료하지 않음. 닫힌 HUD 창의 400ms 위치 저장 타이머 취소/가드. 게임 실행 중 설치 교체/종료 없이 안전 updater 적용 대기.
