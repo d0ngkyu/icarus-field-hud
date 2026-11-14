@@ -724,7 +724,9 @@ local function autoTick()
         local okA, value = pcall(animalReader.read)
         step("idle")
         if not okA then animalFailed = true log("animal reader disabled for session: " .. tostring(value))
-        elseif value ~= lastAnimal then animalJ = value or "null" lastAnimal = value end
+        -- Resend the cached JSON while the panel is open: the HUD expires
+        -- observations after 12 seconds. This does not reread the native array.
+        elseif value or lastAnimal then animalJ = value or "null" lastAnimal = value end
     end
     if not poseChanged and not withInv and not progJ and not lmJ and not oreJ and not fogJ and not animalJ then return end
     if pose then lastPose = pose end
