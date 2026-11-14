@@ -581,3 +581,8 @@ A/B/C 모두 종료 프로토콜, 업데이트 실패 표시, 개인 월드 격�
 - source09928acff2904fc7726a6774cac282989ae6a0c6, manifestb8dcddba3156290de0a64ec69c6208f572b1cc8a. 원격ZIP SHA256 5870a19dd47b3a7c5bd2f54c356c8423e202b8ec909a09d99f61b223ac6a94df 및 내부9개 크기/hash 검증, 실CDN0.3.3 및 source 의미diff 없음 확인.
 - PC: 게임 종료 확인 후 적용. 기존 앱 업데이트 확인은0.3.2 최신으로 표시(동시 PowerShell HTTP는0.3.3 응답; 원인 캐시/HTTP 경로 추정, 확정 아님). 검증한 원격ZIP을 표준 Updater.Extract/VerifyStage/BeginApply에 넘겨 게임 종료 재검사·기존앱 정상종료·helper rollback 절차로0.3.3 설치. 자동 확인 자체가0.3.3 설치에 성공한 것으로 주장하지 않음. PowerShell7에서 .NET Framework 어셈블리 직접 호출은 System.Web 타입 불일치 실패; Windows PowerShell5.1에서 표준 updater 실행 성공.
 - installed-version0.3.3, 실제 설치9개 SHA256 일치 및 설치 own Lua hash 일치. 새 프로세스는 LocalAppData/Programs/IcarusSoloTools. 앞선0.3.2 크기조절도 함께 설치됨. 게임 실행/강제종료/HUD 변경 없음. standalone 배포 소유 해제. 다음: 사용자의 싱글 세션에서 ONLINE/F11/지급 결과 확인.
+
+
+## ACTIVITY-024 · 진행 중
+- Codex codex/activity-achievements: 앱/업적/단축키 섹터. 사용자 요청 재미 업적30개 추가(기존24 유지), 작은 카드·목록 정리, HUD 포커스에서1~9/!~( 전환(입력칸 제외). 사용자가 전체 화면 클릭·마우스 이동·PC무입력시간 집계 명시 승인. 클릭내용/좌표/키내용/앱명 저장없음, 로컬숫자만, HUD종료시집계종료/설정OFF 제공. 게임native/Lua/세이브변경 없음.
+- 전역 마우스 Raw Input 별도 경량helper 검토, GetLastInputInfo로 무입력시간. 원시이동량은 화면px/실제cm와 다르므로 단위명시. 소스·성능·종료생명주기·수치검증 후 stable단일배포. 기존안전모드유지.
