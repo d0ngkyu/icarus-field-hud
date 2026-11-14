@@ -11,6 +11,16 @@ for mapn, caves in C.items():
     for cv in caves:
         pre = (cv.get('prefab') or '').replace('CAVE_', '')
         pts = PM.get(pre)
+        if not pts and cv.get('vol'):
+            # no prefab name (no creature spawner): sample the cave's own volume boxes (box extent 32 x scale)
+            pts = []
+            for t, sc in cv['vol']:
+                hx, hy, hz = 32 * sc[0], 32 * sc[1], 32 * sc[2]
+                nx, ny, nz = max(1, int(2 * hx // R)), max(1, int(2 * hy // R)), max(1, int(2 * hz // R))
+                for i in range(nx + 1):
+                    for j in range(ny + 1):
+                        for k in range(nz + 1):
+                            pts.append((t[0] - hx + 2 * hx * i / nx, t[1] - hy + 2 * hy * j / ny, t[2] - hz + 2 * hz * k / nz))
         if not pts: continue
         a = math.radians(cv['yaw']); ca, sa = math.cos(a), math.sin(a)
         W = [(cv['x'] + t[0] * ca - t[1] * sa, cv['y'] + t[0] * sa + t[1] * ca, cv['z'] + t[2]) for t in pts]
