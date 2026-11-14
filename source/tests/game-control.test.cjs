@@ -31,6 +31,15 @@ test('Lua host saving guards authority, active saves, expiry and failed saves be
  gm.LastProspectSaveStateTime=11;c.tick('d',pawn,world,true);assert(files['d/control-response.txt']=='c|save_processed')
  now=120;request('d','exit');assert(count==2);gm.UpdateProspectStateFailedCounter=1;c.tick('d',pawn,world,true);assert(quit==0 and files['d/control-response.txt']=='d|save_failed')
  now=140;request('e','exit');gm.LastProspectSaveStateTime=12;c.tick('d',pawn,world,true);assert(quit==1)
+ now=160;request('f','save');gm.bCurrentUpdateProspectIsSaving=true;c.tick('d',pawn,world,true);gm.bCurrentUpdateProspectIsSaving=false;c.tick('d',pawn,world,true);assert(files['d/control-response.txt']=='f|save_processed')
+ now=180;request('g','save');now=190;c.tick('d',pawn,world,true);assert(files['d/control-response.txt']=='g|accepted_unverified')
  `;
  const rc=lauxlib.luaL_dostring(L,to_luastring(code));assert.equal(rc,lua.LUA_OK,rc?to_jsstring(lua.lua_tostring(L,-1)):'');lua.lua_close(L);
 });
+
+test('acknowledged save stops vague waiting and distinguishes disk evidence',async()=>{
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'icarus-save-'));
+ try{for(const changed of [false,true]){let t=100000,probes=0;const progress=[];const c=createControl({modDir:()=>dir,gameUp:async()=>true,now:()=>t,progress:p=>progress.push(p),snapshot:async()=>new Map([['world',{mtime:probes++&&changed?2:1,size:10}]]),sleep:async()=>{t+=500;const id=fs.readFileSync(path.join(dir,'control-request.txt'),'utf8').split('|')[0];fs.writeFileSync(path.join(dir,'control-response.txt'),id+'|save_requested')}});const r=await c('save');assert.equal(r.status,changed?'file_updated':'accepted_unverified');assert.equal(t,110000);assert.ok(progress.some(p=>p.message.includes('접수')||p.message.includes('갱신')));}}finally{fs.rmSync(dir,{recursive:true,force:true})}
+});
+
+test('file evidence only reports newer existing nonempty world files',async()=>{const {snapshot,changed}=require('../app/save-evidence');const root=fs.mkdtempSync(path.join(os.tmpdir(),'icarus-evidence-'));try{const dir=path.join(root,'account','Prospects');fs.mkdirSync(dir,{recursive:true});const file=path.join(dir,'world.json');fs.writeFileSync(file,'{}');fs.utimesSync(file,1,1);const before=await snapshot(root);assert.equal(changed(before,await snapshot(root)),false);fs.utimesSync(file,2,2);assert.equal(changed(before,await snapshot(root)),true);fs.writeFileSync(file,'');assert.equal(changed(before,await snapshot(root)),false);assert.equal(changed(new Map(),await snapshot(root)),false);}finally{fs.rmSync(root,{recursive:true,force:true})}});

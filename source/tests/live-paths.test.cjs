@@ -35,7 +35,7 @@ test('preload buffers the latest initial message once, preserving all public API
   assert.deepEqual(received, ['latest', 'next']);
   assert.throws(() => api.onLive(null));
   assert.deepEqual(Object.keys(api).sort(), [
-    'gameControl', 'state', 'toggleTop', 'toggleCompact', 'minimize', 'hide', 'info', 'setMacros',
+    'gameControl', 'onGameProgress', 'state', 'toggleTop', 'toggleCompact', 'minimize', 'hide', 'info', 'setMacros',
     'checkUpdate', 'diagStatus', 'diagReport', 'setSafe', 'setModOn', 'onState',
     'onLive', 'onUpd', 'onDiag',
   ].sort());
@@ -44,11 +44,11 @@ test('preload buffers the latest initial message once, preserving all public API
 });
 
 function liveHarness(mode) {
-  let tick, reads = 0, stats = 0, attempts = 0, destroyed = false, pending;
+  let tick, reads = 0, stats = 0, attempts = 0, destroyed = false, pending, boundsTimer, cancelled=false;
   const events = {}, sent = [];
   const txt = 'window.__icarusLive&&window.__icarusLive({"t":1});';
   const win = {
-    setAlwaysOnTop() {}, loadFile() {}, on() {}, once() {}, isDestroyed: () => destroyed,
+    setAlwaysOnTop() {}, loadFile() {}, on(n,f) { (events[n] ||= []).push(f); }, once() {}, isMinimized(){if(destroyed)throw Error("Object has been destroyed");return false}, isMaximized(){return false}, getBounds(){return {}}, isDestroyed: () => destroyed,
     webContents: { on: (n, f) => { events[n] = f; }, setWindowOpenHandler() {}, send(n, value) {
       attempts++;
       if (mode === 'send-error' && attempts === 1) throw Error('unavailable');
@@ -73,10 +73,10 @@ function liveHarness(mode) {
     app: { requestSingleInstanceLock: () => true, disableHardwareAcceleration() {}, getPath: () => '', on() {}, whenReady: () => ({ then() {} }) },
     BrowserWindow: function () { return win; }, ipcMain: { handle() {} }, screen: { getAllDisplays: () => [] },
   }, fs: fakeFs, './updater.js': {}, './package.json': {}, globals: {
-    setInterval: (f, ms) => { if (ms === 200) tick = f; }, setTimeout() {}, clearTimeout() {}, clearInterval() {},
+    setInterval: (f, ms) => { if (ms === 200) tick = f; }, setTimeout(f,ms) {if(ms===400)boundsTimer=f;return 1}, clearTimeout(){cancelled=true}, clearInterval() {},
   } }, "createWindow('fixture/index.html');");
   return { tick: () => tick(), reload: () => events['did-finish-load'](), release: () => pending(),
-    destroy: () => { destroyed = true; }, sent, reads: () => reads };
+    destroy: () => { destroyed = true; }, sent, reads: () => reads, resize:()=>events.resize.forEach(f=>f()), closed:()=>events.closed.forEach(f=>f()), late:()=>boundsTimer(), cancelled:()=>cancelled };
 }
 for (const mode of ['read-error', 'stat-error', 'empty', 'partial', 'send-error', 'changed-during-read']) {
   test('live retries ' + mode + ' and replays unchanged state after reload', () => {
@@ -219,3 +219,5 @@ for(const failure of ['download','running','write'])test('update preserves old p
   assert.equal(fs.readFileSync(path.join(dir,'a'),'utf8'),'old-a');assert.equal(fs.readFileSync(path.join(dir,'b'),'utf8'),'old-b');
   if(failure==='running')assert.equal(r.deferred,true);else assert.ok(r.skipped.length);
 });
+
+test('resize timer cannot access a destroyed window, even if already queued',()=>{const h=liveHarness('defer');h.resize();h.destroy();h.closed();assert.equal(h.cancelled(),true);assert.doesNotThrow(()=>h.late());});
