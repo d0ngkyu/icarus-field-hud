@@ -221,18 +221,21 @@ function runUpdate(manual) {
 }
 async function performUpdate(manual) {
   if (!UPDATE_URL || !gameDir) return null;
+  let activityPaused=false;
   try {
     if (process.platform === 'win32' && await gameUp() !== false) {
       ulog('update deferred: game is running or its state is unknown');
       if(manual && win && !win.isDestroyed())win.webContents.send('upd',{error:'게임 종료 후 업데이트를 적용합니다.',manual:true});
       return null;
     }
+    if(activityTracker){activityPaused=true;await activityTracker.pause();}
     const r = await UPD.update(gameDir, UPDATE_URL, ulog, async () => process.platform !== 'win32' || await gameUp() === false);
     if(r.deferred){ulog('update deferred: game started during download');return null;}
     lastUpd = { ...r, at: Date.now() };
     // Keep crash-disabled features and safe mode across updates. A changed Lua file
     // does not establish that the native crash has been fixed.
     ulog('update ' + r.version + ': ' + r.changed.length + ' changed, ' + r.skipped.length + ' skipped');
+    for(const reason of r.skipped)ulog('update not applied: '+reason);
     UPD.registerApp(gameDir);
     if (win && !win.isDestroyed()) win.webContents.send('upd', { version: r.version, changed: r.changed, skipped: r.skipped, notes: r.notes, manual: !!manual });
     if (r.appChanged) {
@@ -245,7 +248,7 @@ async function performUpdate(manual) {
     ulog('update failed: ' + e.message);
     if (manual && win && !win.isDestroyed()) win.webContents.send('upd', { error: e.message, manual: true });
     return null;
-  }
+  } finally {if(activityPaused&&!restartPending)activityTracker.resume();}
 }
 
 const TESTYES = !!process.env.HUD_TEST_YES; // automated checks only: answer the setup questions with yes

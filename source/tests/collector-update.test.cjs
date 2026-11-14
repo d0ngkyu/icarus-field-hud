@@ -1,0 +1,11 @@
+const {test}=require('node:test'),assert=require('node:assert/strict'),{EventEmitter}=require('node:events'),fs=require('node:fs'),vm=require('node:vm');
+const {create}=require('../app/activity');
+test('update pause waits for collector exit and resume preserves user preference and totals',async()=>{
+ const state={};let child,spawns=0;const c=create({state,save(){},platform:'win32',spawnFn(){spawns++;child=new EventEmitter();child.stdout=new EventEmitter();child.stdout.setEncoding=()=>{};child.stderr=new EventEmitter();child.stdin=new EventEmitter();child.stdin.end=()=>{};child.kill=()=>true;return child;}});
+ c.boot();c.accept({clicks:7,right:0,wheel:0,distance:0,idle:0});let complete=false;const old=child,p=c.pause().then(()=>complete=true);await Promise.resolve();assert.equal(complete,false);c.enable(true);assert.equal(spawns,1);old.emit('exit',0);await p;assert.equal(complete,true);c.resume();assert.equal(spawns,2);assert.equal(c.info().stats.clicks,7);assert.equal(c.info().stats.launches,1);
+ const p2=c.pause();c.enable(false);child.emit('exit',0);await p2;c.resume();assert.equal(spawns,2);assert.equal(c.info().enabled,false);
+});
+test('desktop updater waits for helper before file writes and restores it on failure/defer',async()=>{
+ const main=fs.readFileSync(require.resolve('../app/main'),'utf8');const block=main.slice(main.indexOf('let updateTask = null'),main.indexOf('const TESTYES'));
+ for(const mode of ['ok','failure','defer','restart','game']){const calls=[];let release;const ctx={UPDATE_URL:'url',gameDir:'game',lastUpd:null,process:{platform:'win32'},gameUp:async()=>mode==='game',ulog(){},win:null,Date,Promise,setTimeout:()=>0,activityTracker:{pause:()=>{calls.push('pause');return new Promise(r=>release=r)},resume:()=>calls.push('resume')},UPD:{registerApp(){},update:async()=>{calls.push('update');if(mode==='failure')throw Error('download failed');return {deferred:mode==='defer',changed:[],skipped:[],version:'test',appChanged:mode==='restart'}}}};vm.createContext(ctx);vm.runInContext(block,ctx);const p=ctx.runUpdate(false);await new Promise(setImmediate);assert.equal(calls.includes('update'),false);if(release)release();await p;if(mode==='game')assert.deepEqual(calls,[]);else assert.deepEqual(calls,mode==='restart'?['pause','update']:['pause','update','resume']);}
+});
