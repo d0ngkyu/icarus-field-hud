@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 public sealed class UpdateFile {public string path;public string sha256;public long size;}
 public sealed class UpdateManifest {public string version,packageUrl,sha256;public long size;public UpdateFile[] files;}
 public static class Updater {
-    public const string CurrentVersion="0.3.1";
+    public const string CurrentVersion="0.3.2";
     public const string ManifestUrl="https://raw.githubusercontent.com/d0ngkyu/icarus-field-hud/codex/solo-items/standalone/manifest.json";
     public static readonly HashSet<string> Allowed=new HashSet<string>(new[]{"IcarusSoloItems.exe","DesktopLauncher.exe","catalog.json","README.md","Scripts/main.lua","Scripts/catalog.lua","tools/repak.exe","tools/LICENSE-MIT","tools/LICENSE-APACHE"},StringComparer.OrdinalIgnoreCase);
     static bool Hex(string s){return s!=null&&System.Text.RegularExpressions.Regex.IsMatch(s,"^[a-fA-F0-9]{64}$");}

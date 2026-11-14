@@ -125,7 +125,7 @@ public partial class ItemTool : Form {
             using(var b=new SolidBrush(bg)) e.Graphics.FillRectangle(b,e.Bounds);
             if(chosen && e.ColumnIndex==0) using(var b=new SolidBrush(gold))e.Graphics.FillRectangle(b,e.Bounds.X,e.Bounds.Y,3,e.Bounds.Height);
             var rect=new Rectangle(e.Bounds.X+14,e.Bounds.Y,e.Bounds.Width-24,e.Bounds.Height);
-            TextRenderer.DrawText(e.Graphics,e.SubItem.Text,Font,rect,e.ColumnIndex==0?(chosen?gold:ForeColor):muted,TextFormatFlags.VerticalCenter|TextFormatFlags.EndEllipsis|TextFormatFlags.SingleLine);
+            TextRenderer.DrawText(e.Graphics,e.SubItem.Text,list.Font,rect,e.ColumnIndex==0?(chosen?gold:ForeColor):muted,TextFormatFlags.VerticalCenter|TextFormatFlags.EndEllipsis|TextFormatFlags.SingleLine);
         };
         Add(list,48,298,588,312);
         list.SelectedIndexChanged+=(o,e)=>{
@@ -195,6 +195,7 @@ public partial class ItemTool : Form {
     [STAThread] public static int Main(string[] args) {
         try {
             if(args.Length==3&&args[0]=="--apply-update"){Updater.RunHelper(args);return 0;}
+            if(args.Contains("--layout-test")){LayoutTest();return 0;}
             if(args.Contains("--self-test")){SelfTest();return 0;}
             if(args.Contains("--suite-test")){SuiteTests.Run(Base);return 0;}
             Application.EnableVisualStyles();Application.SetCompatibleTextRenderingDefault(false);

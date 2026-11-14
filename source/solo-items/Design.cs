@@ -37,7 +37,7 @@ public partial class ItemTool {
         workflow=TextLabel("",236,667,934,52);workflow.Font=Ui(11);workflow.ForeColor=muted;
         selectedName.Font=Ui(17,true);selectedEnglish.Font=Ui(9);amount.Font=new Font("Bahnschrift",22,FontStyle.Bold);
         prepare.Text="아이템 요청 준비";prepare.Font=Ui(12,true);
-        designReady=true;UpdateDesign();ResumeLayout();Invalidate();
+        designReady=true;UpdateDesign();ResumeLayout();InitializeResize();Invalidate();
     }
     void UpdateDesign(){
         if(!designReady)return;
@@ -52,7 +52,7 @@ public partial class ItemTool {
         Invalidate();
     }
     void PaintDesign(Graphics g){
-        g.SmoothingMode=SmoothingMode.AntiAlias;
+        g.ScaleTransform(layoutX,layoutY);g.SmoothingMode=SmoothingMode.AntiAlias;
         using(var b=new SolidBrush(Color.FromArgb(18,24,32)))g.FillRectangle(b,0,0,200,800);
         using(var p=new Pen(Color.FromArgb(37,47,58)))g.DrawLine(p,200,0,200,800);
         using(var b=new SolidBrush(panel)){

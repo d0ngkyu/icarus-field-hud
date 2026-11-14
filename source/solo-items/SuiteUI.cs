@@ -39,7 +39,7 @@ public partial class ItemTool {
         if(new[]{"main.lua","catalog.lua"}.Any(f=>!File.Exists(Path.Combine(target,"Scripts",f))||Tuner.Hash(Path.Combine(target,"Scripts",f))!=Tuner.Hash(Path.Combine(Base,"Scripts",f))))Install(game.Text);
     }
     Label PanelLabel(string text,int x,int y,int w,int h,int size,bool bold){var l=new Label{Text=text,ForeColor=ForeColor,BackColor=panel,Font=Ui(size,bold)};l.SetBounds(x,y,w,h);tuningPanel.Controls.Add(l);return l;}
-    Button PanelButton(string text,int x,int y,int w,Action a,bool primary=false){var b=new Button{Text=text,FlatStyle=FlatStyle.Flat,BackColor=primary?gold:Color.FromArgb(34,44,55),ForeColor=primary?Color.FromArgb(25,29,32):ForeColor,Cursor=Cursors.Hand};b.FlatAppearance.BorderSize=0;b.SetBounds(x,y,w,38);b.Click+=(o,e)=>{try{a();}catch(Exception ex){message.Text=ex.Message;}};tuningPanel.Controls.Add(b);return b;}
+    Button PanelButton(string text,int x,int y,int w,Action a,bool primary=false){var b=new Button{Font=Ui(10),Text=text,FlatStyle=FlatStyle.Flat,BackColor=primary?gold:Color.FromArgb(34,44,55),ForeColor=primary?Color.FromArgb(25,29,32):ForeColor,Cursor=Cursors.Hand};b.FlatAppearance.BorderSize=0;b.SetBounds(x,y,w,38);b.Click+=(o,e)=>{try{a();}catch(Exception ex){message.Text=ex.Message;}};tuningPanel.Controls.Add(b);return b;}
     void ClearPanel(){foreach(Control c in tuningPanel.Controls.Cast<Control>().ToArray()){tuningPanel.Controls.Remove(c);c.Dispose();}}
     void ShowTab(int index){
         activeTab=index;foreach(var c in itemControls)c.Visible=index==0;
@@ -47,7 +47,7 @@ public partial class ItemTool {
         UpdateDesign();tuningPanel.Visible=index!=0;if(index==0)return;ClearPanel();
         string[] titles={"","얼마나 튼튼하게 할까요?","스태미나를 얼마나 쓸까요?","산소 · 배고픔 · 목마름","얼마나 많이 들고 갈까요?","장비를 얼마나 오래 쓸까요?","얼마나 빠르게 달릴까요?","앱 설정"};
         PanelLabel(index==7?"자동 업데이트":"내 플레이에 맞게 고르세요",26,22,900,39,18,true);
-        if(index==7){ShowAppSettings();return;}
+        if(index==7){ShowAppSettings();LayoutNewPanel();return;}
         PanelLabel("버튼으로 고르고, 아래의 ‘설정 적용’을 누르세요. 게임을 새로 실행하면 적용됩니다.",26,66,925,28,10,false).ForeColor=muted;
         switch(index){
             case 1:SettingRow("기본 최대 체력","Health",100,300,new[]{100,200,300},new[]{"기본","2배","3배"},112);break;
@@ -63,7 +63,7 @@ public partial class ItemTool {
         }
         PanelButton("모두 기본값",26,418,155,()=>{tuning=new TuneValues();dirty=true;ShowTab(activeTab);message.Text="기본값을 선택했습니다. ‘설정 적용’을 누르면 복원됩니다.";});
         PanelButton("설정 적용",730,413,224,async()=>await ApplyTuning(),true).Height=44;
-        PanelLabel("싱글 전용 · 멀티플레이 전에는 모두 기본값으로 복원",202,427,510,26,9,false).ForeColor=muted;
+        PanelLabel("싱글 전용 · 멀티플레이 전에는 모두 기본값으로 복원",202,427,510,26,9,false).ForeColor=muted;LayoutNewPanel();
     }
     void SettingRow(string text,string key,int min,int max,int[] presets,string[] labels,int y){
         var field=typeof(TuneValues).GetField(key);int value=(int)field.GetValue(tuning);
