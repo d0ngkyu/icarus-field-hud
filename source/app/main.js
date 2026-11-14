@@ -26,6 +26,25 @@ const onScreen = b => b && b.x !== undefined && screen.getAllDisplays().some(d =
   const a = d.workArea; return b.x < a.x + a.width - 60 && b.x + b.width > a.x + 60 && b.y >= a.y - 10 && b.y < a.y + a.height - 60;
 });
 
+// Usage rank: reuse the existing game watcher; never scan the game for this badge.
+let usageSample = null, usageActive = false, usageSavedAt = 0;
+function usageInfo() {
+  const seconds = Number.isFinite(cfg.hudUseSeconds) && cfg.hudUseSeconds > 0 ? cfg.hudUseSeconds : 0;
+  const level = Math.min(100, 1 + Math.floor(seconds / 3600));
+  const titles = [[1,'갓 내린 신입'],[3,'모닥불 지박령'],[5,'동굴 전세입자'],[10,'폭풍 단골손님'],[20,'이카루스 현지인'],[40,'행성 고인물'],[70,'귀환선 환불러'],[100,'이 행성 건물주']];
+  const title = titles.filter(t=>t[0]<=level).pop()[1];
+  const next = titles.find(t=>t[0]>level);
+  return {seconds,level,title,nextTitle:next?next[1]:null,nextTitleSeconds:next?Math.max(0,(next[0]-1)*3600-seconds):0,nextLevelSeconds:level<100?Math.max(0,level*3600-seconds):0};
+}
+function sampleUsage(up, now = Date.now()) {
+  const elapsed = usageSample === null ? 0 : now - usageSample;
+  if (up === true && usageActive && elapsed > 0 && elapsed <= 10000) cfg.hudUseSeconds = usageInfo().seconds + elapsed/1000;
+  usageSample = now;
+  usageActive = up === true;
+  if (now - usageSavedAt >= 60000 || up !== true) { saveCfg(); usageSavedAt = now; }
+}
+// End usage rank
+
 let win = null, tray = null, quitting = false;
 const iconPath = path.join(__dirname, 'icon.png');
 
@@ -151,7 +170,7 @@ ipcMain.handle('toggleTop', () => toggleTop());
 ipcMain.handle('toggleCompact', () => toggleCompact());
 ipcMain.handle('minimize', () => win.minimize());
 ipcMain.handle('hide', () => win.hide());
-ipcMain.handle('info', () => ({ version: (lastUpd && lastUpd.version) || PKG.contentVersion || '', app: app.getVersion(), game: gameDir, last: lastUpd && { at: lastUpd.at, changed: lastUpd.changed.length } }));
+ipcMain.handle('info', () => ({ usage: usageInfo(), version: (lastUpd && lastUpd.version) || PKG.contentVersion || '', app: app.getVersion(), game: gameDir, last: lastUpd && { at: lastUpd.at, changed: lastUpd.changed.length } }));
 // ---------- problem check ----------
 ipcMain.handle('diagStatus', () => (doctor ? doctor.status() : null));
 ipcMain.handle('setSafe', (_e, on) => { if (doctor) doctor.setSafeMode(!!on); return doctor ? doctor.status() : null; });
@@ -167,7 +186,7 @@ ipcMain.handle('diagReport', () => {
 ipcMain.handle('checkUpdate', () => runUpdate(true).then(r => !!r));
 
 app.on('second-instance', showWin);
-app.on('before-quit', () => { quitting = true; });
+app.on('before-quit', () => { saveCfg(); quitting = true; });
 app.on('window-all-closed', () => {});
 // ---------- start: find the game, install on first run, then keep up to date ----------
 let updateTask = null, restartPending = false;
@@ -288,6 +307,7 @@ function watchGame() {
     try {
       const up = await gameUp();
       if (updateTask || restartPending || quitting) return;
+      sampleUsage(up);
       if (up === null) { gone = 0; return; } // unknown is not a confirmed absence
       if (up) { seen = true; gone = 0; return; }
       if (!seen || cfg.closeWithGame === false || ++gone < 2) return;
