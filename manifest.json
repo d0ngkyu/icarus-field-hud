@@ -1,6 +1,6 @@
 {
- "version": "2026.11.14.18",
- "notes": "개발용: 전체 지도 동굴 목록 준비 (일반 사용자에게는 변화 없음)",
+ "version": "2026.11.14.19",
+ "notes": "동굴 아이콘을 바꿨습니다: 굵은 동굴 입구 모양, 레벨은 1·2·3·M 중 하나로만 표시.",
  "config": {},
  "files": [
   {
@@ -67,8 +67,8 @@
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/index.html",
-   "n": 882476,
-   "h": "29c876fe2b20101d07bf3293956b755717ea05ac"
+   "n": 883243,
+   "h": "2e5bb7fc685ec7f54aefdffb995fbac79fa02791"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/animals.js",
