@@ -374,5 +374,11 @@
 - PC 읽기 version.txt .29 확인. 이전 Esc 중단 당시 .28 기록 이후 적용됨; 이번에 직접 업데이트를 실행한 것은 아님. SAVE-FIX 배포 잠금 및 본 소스 작업 잠금 해제, SOLO-SUITE 독립 작업 유지.
 
 
-## 진행 중 · HUD-ICON-017
+## 착수 기록 · HUD-ICON-017 (아래 완료 참조)
 - Codex · 아이콘 그래픽/바탕화면 HUD 실행기만. 생성 이미지 기반 흑연·골드 나침반 I 문장, 16~256 ICO. 사용자 요청으로 바탕화면 실행기 아이콘 적용 및 추출 검사 완료. 게임/서버 변경 없음. 앱 source 아이콘은 다음 묶음 배포용으로 반영 예정. 다른 UI/독립 도구 영역 보존.
+
+
+## HUD-ICON-017 · 완료
+- PR #15: 흑연/샴페인 골드 나침반 I 생성 아이콘, source/app/icon.png(256px)와 design/hud-gold.ico(16~256px 7종) 원격 보관. Git blob 7fca2ba25216ac9da3dcc097fdd98b4da02da8d2 / 70f552cf035565309346e9744e30509b6a631849 로컬과 일치. 바탕화면 실행기 소스 source/tools/HudLauncher.cs 보관.
+- 사용자 바탕화면 이카루스 HUD.exe 아이콘 실제 교체, 이전 exe workspace 백업. --check exit0, exe에서 추출한 32px 아이콘 시각 확인. 새 exe SHA256 FF4F98E6C54F2BABD71AA64F35E6EA83AE1C1924654745C3890EDB68D2B7C46D. Explorer 캐시의 즉시 갱신 여부는 직접 확인하지 않음.
+- 내장 image_gen 생성, 투명 PNG 보존 및 다중 크기 ICO 패키징. 출력 outputs/icarus-hud-gold.png, icarus-hud.ico. 앱 창/트레이 아이콘은 다음 정식 묶음 배포 시 적용; 현재 stable .29 변경 없음. 게임/서버 실행 또는 종료 안 함. 본 작업 소유 해제.
