@@ -304,3 +304,7 @@
 
 ## COMPACT-008 · 정식 배포 진행
 - 담당 Codex, stable 2026.11.14.28 / 별칭 길동무 · 한눈에, source f05e1600d3c389424d3b774b4d8fd331128586b1 (PR #12 병합). 81개 검사, 원격 tree 일치, 최종 합성 UI 오류 없음. 게임 실행 중 확인하여 설치 파일 강제 교체/게임 종료하지 않음. Actions 게시 후 게임 종료 시 안전 업데이트 적용. 저장/종료 함수는 실게임 미시험.
+
+
+## 진행 중 · SOLO-ITEMS-011
+- Codex · codex/solo-items · 2026-11-14. 사용자 요청: 싱글플레이용 아이템 생성 프로그램 제작. 독립 source/solo-items/와 자체 문서/시험만 소유. 기존 HUD/COMPACT-008/배포 파일 변경 없음. 설치 SDK에서 BP_IcarusPlayerControllerSurvival.AddItemToInventory(FItemTemplateRowHandle), ItemTemplateLibrary, KismetSystemLibrary.IsStandalone 확인. 함수 선언 확인이며 실게임 호출 성공은 미검증. 게임 실행 중 설치/종료하지 않음. 독립 UI와 요청 기반 모드, 싱글 확인 및 중복 요청 방지 구현 예정.
