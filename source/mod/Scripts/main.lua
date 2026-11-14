@@ -52,7 +52,7 @@ end
 -- copying map pictures out of the game is only needed on the machine that builds updates
 local DEVMODE = MODDIR and fileExists(MODDIR .. "\\dev.txt") or false
 local function MacroBind(key, fn)
-    if MACROS then RegisterKeyBind(key, function() step("macro") fn() end) end
+    if MACROS then RegisterKeyBind(key, function() if not WORLD_READY then return end step("macro") fn() end) end
 end
 
 local function openOut()
@@ -88,6 +88,19 @@ local function parentValid(w)
     return ok and v == true
 end
 
+local UEHelpers = setmetatable({}, {__index = require("UEHelpers")})
+-- A listen-server can have several valid player controllers. Only the local
+-- controller belongs to this HUD; never select another client's first entry.
+function UEHelpers.GetPlayerController()
+    for _, pc in ipairs(FindAllOf("PlayerController") or {}) do
+        if pc:IsValid() and pc:IsLocalPlayerController() then return pc end
+    end
+    return nil
+end
+function UEHelpers.GetPlayer()
+    local pc = UEHelpers.GetPlayerController()
+    return pc and pc.Pawn or nil
+end
 local function findRecipe()
     local best, bestScore, cands = nil, -1, 0
     for _, cls in ipairs({ "UMG_Processor_C", "UMG_Processor_Skinning_C", "UMG_Processor_FoodTrough_T4_C" }) do
@@ -124,7 +137,8 @@ local function findRecipe()
     if handName and handOpen then return handName, "hand" end
     -- item held in hand (building pieces, deployables, tools)
     local okH, held = pcall(function()
-        local pawn = require("UEHelpers").GetPlayer()
+        local pawn = UEHelpers.GetPlayer()
+        if not pawn or not pawn:IsValid() then return nil end
         local fd = pawn.FocusedItemData
         local inv, slot = fd.FocusedItemInventory, fd.FocusedItemSlot
         if not inv or not inv:IsValid() then return nil end
@@ -144,17 +158,19 @@ local function findRecipe()
     return nil, "none of " .. cands
 end
 
-local UEHelpers = require("UEHelpers")
-
 local function addSlots(inv, into)
+    if not inv or not inv:IsValid() then return 0 end
     local n = 0
     local slots = inv.Slots.Slots
+    local count = slots:GetArrayNum()
+    if count < 0 or count > 512 then return 0 end
     slots:ForEach(function(_, e)
         local ok = pcall(function()
             local item = e:get().ItemData
             local name = item.ItemStaticData.RowName:ToString()
             if name == nil or name == "" or name == "None" then return end
             local count = 1
+            if item.ItemDynamicData:GetArrayNum() > 64 then return end
             item.ItemDynamicData:ForEach(function(_, d)
                 local dd = d:get()
                 if dd.PropertyType == 7 then count = dd.Value end
@@ -189,6 +205,10 @@ local function scanInventory(full)
                 stats.skip = stats.skip + 1 return
             end
             local outer = inv:GetOuter()
+            if not outer or not outer:IsValid() then return end
+            -- Inventory owners can also be components. Never call actor functions
+            -- on an arbitrary UObject merely because pcall surrounds it.
+            if not outer:IsA("/Script/Engine.Actor") then return end
             local loc = outer:K2_GetActorLocation()
             local dx, dy, dz = loc.X - ploc.X, loc.Y - ploc.Y, loc.Z - ploc.Z
             local cname = "?"
@@ -216,6 +236,7 @@ local ORE_KEEP = 6  -- nearest N per ore type
 
 local LAST_ORES = {}
 local function scanOres(keep)
+    if not WORLD_READY or not on("ores") then return {} end
     local pawn = UEHelpers.GetPlayer()
     if not pawn or not pawn:IsValid() then return {}, "no player" end
     local ploc = pawn:K2_GetActorLocation()
@@ -277,7 +298,9 @@ local function scanOres(keep)
         for _, o in ipairs(list) do
             if kept >= (keep or ORE_KEEP) then break end
             local mined = false
-            pcall(function() mined = (o.a:GetVoxelFullyMined() == true) end)
+            if t:sub(1, 2) == "v:" and o.a:IsValid() then
+                pcall(function() mined = (o.a:GetVoxelFullyMined() == true) end)
+            end
             if not mined then
                 table.insert(LAST_ORES, { t = t, x = o.x, y = o.y, z = o.z })
                 table.insert(out, string.format('["%s",%.0f,%.0f,%.0f]', (t:gsub('[^%w_:%-%.]', '')), o.x, o.y, o.z))
@@ -328,8 +351,10 @@ local function worldSettingsMarks()
             if not cand:IsValid() or string.find(cand:GetFullName(), "Default__", 1, true) then return end
             cands = cands + 1
             local n = cand.DeepMiningOreDepositSpawnLocations:GetArrayNum() + cand.ExoticVoxelSpawnLocations:GetArrayNum()
+            if n < 0 or n > 4096 then return end
             if n > best then ws, best = cand, n end
-            if cand.CaveLocations:GetArrayNum() > 0 then
+            local caveCount = cand.CaveLocations:GetArrayNum()
+            if caveCount > 0 and caveCount <= 2048 then
                 withCaves = withCaves + 1
                 cand.CaveLocations:ForEach(function(_, e)
                     local v = e:get()
@@ -368,11 +393,14 @@ local function worldSettingsMarks()
         log(string.format("whole-map marks: %d caves (%d without size) from %d of %d settings, %d deep veins, %d exotic spots", nc, unk, withCaves, cands, nd, nx))
         wsNote = true
     end
-    if nc > 0 and nd + nx > 0 then wsCache, wsWorld = out, w end
+    -- Some sessions expose veins but no CaveLocations at all. Cache the
+    -- successful static data too; live cave entrances are scanned separately.
+    if nd + nx > 0 then wsCache, wsWorld = out, w end
     return out
 end
 
 local function scanLandmarks()
+    if not WORLD_READY or not on("landmarks") then return nil end
     local out, sum = {}, 0
     step("worldmarks")
     local okW, wm = true, {}
@@ -482,12 +510,16 @@ end
 
 local lastQuick = ""
 local function readProgress(force)
+    if not WORLD_READY or not on("progress") then return nil end
     local t0 = os.clock()
     local pc = UEHelpers.GetPlayerController()
     if not pc or not pc:IsValid() then return nil end
     local ps = pc.PlayerState
     if not ps or not ps:IsValid() then return nil end
-    local bm = ps.BlueprintTalentController.Model
+    local bc = ps.BlueprintTalentController
+    if not bc or not bc:IsValid() then return nil end
+    local bm = bc.Model
+    if not bm or not bm:IsValid() then return nil end
     local lvl, bpp, tp = -1, -1, -1
     pcall(function() lvl = bm:GetLevel() end)
     pcall(function() bpp = bm:GetAvailablePoints() end)
@@ -520,10 +552,14 @@ local function readProgress(force)
     return nil
 end
 
+local keyBusy = false
 local function send(mode)
+    if keyBusy or not WORLD_READY then return end
+    keyBusy = true
     step("key_" .. tostring(mode))
     ExecuteInGameThread(function()
         local ok, err = pcall(function()
+            if not WORLD_READY then return end
             local name, src, isItem = nil, "", false
             if mode ~= "inv" then
                 name, src, isItem = findRecipe()
@@ -562,6 +598,8 @@ local function send(mode)
             if name then log(mode .. " " .. name .. " (" .. src .. ")") end
         end)
         if not ok then log("error: " .. tostring(err)) end
+        keyBusy = false
+        step("idle")
     end)
 end
 
@@ -584,12 +622,8 @@ local function findBagInvs()
 end
 
 local function scanBag()
-    bagAge = bagAge + 1
-    local stale = (bagInvs == nil) or (#bagInvs == 0) or (bagAge >= 40)
-    if not stale then
-        for _, inv in ipairs(bagInvs) do if not inv:IsValid() then stale = true break end end
-    end
-    if stale then bagInvs = findBagInvs() bagAge = 0 end
+    -- Do not retain native Inventory references across game-thread callbacks.
+    local bagInvs = findBagInvs()
     if #bagInvs == 0 then return false end
     local bag = {}
     for _, inv in ipairs(bagInvs) do pcall(addSlots, inv, bag) end
@@ -669,15 +703,34 @@ local animalReader, animalFailed, lastAnimal = nil, false, nil
 local okAnimal, loadedAnimal = pcall(require, "animals")
 if okAnimal then animalReader = loadedAnimal else log("animal reader unavailable: " .. tostring(loadedAnimal)) end
 WORLD_READY = false
+local sessionId, sessionTicks = nil, 0
+local function resetSession()
+    WORLD_READY = false
+    sessionTicks = 0
+    bagInvs, lastBag, lastBagJson, lastPose = nil, "", "{}", nil
+    wsCache, wsWorld, wsNote, lastLm = nil, nil, false, ""
+    lastQuick, lastProg, lastProgJson = "", "", nil
+    LAST_ORES, caveNameSeen = {}, {}
+    lastAnimal = nil
+    if animalReader and animalReader.reset then animalReader.reset() end
+end
 local function autoTick()
     local t0 = os.clock()
     step("tick")
     tick = tick + 1
+    local pawn = UEHelpers.GetPlayer()
+    local world = pawn and pawn:IsValid() and pawn:GetWorld() or nil
+    local id = world and world:IsValid() and (world:GetFullName() .. "|" .. pawn:GetFullName()) or nil
+    if not id then sessionId = nil resetSession() step("idle") return end
+    if id ~= sessionId then resetSession() sessionId = id end
+    sessionTicks = sessionTicks + 1
+    WORLD_READY = sessionTicks > 60
+    if not WORLD_READY then step("idle") return end
     local bagChanged = false
-    if tick % 2 == 0 then bagChanged = scanBag() end
+    if tick % 4 == 0 then bagChanged = scanBag() end
     local pose = poseJson()
     local poseChanged = pose ~= nil and pose ~= lastPose
-    WORLD_READY = pose ~= nil and tick > 60
+    if not pose then sessionId = nil resetSession() step("idle") return end
     local dt = (os.clock() - t0) * 1000
     if dt > autoMax + 5 then autoMax = dt log(string.format("tick took %.0f ms", dt)) end
     local withInv = bagChanged or (tick % 20 == 0)
@@ -690,7 +743,7 @@ local function autoTick()
         if okL then lmJ = lj else log("landmark scan failed: " .. tostring(lj)) end
     end
     local oreJ = nil
-    if tick % 80 == 41 then
+    if tick % 80 == 41 and on("ores") then
         step("ores")
         local okO, list = pcall(scanOres, 40)
         step("idle")
@@ -745,7 +798,8 @@ LoopAsync(AUTO_MS, function()
     autoBusy = true
     ExecuteInGameThread(function()
         local ok, err = pcall(autoTick)
-        if not ok then bagInvs = nil log("tick error: " .. tostring(err)) end
+        if not ok then sessionId = nil resetSession() log("tick error: " .. tostring(err)) end
+        step("idle")
         autoBusy = false
     end)
     return false
@@ -776,8 +830,11 @@ local function sendWp(code)
 end
 
 function setWaypoint(x, y, z)
+    if not WORLD_READY then return end
     local pc = UEHelpers.GetPlayerController()
+    if not pc or not pc:IsValid() then return end
     local ps = pc.PlayerState
+    if not ps or not ps:IsValid() then return end
     ps:ServerMovePersonalWaypoint({ X = x, Y = y, Z = z }, pc)
     WP.x, WP.y, WP.z = x, y, z
     lastWp = string.format("%d|%d|%d", math.floor(x + 0.5), math.floor(y + 0.5), math.floor(z + 0.5))
@@ -786,7 +843,9 @@ function setWaypoint(x, y, z)
 end
 
 local function clearWaypoint()
+    if not WORLD_READY then return end
     local pc = UEHelpers.GetPlayerController()
+    if not pc or not pc:IsValid() or not pc.PlayerState or not pc.PlayerState:IsValid() then return end
     pc.PlayerState:ServerDestroyWaypoint()
     lastWp = ""
     WP.x = nil
@@ -841,10 +900,12 @@ end
 
 local function walkStep(gen)
     if not walking or gen ~= walkGen then return end
+    if not WORLD_READY then stopWalk("월드 전환") return end
     local ok, err = pcall(function()
         if not WP.x then stopWalk("표시된 목표 없음") return end
         local pawn = UEHelpers.GetPlayer()
         local pc = UEHelpers.GetPlayerController()
+        if not pawn or not pawn:IsValid() or not pc or not pc:IsValid() then stopWalk("플레이어 없음") return end
         local l = pawn:K2_GetActorLocation()
         local dx, dy = WP.x - l.X, WP.y - l.Y
         if dx * dx + dy * dy < ARRIVE_CM * ARRIVE_CM then stopWalk("도착") return end
@@ -877,11 +938,14 @@ MacroBind(KEY_WALK, function()
         walking, walkLast = true, nil
         walkGen = walkGen + 1
         local gen = walkGen
+        local queued = false
         log("auto walk started")
         hudMsg("자동 이동 켜짐 - 목표로 걷는 중 (F4로 끄기)")
         LoopAsync(WALK_MS, function()
             if not walking or gen ~= walkGen then return true end
-            ExecuteInGameThread(function() walkStep(gen) end)
+            if queued then return false end
+            queued = true
+            ExecuteInGameThread(function() walkStep(gen) queued = false end)
             return false
         end)
     end)
@@ -919,6 +983,7 @@ end
 
 local function mineStep(gen)
     if not mining or gen ~= mineGen then return end
+    if not WORLD_READY then stopMining("월드 전환") return end
     local ok, err = pcall(function()
         local pawn = UEHelpers.GetPlayer()
         if not pawn or not pawn:IsValid() then stopMining("no player") return end
@@ -988,11 +1053,14 @@ MacroBind(KEY_MINE, function()
         mineBase, mineSeen, mineLastGain, mineChk = bagCounts(), {}, os.clock(), 0
         mineGen = mineGen + 1
         local gen = mineGen
+        local queued = false
         log("auto mine started")
         hudMsg("자동 채굴 켜짐 (F5로 끄기, 움직이면 자동으로 꺼짐)")
         LoopAsync(MINE_MS, function()
             if not mining or gen ~= mineGen then return true end
-            ExecuteInGameThread(function() mineStep(gen) end)
+            if queued then return false end
+            queued = true
+            ExecuteInGameThread(function() mineStep(gen) queued = false end)
             return false
         end)
     end)
