@@ -597,3 +597,7 @@ A/B/C 모두 종료 프로토콜, 업데이트 실패 표시, 개인 월드 격�
 - 생활30추가 총54, 작은카드/필터/입력칸제외1~9와Shift기호 전환. 전체화면마우스 클릭·우클릭·휠·이동(raw단위)/60초이상무입력/실행·날짜 누적. 설정OFF/로컬합계저장, 키내용·좌표·앱이름 저장/전송없음. 새 게임native/Lua/세이브변경 없음.
 - helper 초기약22MiB/CPU관측0.047초, 5초전달/60초저장. 정상종료 및 별도부모프로세스강제종료후 helper소멸 확인. 실제설치UI 클릭숫자증가/집계OFF→프로세스0 확인. 마우스이동 실제센서정확도·고폴링게임FPS·장시간부하는 미검증. 비정상종료시 마지막저장이후 손실가능. ACTIVITY-REVIEW.md 참조.
 - stable배포소유 해제. 기존 종료native충돌 원인은 이 작업으로 해결한 것으로 간주하지 않음. 독립싱글도구 변경없음.
+
+
+## 진행 중 · SOLO-HOST-025
+- Codex codex/solo-items 독립0.3.4: 실제 지급 실패 status ERROR/0/Single-player standalone mode required 및 world-check MULTI 확인. 사용자 직접 연 월드에서 혼자 플레이 확인. 기존 IsStandalone만으로 개인호스트를 차단하는 결함 수정: 로컬 권한+유효 GameMode+인원1/관전자0 검사. 다른 클라이언트/복수인원/알수없음 차단 유지. source/solo-items 및 standalone만 소유. 게임 실행 중 설치 교체/게임종료 안함. 지급 자체의 native 성공은 여전히 미검증.
