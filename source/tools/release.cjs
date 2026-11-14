@@ -21,7 +21,7 @@ function build({root,source,channel,version,notes}){
  const payloads=new Map();
  for(const f of baseline.files){let p=f.p.startsWith('app/')?'source/'+f.p:f.p.startsWith(prefix)?'source/mod/'+f.p.slice(prefix.length):null;let b=p&&listed.has(p)?read(p):read('files/'+f.p);if(f.p.endsWith('/hud/index.html'))b=Buffer.from(b.toString().replaceAll('__HUD_VERSION__',version));payloads.set(f.p,b);}
  // New source modules/maps/fonts are included without a manual manifest edit.
- for(const p of listed){let dest;if(/^source\/app\/[^/]+\.js$/.test(p))dest=p.slice(7);else if(/^source\/mod\/(Scripts\/.*\.lua|hud\/.*\.(js|html|webp|woff2))$/.test(p))dest=prefix+p.slice(11);if(dest&&!payloads.has(dest))payloads.set(dest,read(p));}
+ for(const p of listed){let dest;if(/^source\/app\/[^/]+\.js$/.test(p))dest=p.slice(7);else if(/^source\/mod\/(Scripts\/.*\.lua|hud\/.*\.(js|css|html|webp|woff2))$/.test(p))dest=prefix+p.slice(11);if(dest&&!payloads.has(dest))payloads.set(dest,read(p));}
  const folder='releases/'+channel+'/'+version;
  if(fs.existsSync(path.join(root,folder)))throw Error('Immutable release already exists');
  const man={version,channel,source,notes:notes||'',config:baseline.config||{},filesPath:folder+'/files',files:[]};

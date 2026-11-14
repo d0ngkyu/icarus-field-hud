@@ -29,7 +29,7 @@ const onScreen = b => b && b.x !== undefined && screen.getAllDisplays().some(d =
 let win = null, tray = null, quitting = false;
 const iconPath = path.join(__dirname, 'icon.png');
 
-function state() { return { top: cfg.top, compact: cfg.compact }; }
+function state() { return { top: win && !win.isDestroyed() && typeof win.isAlwaysOnTop === 'function' ? win.isAlwaysOnTop() : cfg.top, compact: cfg.compact }; }
 
 function createWindow(hud) {
   const b = cfg.compact ? cfg.small : cfg.full;
@@ -39,7 +39,7 @@ function createWindow(hud) {
     icon: iconPath, show: false,
     webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, backgroundThrottling: true, spellcheck: false },
   });
-  win.setAlwaysOnTop(cfg.top, 'floating');
+  win.setAlwaysOnTop(cfg.top, cfg.top ? 'screen-saver' : 'normal');
   win.loadFile(hud);
   // push game updates to the page: only a cheap file check here, no page polling
   const live = path.join(path.dirname(hud), 'live.js');
@@ -100,7 +100,15 @@ function createWindow(hud) {
   win.webContents.setWindowOpenHandler(({ url }) => { shell.openExternal(url); return { action: 'deny' }; });
 }
 
-function toggleTop() { cfg.top = !cfg.top; win.setAlwaysOnTop(cfg.top, 'floating'); saveCfg(); buildTray(); return state(); }
+function toggleTop() {
+  if (!win || win.isDestroyed()) throw new Error('HUD 창이 없습니다.');
+  const want = !state().top;
+  win.setAlwaysOnTop(want, want ? 'screen-saver' : 'normal');
+  if (want && typeof win.moveTop === 'function') win.moveTop();
+  cfg.top = typeof win.isAlwaysOnTop === 'function' ? win.isAlwaysOnTop() : want;
+  saveCfg(); buildTray();
+  const next = state(); win.webContents.send('state', next); return next;
+}
 function toggleCompact() {
   const nb = win.getBounds();
   if (cfg.compact) { cfg.small = nb; cfg.compact = false; win.setBounds(onScreen(cfg.full) ? cfg.full : { ...nb, width: cfg.full.width, height: cfg.full.height }); }

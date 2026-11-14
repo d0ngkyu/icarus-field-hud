@@ -28,3 +28,8 @@ test('caps, zero-rate mutation, goals and input bounds are honored',()=>{
 test('simulation rejects incompatible parents through the public model',()=>{
  const a=animal('a',1,Array(7).fill(5)),b=animal('b',1,Array(7).fill(5));assert.equal(M.birthEstimate(a,b),null);
 });
+test('1–8 stages are exact-value frequencies, not cumulative or renormalized',()=>{
+ const model=require('../mod/hud/animals.js');
+ const r=model.simulateGenes([6,6,6,6,6,6,6],[8,8,8,8,8,8,8],0,12000,123456789,[8,8,8,8,8,8,8]);
+ for(const k of model.keys){const stages=model.exactStages(r,k);assert.deepEqual(stages.map(s=>s.value),[1,2,3,4,5,6,7,8]);for(const s of stages)assert.equal(s.hits,model.birthChance(r,k,s.value,'exact').hits);const omitted=[0,9,10].reduce((n,v)=>n+model.birthChance(r,k,v,'exact').hits,0);assert.equal(stages.reduce((n,s)=>n+s.hits,0)+omitted,r.trials);}
+});

@@ -102,3 +102,10 @@ test('running game and failed process query defer updates before any write',asyn
   assert.equal(await h.run('runUpdate(false)'),null);
   h.running=false;h.fail=true;assert.equal(await h.run('runUpdate(false)'),null);
 });
+test('always-on-top toggles actual window state and broadcasts the confirmed result',()=>{
+ const h=harness();
+ h.run(`globalThis.topCalls=[];globalThis.actualTop=false;win.isAlwaysOnTop=()=>actualTop;win.setAlwaysOnTop=(value,level)=>{actualTop=value;topCalls.push([value,level])};win.moveTop=()=>topCalls.push('raised');win.webContents.send=(name,value)=>topCalls.push([name,value.top]);buildTray=()=>{};cfg.top=true;toggleTop();`);
+ assert.equal(h.run('state().top'),true);
+ assert.equal(h.run('topCalls[0][1]'),'screen-saver');
+ h.run('toggleTop()');assert.equal(h.run('state().top'),false);assert.equal(h.run("topCalls.some(x=>Array.isArray(x)&&x[1]==='normal')"),true);
+});
