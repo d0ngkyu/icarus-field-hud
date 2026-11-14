@@ -8,7 +8,7 @@ $stage=Join-Path $release $version
 New-Item -ItemType Directory -Force -Path $stage | Out-Null
 $records=@()
 foreach ($file in $files) {
-    $source=Join-Path $root $file; $target=Join-Path $stage $file
+    $source=Join-Path (Join-Path $root 'bin') $file; $target=Join-Path $stage $file
     New-Item -ItemType Directory -Force -Path ([IO.Path]::GetDirectoryName($target)) | Out-Null
     Copy-Item -LiteralPath $source -Destination $target -Force
     $records+=@{path=$file;size=(Get-Item -LiteralPath $target).Length;sha256=(Get-FileHash -LiteralPath $target -Algorithm SHA256).Hash.ToLowerInvariant()}

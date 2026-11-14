@@ -1,0 +1,7 @@
+# Golden wings icon · 0.3.1
+
+User asked for a striking app icon. Generated using built-in image_gen, then format-converted into a 32-bit alpha ICO with 16/24/32/48/64/128/256px frames. No creative raster edits were made during format conversion. Source ICO: assets/app.ico. Both executable resources use it; the app window extracts its executable icon. Conversion utility: tools/MakeIcon.cs.
+
+Final prompt:
+
+Use case: logo-brand. Asset type: premium Windows desktop application icon for a personal ICARUS survival-game companion tool. Create a single bold iconic symbol: a pair of angular, sculpted champagne-gold Icarus wings curving upward around a small brilliant warm-white solar core, subtly suggesting the letter I in negative space. Centered, perfectly balanced, dramatic yet minimal. A dark obsidian / midnight-navy rounded-square tile with subtle bevel, very fine metallic edge, rich restrained 3D material, controlled gold highlights and tiny cyan rim-light accents. No scenery, no decorative text, no letters rendered as typography, no game logo, no watermark. Front-facing orthographic view, no perspective tilt, one icon only, not a presentation sheet. Large clean silhouette readable at 32 pixels, use only 3 broad feather segments per wing, avoid intricate feather texture, generous separation of forms. The tile fills about 92 percent of a square canvas. Transparent outer background around the rounded tile, sharp high-quality alpha edges. Sophisticated sci-fi tool identity, striking at desktop size. 1024x1024 square.

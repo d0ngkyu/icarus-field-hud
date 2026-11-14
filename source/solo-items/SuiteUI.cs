@@ -38,15 +38,15 @@ public partial class ItemTool {
         if(!File.Exists(Path.Combine(target,"solo-items-owner.txt"))||!File.Exists(Path.Combine(target,"enabled.txt")))return;
         if(new[]{"main.lua","catalog.lua"}.Any(f=>!File.Exists(Path.Combine(target,"Scripts",f))||Tuner.Hash(Path.Combine(target,"Scripts",f))!=Tuner.Hash(Path.Combine(Base,"Scripts",f))))Install(game.Text);
     }
-    Label PanelLabel(string text,int x,int y,int w,int h,int size,bool bold){var l=new Label{Text=text,ForeColor=ForeColor,BackColor=panel,Font=new Font("맑은 고딕",size,bold?FontStyle.Bold:FontStyle.Regular)};l.SetBounds(x,y,w,h);tuningPanel.Controls.Add(l);return l;}
+    Label PanelLabel(string text,int x,int y,int w,int h,int size,bool bold){var l=new Label{Text=text,ForeColor=ForeColor,BackColor=panel,Font=Ui(size,bold)};l.SetBounds(x,y,w,h);tuningPanel.Controls.Add(l);return l;}
     Button PanelButton(string text,int x,int y,int w,Action a,bool primary=false){var b=new Button{Text=text,FlatStyle=FlatStyle.Flat,BackColor=primary?gold:Color.FromArgb(34,44,55),ForeColor=primary?Color.FromArgb(25,29,32):ForeColor,Cursor=Cursors.Hand};b.FlatAppearance.BorderSize=0;b.SetBounds(x,y,w,38);b.Click+=(o,e)=>{try{a();}catch(Exception ex){message.Text=ex.Message;}};tuningPanel.Controls.Add(b);return b;}
     void ClearPanel(){foreach(Control c in tuningPanel.Controls.Cast<Control>().ToArray()){tuningPanel.Controls.Remove(c);c.Dispose();}}
     void ShowTab(int index){
         activeTab=index;foreach(var c in itemControls)c.Visible=index==0;
         for(int i=0;i<tabs.Count;i++){tabs[i].BackColor=i==index?gold:Color.FromArgb(34,44,55);tabs[i].ForeColor=i==index?Color.FromArgb(25,29,32):ForeColor;}
-        tuningPanel.Visible=index!=0;if(index==0)return;ClearPanel();
+        UpdateDesign();tuningPanel.Visible=index!=0;if(index==0)return;ClearPanel();
         string[] titles={"","얼마나 튼튼하게 할까요?","스태미나를 얼마나 쓸까요?","산소 · 배고픔 · 목마름","얼마나 많이 들고 갈까요?","장비를 얼마나 오래 쓸까요?","얼마나 빠르게 달릴까요?","앱 설정"};
-        PanelLabel(titles[index],24,20,900,39,20,true);
+        PanelLabel(index==7?"자동 업데이트":"내 플레이에 맞게 고르세요",26,22,900,39,18,true);
         if(index==7){ShowAppSettings();return;}
         PanelLabel("버튼으로 고르고, 아래의 ‘설정 적용’을 누르세요. 게임을 새로 실행하면 적용됩니다.",26,66,925,28,10,false).ForeColor=muted;
         switch(index){
@@ -67,23 +67,30 @@ public partial class ItemTool {
     }
     void SettingRow(string text,string key,int min,int max,int[] presets,string[] labels,int y){
         var field=typeof(TuneValues).GetField(key);int value=(int)field.GetValue(tuning);
-        PanelLabel(text,26,y,530,25,12,true);
-        var current=PanelLabel("",778,y,176,26,13,true);current.TextAlign=ContentAlignment.MiddleRight;current.ForeColor=gold;
-        var slider=new TrackBar{Minimum=min,Maximum=max,Value=value,TickStyle=TickStyle.None,SmallChange=10,LargeChange=25,BackColor=panel,AccessibleName=text};slider.SetBounds(20,y+36,535,40);tuningPanel.Controls.Add(slider);
-        Action show=()=>current.Text=slider.Value==100?"기본 (100%)":slider.Value==0?"소모 없음":slider.Value+"%";
-        slider.ValueChanged+=(o,e)=>{field.SetValue(tuning,slider.Value);dirty=true;show();};show();
-        for(int i=0;i<3;i++){int v=presets[i];PanelButton(labels[i],575+i*128,y+34,120,()=>slider.Value=v);}
+        bool compact=activeTab==3;
+        PanelLabel(text,26,y,600,30,12,true);
+        var current=PanelLabel("",730,y-5,224,compact?36:55,compact?19:30,true);current.TextAlign=ContentAlignment.MiddleRight;current.ForeColor=gold;current.Font=new Font("Bahnschrift",compact?20:30,FontStyle.Bold);
+        var slider=new TrackBar{Minimum=min,Maximum=max,Value=value,TickStyle=TickStyle.None,SmallChange=10,LargeChange=25,BackColor=panel,AccessibleName=text};slider.SetBounds(20,y+(compact?38:69),535,40);tuningPanel.Controls.Add(slider);
+        var choices=new List<Button>();
+        Action show=()=>{
+            current.Text=slider.Value==0?"OFF":slider.Value+"%";
+            for(int j=0;j<choices.Count;j++){
+                bool chosen=slider.Value==presets[j];choices[j].BackColor=chosen?Color.FromArgb(61,52,39):Color.FromArgb(34,44,55);choices[j].ForeColor=chosen?gold:ForeColor;choices[j].FlatAppearance.BorderSize=chosen?1:0;choices[j].FlatAppearance.BorderColor=gold;
+            }
+        };
+        for(int i=0;i<3;i++){int v=presets[i];var b=PanelButton(labels[i],575+i*128,y+(compact?34:65),120,()=>slider.Value=v);b.Height=44;b.Font=Ui(11,true);choices.Add(b);}
+        slider.ValueChanged+=(o,e)=>{field.SetValue(tuning,slider.Value);dirty=true;show();UpdateDesign();};show();
     }
     async Task ApplyTuning(){
         if(working)return;working=true;Enabled=false;message.Text="설정 파일을 준비하고 있습니다…";
         string root=game.Text;var copy=Tuner.Json().Deserialize<TuneValues>(Tuner.Json().Serialize(tuning));
-        try{string result=await Task.Run(()=>Tuner.Apply(root,copy,Path.Combine(Base,"tools","repak.exe")));dirty=false;SaveConfig();message.Text=result;}
+        try{string result=await Task.Run(()=>Tuner.Apply(root,copy,Path.Combine(Base,"tools","repak.exe")));dirty=false;SaveConfig();UpdateDesign();message.Text=result;}
         catch(Exception ex){message.Text=ex.Message;}
         finally{working=false;Enabled=true;}
     }
     void ShowAppSettings(){
         PanelLabel("자동으로 새 버전을 받고, 파일을 교체합니다.",26,75,900,29,12,false).ForeColor=muted;
-        var auto=new CheckBox{Text="자동 업데이트",Checked=config.AutoUpdate,ForeColor=ForeColor,BackColor=panel,Font=new Font("맑은 고딕",13,FontStyle.Bold),AutoSize=false};auto.SetBounds(26,133,800,42);auto.CheckedChanged+=(o,e)=>{config.AutoUpdate=auto.Checked;SaveConfig();};tuningPanel.Controls.Add(auto);
+        var auto=new CheckBox{Text="자동 업데이트",Checked=config.AutoUpdate,ForeColor=ForeColor,BackColor=panel,Font=Ui(13,true),AutoSize=false};auto.SetBounds(26,133,800,42);auto.CheckedChanged+=(o,e)=>{config.AutoUpdate=auto.Checked;SaveConfig();};tuningPanel.Controls.Add(auto);
         PanelLabel("앱을 켤 때와 15분마다 확인합니다.\n게임 실행 중에는 다운로드만 하고, 파일 교체는 기다립니다.\n설정을 고르는 중이면 다음 실행 때 적용합니다.",26,190,920,96,12,false).ForeColor=muted;
         PanelLabel("현재 버전  "+Updater.CurrentVersion,26,308,900,30,12,true);
         updateStatus=PanelLabel("",26,352,920,46,10,false);updateStatus.ForeColor=gold;

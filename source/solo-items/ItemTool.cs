@@ -84,16 +84,12 @@ public partial class ItemTool : Form {
     [DllImport("dwmapi.dll")] static extern int DwmSetWindowAttribute(IntPtr h,int attr,ref int value,int size);
     protected override void OnHandleCreated(EventArgs e) {base.OnHandleCreated(e);try{int on=1;DwmSetWindowAttribute(Handle,20,ref on,4);}catch{}}
     protected override void OnPaint(PaintEventArgs e) {
-        base.OnPaint(e);var g=e.Graphics;g.SmoothingMode=SmoothingMode.AntiAlias;
-        using(var b=new SolidBrush(panel)){g.FillRectangle(b,28,155,630,477);g.FillRectangle(b,678,155,334,477);g.FillRectangle(b,28,652,984,94);}
-        using(var pen=new Pen(Color.FromArgb(44,55,67))){g.DrawRectangle(pen,28,155,630,477);g.DrawRectangle(pen,678,155,334,477);g.DrawLine(pen,702,351,988,351);}
-        using(var pen=new Pen(gold,2)){g.DrawLine(pen,29,155,100,155);}
-        using(var b=new LinearGradientBrush(new Rectangle(702,205,286,74),Color.FromArgb(37,49,61),panel,0f))g.FillRectangle(b,702,205,286,74);
-        using(var pen=new Pen(Color.FromArgb(103,91,72))){g.DrawEllipse(pen,917,209,60,60);g.DrawEllipse(pen,930,222,34,34);g.DrawLine(pen,909,239,985,239);}
+        base.OnPaint(e);PaintDesign(e.Graphics);
     }
     public ItemTool() {
         catalog=LoadCatalog();
         Text="ICARUS · 싱글 도구";
+        Icon=Icon.ExtractAssociatedIcon(Application.ExecutablePath);
         ClientSize=new Size(1040,800); FormBorderStyle=FormBorderStyle.FixedSingle;MaximizeBox=false;
         StartPosition=FormStartPosition.CenterScreen;
         Font=new Font("맑은 고딕",10); BackColor=Color.FromArgb(14,19,25);ForeColor=Color.FromArgb(232,237,242);DoubleBuffered=true;
@@ -139,7 +135,7 @@ public partial class ItemTool : Form {
             if(prepare!=null)prepare.Enabled=chosen;
         };
         TextLabel("선택한 아이템",702,176,286,26).ForeColor=muted;
-        var mark=TextLabel("SUPPLY  /  01",720,229,185,27);mark.ForeColor=gold;mark.Font=new Font("Segoe UI",13,FontStyle.Bold);mark.BackColor=Color.FromArgb(33,44,55);
+        var mark=TextLabel("선택한 보급품",720,229,185,27);mark.ForeColor=gold;mark.Font=new Font("Segoe UI",13,FontStyle.Bold);mark.BackColor=Color.FromArgb(33,44,55);
         selectedName.Text="아이템을 선택하세요";selectedName.Font=new Font("맑은 고딕",16,FontStyle.Bold);selectedName.BackColor=panel;selectedName.AutoEllipsis=true;Add(selectedName,702,290,286,34);
         selectedEnglish.Text="왼쪽 목록에서 필요한 아이템을 골라 주세요.";selectedEnglish.ForeColor=muted;selectedEnglish.Font=new Font("맑은 고딕",9);selectedEnglish.BackColor=panel;selectedEnglish.AutoEllipsis=true;Add(selectedEnglish,702,326,286,24);
         TextLabel("보급 수량",702,373,180,26).Font=new Font("맑은 고딕",11,FontStyle.Bold);
@@ -167,7 +163,7 @@ public partial class ItemTool : Form {
         message.Text="준비됨  ·  아이템을 선택해 보급 요청을 준비하세요.";
         message.ForeColor=muted;message.Font=new Font("맑은 고딕",9);Add(message,28,762,984,32);
         timer.Interval=1000;timer.Tick+=(o,e)=>ReadStatus();timer.Start();
-        FormClosed+=(o,e)=>{timer.Dispose();rowHeight.Dispose();};FilterItems();InitializeSuite();
+        FormClosed+=(o,e)=>{timer.Dispose();rowHeight.Dispose();};FilterItems();InitializeSuite();InitializeDesign();
     }
     void FilterItems() {
         string q=search.Text.Trim();list.BeginUpdate();list.Items.Clear();

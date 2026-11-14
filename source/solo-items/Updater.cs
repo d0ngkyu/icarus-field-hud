@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 public sealed class UpdateFile {public string path;public string sha256;public long size;}
 public sealed class UpdateManifest {public string version,packageUrl,sha256;public long size;public UpdateFile[] files;}
 public static class Updater {
-    public const string CurrentVersion="0.3.0";
+    public const string CurrentVersion="0.3.1";
     public const string ManifestUrl="https://raw.githubusercontent.com/d0ngkyu/icarus-field-hud/codex/solo-items/standalone/manifest.json";
     public static readonly HashSet<string> Allowed=new HashSet<string>(new[]{"IcarusSoloItems.exe","DesktopLauncher.exe","catalog.json","README.md","Scripts/main.lua","Scripts/catalog.lua","tools/repak.exe","tools/LICENSE-MIT","tools/LICENSE-APACHE"},StringComparer.OrdinalIgnoreCase);
     static bool Hex(string s){return s!=null&&System.Text.RegularExpressions.Regex.IsMatch(s,"^[a-fA-F0-9]{64}$");}
@@ -65,12 +65,19 @@ public static class Updater {
         guard();using(var updateLock=new FileStream(Path.Combine(target,".update.lock"),FileMode.OpenOrCreate,FileAccess.ReadWrite,FileShare.None)){
             string backup=Path.Combine(target,".update-backups",DateTime.UtcNow.ToString("yyyyMMdd-HHmmss")+"-"+Guid.NewGuid().ToString("N").Substring(0,6));Directory.CreateDirectory(backup);
             var touched=new List<UpdateFile>();var existed=new HashSet<string>();
+            string oldLauncher=Path.Combine(target,"DesktopLauncher.exe"),oldLauncherHash=File.Exists(oldLauncher)?Tuner.Hash(oldLauncher):null;
             foreach(var f in m.files){string old=Path.Combine(target,f.path);if(File.Exists(old)){string b=Path.Combine(backup,f.path);Directory.CreateDirectory(Path.GetDirectoryName(b));File.Copy(old,b);existed.Add(f.path);}}
             try{
                 guard();foreach(var f in m.files){guard();string dest=Path.Combine(target,f.path);Directory.CreateDirectory(Path.GetDirectoryName(dest));File.Copy(Path.Combine(stage,f.path),dest+".new",true);touched.Add(f);if(File.Exists(dest))File.Replace(dest+".new",dest,null);else File.Move(dest+".new",dest);}
                 VerifyStage(target,m);Tuner.Atomic(Path.Combine(target,"installed-version.json"),Tuner.Json().Serialize(m));
             }catch{
                 foreach(var f in touched.AsEnumerable().Reverse()){string dest=Path.Combine(target,f.path);if(existed.Contains(f.path))File.Copy(Path.Combine(backup,f.path),dest,true);else File.Delete(dest);File.Delete(dest+".new");}throw;
+            }
+            // Refresh only this app's known desktop launcher, never a user's unrelated file.
+            string canonical=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"Programs","IcarusSoloTools");
+            string desktop=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory),"아이카루스 싱글 도구.exe");
+            if(string.Equals(target.TrimEnd('\\'),canonical.TrimEnd('\\'),StringComparison.OrdinalIgnoreCase)&&oldLauncherHash!=null&&File.Exists(desktop)&&Tuner.Hash(desktop)==oldLauncherHash){
+                try{File.Copy(Path.Combine(target,"DesktopLauncher.exe"),desktop+".new",true);File.Replace(desktop+".new",desktop,null);}catch(IOException){}catch(UnauthorizedAccessException){}
             }
         }
     }
