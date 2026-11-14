@@ -16,7 +16,7 @@ test('Lua host saving guards authority, active saves, expiry and failed saves be
  lua.lua_pushstring(L,to_luastring(fs.readFileSync(path.join(__dirname,'../mod/Scripts/game_control.lua'),'utf8')));lua.lua_setglobal(L,to_luastring('SOURCE'));
  const code=`local now=100 local files={} os.time=function() return now end
  io.open=function(p,mode) if mode=='r' and not files[p] then return nil end return {read=function() return files[p] end,write=function(_,s) files[p]=s end,close=function() end} end
- os.remove=function(p) files[p]=nil return true end
+ os.remove=function(p) files[p]=nil return true end os.rename=function(a,b) files[b]=files[a] files[a]=nil return true end
  local count,quit=0,0
  local gm={LastProspectSaveStateTime=10,UpdateProspectStateFailedCounter=0,bCurrentUpdateProspectIsSaving=false,IsValid=function() return true end,IsA=function() return true end,ForceImmediateProspectSave=function() count=count+1 end}
  local world={AuthorityGameMode=gm,IsValid=function() return true end,GetFullName=function() return 'world' end}
@@ -33,6 +33,7 @@ test('Lua host saving guards authority, active saves, expiry and failed saves be
  now=140;request('e','exit');gm.LastProspectSaveStateTime=12;c.tick('d',pawn,world,true);assert(quit==1)
  now=160;request('f','save');gm.bCurrentUpdateProspectIsSaving=true;c.tick('d',pawn,world,true);gm.bCurrentUpdateProspectIsSaving=false;c.tick('d',pawn,world,true);assert(files['d/control-response.txt']=='f|save_processed')
  now=180;request('g','save');now=190;c.tick('d',pawn,world,true);assert(files['d/control-response.txt']=='g|accepted_unverified')
+ now=214;request('h','exit',200);now=241;gm.LastProspectSaveStateTime=99;c.tick('d',pawn,world,true);assert(quit==1 and files['d/control-response.txt']=='h|timeout')
  `;
  const rc=lauxlib.luaL_dostring(L,to_luastring(code));assert.equal(rc,lua.LUA_OK,rc?to_jsstring(lua.lua_tostring(L,-1)):'');lua.lua_close(L);
 });
@@ -43,3 +44,4 @@ test('acknowledged save stops vague waiting and distinguishes disk evidence',asy
 });
 
 test('file evidence only reports newer existing nonempty world files',async()=>{const {snapshot,changed}=require('../app/save-evidence');const root=fs.mkdtempSync(path.join(os.tmpdir(),'icarus-evidence-'));try{const dir=path.join(root,'account','Prospects');fs.mkdirSync(dir,{recursive:true});const file=path.join(dir,'world.json');fs.writeFileSync(file,'{}');fs.utimesSync(file,1,1);const before=await snapshot(root);assert.equal(changed(before,await snapshot(root)),false);fs.utimesSync(file,2,2);assert.equal(changed(before,await snapshot(root)),true);fs.writeFileSync(file,'');assert.equal(changed(before,await snapshot(root)),false);assert.equal(changed(new Map(),await snapshot(root)),false);}finally{fs.rmSync(root,{recursive:true,force:true})}});
+test('manual requests work in broad safety mode but retain explicit feature blocks and ignore incomplete replies',async()=>{const dir=fs.mkdtempSync(path.join(os.tmpdir(),'icarus-safe-control-'));let t=100000,n=0;try{fs.writeFileSync(path.join(dir,'safe_mode.txt'),'on');const c=createControl({modDir:()=>dir,gameUp:async()=>true,now:()=>t,sleep:async()=>{t+=500;const id=fs.readFileSync(path.join(dir,'control-request.txt'),'utf8').split('|')[0];fs.writeFileSync(path.join(dir,'control-response.txt'),++n===1?id+'|':id+'|save_processed')}});assert.equal((await c('save')).status,'save_processed');assert.equal(n,2);fs.writeFileSync(path.join(dir,'features_off.txt'),'fog\ngame_control');await assert.rejects(c('save'),/차단/);}finally{fs.rmSync(dir,{recursive:true,force:true})}});

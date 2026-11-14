@@ -30,18 +30,21 @@ const onScreen = b => b && b.x !== undefined && screen.getAllDisplays().some(d =
 // Usage rank: reuse the existing game watcher; never scan the game for this badge.
 let activityTracker = null;
 let usageSample = null, usageActive = false, usageSavedAt = 0, usageSession = 0;
-const usageTitles = [[1,'갓 내린 신입'],[2,'돌멩이 수집가'],[3,'모닥불 지박령'],[5,'동굴 전세입자'],[7,'나무꾼 출신'],[10,'폭풍 단골손님'],[13,'광맥 감별사'],[16,'제작대 집주인'],[20,'이카루스 현지인'],[25,'보급품 감별사'],[30,'귀환 연기 전문가'],[35,'산소통 단골'],[40,'행성 고인물'],[50,'동굴 건물주'],[60,'폭풍과 맞담배'],[70,'귀환선 환불러'],[80,'행성 명예주민'],[90,'개척자 원로'],[95,'지구가 어딘데'],[100,'이 행성 건물주']];
+const usageTitles = [[1,'갓 내린 신입'],[2,'돌멩이 수집가'],[3,'모닥불 지박령'],[5,'동굴 전세입자'],[7,'나무꾼 출신'],[10,'폭풍 단골손님'],[13,'광맥 감별사'],[16,'제작대 집주인'],[20,'이카루스 현지인'],[25,'보급품 감별사'],[30,'귀환 연기 전문가'],[35,'산소통 단골'],[40,'행성 생활 만렙각'],[50,'동굴 건물주'],[60,'폭풍도 구독 중'],[70,'귀환선 환불러'],[80,'행성 명예주민'],[90,'개척자 원로'],[95,'지구는 잠시 로그아웃'],[100,'이 행성 건물주']];
 const usageNumber = n => Number.isFinite(n) && n > 0 ? n : 0;
 function usageInfo() {
   const seconds = usageNumber(cfg.hudUseSeconds), level = Math.min(100, 1 + Math.floor(seconds / 3600));
-  const titles = usageTitles.map(([lv,title])=>({id:'rank-'+lv,title,level:lv,goal:(lv-1)*3600,value:seconds,unlocked:level>=lv,hidden:false,description:'누적 '+(lv-1)+'시간 함께 사용'}));
+  if(!Array.isArray(cfg.hudEarnedTitles)){cfg.hudEarnedTitles=usageTitles.filter(([lv])=>seconds>=(lv-1)*3600).map(([lv])=>'rank-'+lv);for(const [id,value,goal]of [['secret-session',cfg.hudMaxSession,7200],['secret-night',cfg.hudNightSeconds,3600],['secret-thirty',seconds,108000],['secret-return',seconds,180000]])if(usageNumber(value)>=goal)cfg.hudEarnedTitles.push(id);}
+  const earned=new Set(cfg.hudEarnedTitles);
+  const titles = usageTitles.map(([lv,title])=>({id:'rank-'+lv,title,level:lv,goal:(lv-1)*4500,value:seconds,unlocked:earned.has('rank-'+lv)||seconds>=(lv-1)*4500,hidden:false,description:'누적 '+((lv-1)*1.25)+'시간 함께 사용'}));
   const secrets = [
-    {id:'secret-session',title:'잠깐만 한다며',goal:7200,value:usageNumber(cfg.hudMaxSession),description:'한 번에 2시간 함께 사용',hint:'짧게 하기로 했던 약속'},
-    {id:'secret-night',title:'내일의 나야 미안',goal:3600,value:usageNumber(cfg.hudNightSeconds),description:'자정부터 새벽 5시 사이 누적 1시간 사용',hint:'모두 잠든 시간의 개척자'},
-    {id:'secret-thirty',title:'처음엔 재미없다 했잖아',goal:108000,value:seconds,description:'누적 30시간 함께 사용',hint:'첫인상은 오래가지 않죠'},
-    {id:'secret-return',title:'귀환 버튼 어디 갔지',goal:180000,value:seconds,description:'누적 50시간 함께 사용',hint:'지구행 표를 어디 뒀더라'}
-  ].map(x=>({...x,hidden:true,unlocked:x.value>=x.goal}));
+    {id:'secret-session',title:'잠깐만 한다며',goal:10800,value:usageNumber(cfg.hudMaxSession),description:'한 번에 3시간 함께 사용',hint:'짧게 하기로 했던 약속'},
+    {id:'secret-night',title:'내일의 나야 미안',goal:5400,value:usageNumber(cfg.hudNightSeconds),description:'자정부터 새벽 5시 사이 누적 1.5시간 사용',hint:'모두 잠든 시간의 개척자'},
+    {id:'secret-thirty',title:'처음엔 재미없다 했잖아',goal:162000,value:seconds,description:'누적 45시간 함께 사용',hint:'첫인상은 오래가지 않죠'},
+    {id:'secret-return',title:'귀환 버튼 어디 갔지',goal:270000,value:seconds,description:'누적 75시간 함께 사용',hint:'지구행 표를 어디 뒀더라'}
+  ].map(x=>({...x,hidden:true,unlocked:earned.has(x.id)||x.value>=x.goal}));
   const achievements=[...titles,...secrets,...(activityTracker?activityTracker.info().achievements:[])], automatic=titles.filter(t=>t.unlocked).pop();
+  cfg.hudEarnedTitles=[...new Set([...earned,...titles.concat(secrets).filter(t=>t.unlocked).map(t=>t.id)])];
   const selected=achievements.find(t=>t.id===cfg.hudTitleId&&t.unlocked)||automatic;
   const next=titles.find(t=>!t.unlocked);
   return {activity:activityTracker?activityTracker.info():null,seconds,level,title:selected.title,selectedId:selected.id,automatic:!achievements.some(t=>t.id===cfg.hudTitleId&&t.unlocked),achievements:achievements.map(t=>t.hidden&&!t.unlocked?{id:t.id,hidden:true,unlocked:false,title:'???',hint:t.hint}:t),nextTitle:next?.title||null,nextTitleSeconds:next?Math.max(0,next.goal-seconds):0,nextLevelSeconds:level<100?Math.max(0,level*3600-seconds):0};
@@ -98,6 +101,8 @@ function createWindow(hud) {
           if (e3 || generation !== loadGeneration || liveWindow.isDestroyed()) return;
           if (sig !== after.mtimeMs + ':' + after.size) return;
           try { liveWindow.webContents.send('live', txt); } catch (e) { return; }
+          // Parse the existing JSON envelope, never execute it for achievements.
+          if(activityTracker){try{const match=txt.trim().match(/^window\.__icarusLive&&window\.__icarusLive\((\{[\s\S]*\})\);?$/);if(match)activityTracker.position(JSON.parse(match[1]),usageActive);}catch{}}
           lastSig = sig;
           // Preserve the existing update trigger, but only after a successful read.
           if (lastLiveAt && Date.now() - lastLiveAt > 120000) runUpdate(false);
@@ -179,7 +184,7 @@ ipcMain.handle('gameControl',async (_e,action)=>{
  if(updateTask||restartPending)return {message:'HUD 업데이트가 끝난 뒤 다시 눌러 주세요.'};
  if(action==='exit'){const answer=await dialog.showMessageBox(win,{type:'warning',message:'호스트 게임을 종료할까요?',detail:'접속한 친구들도 연결이 끊깁니다. 게임에서 Esc 메뉴를 연 상태에서 저장 처리 확인 후 종료를 요청합니다.',buttons:['취소','저장 후 종료'],defaultId:0,cancelId:0});if(answer.response!==1)return {message:'종료 요청을 취소했습니다.'};}
  if(!gameControlAction)gameControlAction=require('./game-control.js').createControl({modDir:()=>gameDir&&UPD.modDir(gameDir),gameUp,openExternal:url=>shell.openExternal(url),saveRoot:process.env.LOCALAPPDATA?path.join(process.env.LOCALAPPDATA,"Icarus","Saved","PlayerData"):null,progress:p=>{if(win&&!win.isDestroyed())win.webContents.send("game-progress",p)}});
- return gameControlAction(action);
+ try{return await gameControlAction(action);}catch(error){return {status:'error',message:error.message||'요청을 처리하지 못했습니다. 게임 상태를 확인해 주세요.'};}
 });
 ipcMain.handle('setActivityEnabled', (_e,on) => {if(activityTracker)activityTracker.enable(on===true);return usageInfo();});
 ipcMain.handle('setTitle', (_e,id) => { if(id==='auto'||usageInfo().achievements.some(t=>t.id===id&&t.unlocked)){cfg.hudTitleId=id==='auto'?null:id;saveCfg();}return usageInfo(); });

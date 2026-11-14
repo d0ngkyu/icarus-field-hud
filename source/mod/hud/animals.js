@@ -1,7 +1,9 @@
 (function (root) {
   'use strict';
   const labels = { Vitality:'활력 (VIR)', Endurance:'체력 (FIT)', Muscle:'체격 (PHY)', Agility:'반사 (REF)', Hardiness:'적응 (ADP)', Toughness:'강인함 (TGH)', Utility:'본능 (INS)' };
-  const keys = Object.keys(labels);
+  const keys = ['Vitality','Endurance','Muscle','Agility','Toughness','Hardiness','Utility'];
+  const statNames={Health:'체력',HealthRegen:'체력 재생',Stamina:'스태미나',StaminaRegen:'스태미나 재생',MeleeDamage:'근접 피해',MovementSpeed:'이동 속도',SprintSpeed:'질주 속도',WeightCapacity:'운반 중량',ColdRes:'추위 저항',HeatRes:'더위 저항',FallRes:'낙하 저항',FireRes:'불 저항',MeleeRes:'근접 저항',PoisonRes:'독 저항',ProjectileRes:'발사체 저항'};
+  const plain=s=>typeof s==='string'?s.replace(/<[^>]*>/g,'').slice(0,1200):'';
   const clean = s => typeof s === 'string' ? s.slice(0, 300) : '';
   function normalize(a) {
     if (!a || typeof a !== 'object' || !clean(a.species) || !a.genes) return null;
@@ -12,8 +14,10 @@
       genes[k] = v;
     }
     const stats = {};
-    for (const k of ['Health','Stamina','MeleeDamage','MovementSpeed','SprintSpeed','WeightCapacity']) if (typeof a.stats?.[k] === 'string') stats[k] = clean(a.stats[k]);
-    return { id:clean(a.id), aliases:(Array.isArray(a.aliases)?a.aliases:[]).filter(x=>typeof x==='string').slice(-20), name:clean(a.name)||'이름 없는 동물', species:clean(a.species), sex:[1,2].includes(a.sex)?a.sex:0, genes, stats };
+    for (const k of Object.keys(statNames)) if (typeof a.stats?.[k] === 'string') stats[k] = plain(a.stats[k]);
+    const tooltips=Object.fromEntries(keys.filter(k=>plain(a.tooltips?.[k])).map(k=>[k,plain(a.tooltips[k])]));
+    const details=(Array.isArray(a.details)?a.details:[]).slice(0,96).filter(x=>x&&plain(x.label)&&plain(x.value)).map(x=>({group:plain(x.group)||'능력치',label:plain(x.label),value:plain(x.value)}));
+    return { id:clean(a.id), aliases:(Array.isArray(a.aliases)?a.aliases:[]).filter(x=>typeof x==='string').slice(-20), name:clean(a.name)||'이름 없는 동물', species:clean(a.species), sex:[1,2].includes(a.sex)?a.sex:0, genes, stats,tooltips,details };
   }
   function thresholds(t) {
     return t && Number.isInteger(t.low) && Number.isInteger(t.high) && t.low >= 0 && t.low < t.high && t.high <= 10 ? {low:t.low, high:t.high} : {low:3,high:8};
@@ -112,7 +116,6 @@
     const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
     const sex=a=>a.sex===1?'암컷':a.sex===2?'수컷':'성별 미확인';
     const names={low:'낮음',normal:'보통',high:'높음'};
-    const statNames={Health:'체력',Stamina:'스태미나',MeleeDamage:'근접 공격력',MovementSpeed:'이동 속도',SprintSpeed:'질주 속도',WeightCapacity:'운반 중량'};
     const save=()=>{try{db.selectedId=selected!==''?db.animals[Number(selected)]?.id||'':'';localStorage.setItem(storageKey,JSON.stringify(db));return true;}catch(e){status('저장 공간이 부족해 저장하지 못했습니다.');return false;}};
     const status=s=>{host.querySelector('[data-status]').textContent=s;};
     const style=doc.createElement('style');style.textContent=`
@@ -145,6 +148,22 @@
     pairSection.querySelector('h2').nextElementSibling.textContent='상대를 골라 약점 보완과 수치별 출생 확률을 비교하세요.';
     const management=doc.createElement('details');management.innerHTML='<summary>저장 동물 검색 · 관리</summary>';const searchLabel=host.querySelector('[data-search]').closest('label');management.append(searchLabel,host.querySelector('[data-delete]'));host.querySelector('[data-save]').parentElement.after(management);
     const pickers=doc.createElement('div');pickers.className='pair-pickers';const baseLabel=host.querySelector('[data-base]').closest('label'),targetLabel=host.querySelector('[data-target]').closest('label');baseLabel.before(pickers);pickers.append(baseLabel,targetLabel);
+    const overview=host.querySelector('.animal-grid');
+    overview.classList.add('animal-overview');pairSection.classList.add('breeding-plan');overview.after(pairSection);
+    const liveStats=doc.createElement('section');liveStats.className='animal-live-stats';liveStats.innerHTML='<h2>현재 능력치</h2><p data-stat-source class="muted"></p><div data-live-stats></div>';overview.append(liveStats);
+    const intro=overview.querySelector('section>p');intro.textContent='게임에서 동물 상세창을 열면 자동으로 표시됩니다. 등록은 교배 후보를 보관할 때만 필요합니다.';
+    const tip=doc.createElement('div');tip.className='gene-tooltip';tip.setAttribute('role','tooltip');tip.hidden=true;host.append(tip);
+    function showTip(e){const item=e.target.closest('[data-stat]');if(!item)return;const a=current&&Date.now()-observedAt<12000?current:db.animals[Number(selected)];if(!a)return;tip.textContent=a.tooltips[item.dataset.stat]||labels[item.dataset.stat]+' ['+a.genes[item.dataset.stat]+']\n게임 상세창의 효과 설명을 아직 받지 못했습니다.';tip.hidden=false;const r=item.getBoundingClientRect();tip.style.left=Math.max(8,Math.min(r.left,innerWidth-292))+'px';tip.style.top=Math.max(8,Math.min(r.bottom+6,innerHeight-tip.offsetHeight-8))+'px';}
+    host.addEventListener('pointerover',showTip);host.addEventListener('focusin',showTip);host.addEventListener('pointerout',e=>{if(e.target.closest('[data-stat]')&&!e.target.closest('[data-stat]').contains(e.relatedTarget))tip.hidden=true});host.addEventListener('focusout',()=>tip.hidden=true);host.addEventListener('scroll',()=>tip.hidden=true,true);
+    function renderLiveStats(a,fresh){
+      liveStats.querySelector('[data-stat-source]').textContent=!a?'동물 상세창을 열어 주세요.':fresh?'상세창 연결 · 약 3초마다 갱신 · 게임 표시값':'저장된 기록 · 현재 상태가 아닙니다';
+      const box=liveStats.querySelector('[data-live-stats]');if(!a){box.innerHTML='<p class="muted">체력 · 스태미나 · 이동 · 공격 · 중량을 이곳에서 확인합니다.</p>';return;}
+      const primary=['Health','Stamina','MeleeDamage','MovementSpeed','SprintSpeed','WeightCapacity'];
+      box.innerHTML='<div class="stat-cards">'+primary.map(k=>'<div class="stat-card"><small>'+statNames[k]+'</small><b>'+esc(a.stats[k]||'—')+'</b></div>').join('')+'</div>';
+      const rows=a.details.length?a.details:Object.entries(a.stats).filter(([k])=>!primary.includes(k)).map(([k,value])=>({group:k.includes('Res')?'저항':'재생',label:statNames[k],value}));
+      const groups=new Map();for(const row of rows){if(!groups.has(row.group))groups.set(row.group,[]);groups.get(row.group).push(row);}
+      box.insertAdjacentHTML('beforeend','<div class="animal-stat-groups">'+[...groups].map(([name,rows])=>'<div class="animal-stat-group"><h3>'+esc(name)+'</h3><dl>'+rows.map(r=>'<div><dt>'+esc(r.label)+'</dt><dd>'+esc(r.value)+'</dd></div>').join('')+'</dl></div>').join('')+'</div><p class="muted">'+(a.details.length?'확장 능력치: 게임에서 열린 상세 목록의 표시값입니다.':'게임의 동물 상세 능력치(더 보기)를 열면 저항·소모·재생 등 확장 목록도 표시됩니다.')+'</p>');
+    }
     const context=()=>host.querySelector('[data-context]').value.trim();
     const percentage=(p,hits,n)=>n?`${p.toFixed(1)}% (${hits}/${n}마리)`:'관측 부족 (0마리)';
     const simulationCache=new Map(),pendingSimulations=new Map();let predictionWorker=null,workerUrl=null,jobId=0;
@@ -207,7 +226,7 @@
     host.addEventListener('keydown',e=>{const b=e.target.closest('[data-stat]');if(b&&['Enter',' '].includes(e.key)){e.preventDefault();selectStat(b.dataset.stat)}});
     function radar(a){
       const pt=(i,r)=>[220+Math.sin(i*Math.PI*2/7)*r,190-Math.cos(i*Math.PI*2/7)*r],points=r=>keys.map((k,i)=>pt(i,r).join(',')).join(' '),color=n=>`hsl(${12+n*14},45%,62%)`;
-      return `<svg class="radar" viewBox="0 0 440 400" role="group" aria-label="7개 유전 스탯 방사형 차트">${[.2,.4,.6,.8,1].map(f=>`<polygon points="${points(f*125)}" fill="none" stroke="#344552" stroke-width="1"/>`).join('')}${keys.map((k,i)=>{const next=(i+1)%7,p=pt(i,a.genes[k]*12.5),q=pt(next,a.genes[keys[next]]*12.5),axis=pt(i,125),label=pt(i,163);return `<g data-stat="${k}" role="button" tabindex="0" aria-label="${labels[k]} 확률 보기"><defs><linearGradient id="gene-fill-${i}" gradientUnits="userSpaceOnUse" x1="220" y1="190" x2="${p[0]}" y2="${p[1]}"><stop stop-color="#293a49" stop-opacity=".2"/><stop offset="1" stop-color="${color(a.genes[k])}" stop-opacity=".65"/></linearGradient></defs><line x1="220" y1="190" x2="${axis[0]}" y2="${axis[1]}" stroke="#344552"/><polygon points="220,190 ${p.join(',')} ${q.join(',')}" fill="url(#gene-fill-${i})"/><line x1="${p[0]}" y1="${p[1]}" x2="${q[0]}" y2="${q[1]}" stroke="${color(a.genes[k])}" stroke-width="2"/><circle cx="${p[0]}" cy="${p[1]}" r="4" fill="${color(a.genes[k])}"/><text x="${label[0]}" y="${label[1]}" text-anchor="middle">${labels[k].split(' ')[0]}</text><text class="value" style="fill:${color(a.genes[k])}" x="${label[0]}" y="${label[1]+20}" text-anchor="middle">${a.genes[k]}<tspan font-size="10" fill="#8295a6"> / 10</tspan></text></g>`}).join('')}</svg>`;
+      return `<svg class="radar" viewBox="0 0 440 400" role="group" aria-label="7개 유전 스탯 방사형 차트">${[.2,.4,.6,.8,1].map(f=>`<polygon points="${points(f*125)}" fill="none" stroke="#344552" stroke-width="1"/>`).join('')}${keys.map((k,i)=>{const next=(i+1)%7,p=pt(i,a.genes[k]*12.5),q=pt(next,a.genes[keys[next]]*12.5),axis=pt(i,125),label=pt(i,163);return `<g data-stat="${k}" role="button" tabindex="0" aria-label="${labels[k]} 효과 및 확률 보기"><title>${esc(a.tooltips[k]||labels[k])}</title><defs><linearGradient id="gene-fill-${i}" gradientUnits="userSpaceOnUse" x1="220" y1="190" x2="${p[0]}" y2="${p[1]}"><stop stop-color="#293a49" stop-opacity=".2"/><stop offset="1" stop-color="${color(a.genes[k])}" stop-opacity=".65"/></linearGradient></defs><line x1="220" y1="190" x2="${axis[0]}" y2="${axis[1]}" stroke="#344552"/><polygon points="220,190 ${p.join(',')} ${q.join(',')}" fill="url(#gene-fill-${i})"/><line x1="${p[0]}" y1="${p[1]}" x2="${q[0]}" y2="${q[1]}" stroke="${color(a.genes[k])}" stroke-width="2"/><circle cx="${p[0]}" cy="${p[1]}" r="4" fill="${color(a.genes[k])}"/><text x="${label[0]}" y="${label[1]}" text-anchor="middle">${labels[k].match(/\(([^)]+)\)/)[1]}</text><text class="value" style="fill:${color(a.genes[k])}" x="${label[0]}" y="${label[1]+20}" text-anchor="middle">${a.genes[k]}<tspan font-size="10" fill="#8295a6"> / 10</tspan></text></g>`}).join('')}</svg>`;
     }
     function renderCurrent(){
       const fresh=current && Date.now()-observedAt<12000;
@@ -215,8 +234,9 @@
       host.querySelector('[data-record]').disabled=!fresh;
       host.querySelector('[data-count]').textContent='저장 '+db.animals.length+'마리 · 관측 '+db.observations.length+'건';
       const a=fresh?current:(selected!==''?db.animals[Number(selected)]:null);
+      renderLiveStats(a,!!fresh);
       if(!a){host.querySelector('[data-current]').innerHTML='<div class="animal-empty"><b>동물 등록 방법</b><p>1. 게임에서 동물 상세창을 엽니다.<br>2. 스탯이 나타나면 ‘처음 등록하기’를 누릅니다.<br>3. 다음부터는 저장된 동물을 골라 바로 확인합니다.</p></div>';return;}
-      host.querySelector('[data-current]').innerHTML=`<div class="animal-title"><h3>${esc(a.name)}</h3><span class="badge ${fresh?'':'saved'}">${fresh?'상세창 연결됨':'저장된 기록'}</span></div><p class="muted" style="overflow-wrap:anywhere">${sex(a)} · ${esc(a.species)} · 유전 합계 <strong>${keys.reduce((sum,k)=>sum+a.genes[k],0)} / 70</strong></p>${radar(a)}<div class="stat-picker">${keys.map(k=>`<button data-stat="${k}" class="${focusStat===k?'selected':''}">${labels[k].split(' ')[0]} <b>${a.genes[k]}</b></button>`).join('')}</div><div data-reconnect></div><div class="gene-key"><span style="--key:#d88474">낮음</span><span style="--key:#c6b87a">보통</span><span style="--key:#72cbb0">높음</span></div><details><summary>현재 능력치 · 장비와 버프 포함</summary>${Object.keys(a.stats).length?'<div class="stat-cards">'+Object.entries(a.stats).map(([k,v])=>`<div class="stat-card"><small>${statNames[k]}</small><b>${esc(v)}</b></div>`).join('')+'</div>':'<p class="muted">상세창에서 현재 능력치를 아직 읽지 못했습니다.</p>'}</details>`;
+      host.querySelector('[data-current]').innerHTML=`<div class="animal-title"><h3>${esc(a.name)}</h3><span class="badge ${fresh?'':'saved'}">${fresh?'상세창 연결됨':'저장된 기록'}</span></div><p class="muted" style="overflow-wrap:anywhere">${sex(a)} · ${esc(a.species)} · 유전 합계 <strong>${keys.reduce((sum,k)=>sum+a.genes[k],0)} / 70</strong></p>${radar(a)}<div class="stat-picker">${keys.map(k=>`<button data-stat="${k}" class="${focusStat===k?'selected':''}">${labels[k].split(' ')[0]} <b>${a.genes[k]}</b></button>`).join('')}</div><div data-reconnect></div><div class="gene-key"><span style="--key:#d88474">낮음</span><span style="--key:#c6b87a">보통</span><span style="--key:#72cbb0">높음</span></div>`;
       renderReconnect();
     }
 
@@ -280,7 +300,7 @@
       if(!save()){db.animals=previous;return;}
       selected=String(old>=0?old:db.animals.length-1);save();status('등록했습니다. 다음 실행 때 자동으로 불러옵니다.');clearConfirmation();renderCurrent();renderPairs();
     };
-    host.querySelector('[data-base]').onchange=e=>{selected=e.target.value;pairChoice='';save();clearConfirmation();current=null;renderCurrent();renderPairs();};
+    host.querySelector('[data-base]').onchange=e=>{selected=e.target.value;pairChoice='';save();clearConfirmation();renderCurrent();renderPairs();};
     host.querySelector('[data-target]').onchange=e=>{target=e.target.value;renderPairs();};
     host.querySelector('[data-delete]').onclick=()=>{if(selected===''||!confirmDelete('[data-delete]',selected))return;const previous=db.animals.slice();db.animals.splice(Number(selected),1);if(!save()){db.animals=previous;return;}selected='';clearConfirmation();renderCurrent();renderPairs();};
     host.querySelector('[data-limits]').onchange=e=>{
@@ -290,16 +310,19 @@
       if(!Number.isInteger(t.low)||!Number.isInteger(t.high)||t.low<0||t.high>10||t.low>=t.high){status('낮음 기준은 높음보다 작아야 하며 0~10 정수여야 합니다.');return;}
       const prior=db.limits[k];db.limits[k]=t;if(!save()){db.limits[k]=prior;return;}status('색상 기준을 저장했습니다.');renderCurrent();renderPairs();
     };
+    let currentVisual='', liveSaveAt=0, liveDirty=false;
+    const pairIdentity=a=>JSON.stringify(a&&[a.id,a.genes,a.sex,a.species]);
+    root.addEventListener('beforeunload',()=>{if(liveDirty)save()});
     root.__animalIngest=m=>{
       if(!Object.prototype.hasOwnProperty.call(m,'animal'))return;
       const next=normalize(m.animal), sig=JSON.stringify(next);if(sig!==signature)clearConfirmation();observedAt=Date.now();current=next;
-      if(next&&sig!==signature){const i=db.animals.findIndex(a=>a.id&&a.id===next.id);if(i>=0){db.animals[i]={...next,aliases:db.animals[i].aliases||[]};save();if(active&&!doc.hidden)renderPairs();}}
-      if(active && !doc.hidden && sig!==signature)renderCurrent();signature=sig;
+      if(next&&sig!==signature){const i=db.animals.findIndex(a=>a.id&&a.id===next.id);if(i>=0){const changed=pairIdentity(db.animals[i])!==pairIdentity(next);db.animals[i]={...next,aliases:db.animals[i].aliases||[]};liveDirty=true;if(changed||Date.now()-liveSaveAt>=30000){if(save())liveDirty=false;liveSaveAt=Date.now();}if(changed&&active&&!doc.hidden)renderPairs();}}
+      const visual=JSON.stringify(next&&[next.id,next.name,next.genes,next.sex,next.species,next.tooltips]);if(active&&!doc.hidden){if(visual!==currentVisual||!next)renderCurrent();else renderLiveStats(next,true);}currentVisual=visual;signature=sig;
     };
     root.__animalsShown=()=>{if(active)return;active=true;renderCurrent();renderPairs();};
     const observer=new MutationObserver(()=>{const next=host.classList.contains('on');if(next&&!active)root.__animalsShown();else if(!next){active=false;rankGeneration++;rankKey='';}});observer.observe(host,{attributes:true,attributeFilter:['class']});
     // No background rendering. A cheap freshness check runs only for an open tab.
-    setInterval(()=>{if(active && !doc.hidden && current && Date.now()-observedAt>=12000){current=null;signature='';renderCurrent();}},3000);
+    setInterval(()=>{if(liveDirty&&Date.now()-liveSaveAt>=30000){if(save())liveDirty=false;liveSaveAt=Date.now();}if(active && !doc.hidden && current && Date.now()-observedAt>=12000){current=null;signature='';currentVisual='';renderCurrent();}},3000);
     doc.addEventListener('visibilitychange',()=>{if(active&&!doc.hidden){renderCurrent();renderPairs();}});
     renderCurrent();renderPairs();
   };
