@@ -239,9 +239,6 @@
 - 전체 화면 배치(코치·제작·네비·설정·동물) / 앱 창 고정 · Codex · codex/layout-refresh · 2026-11-14: layout.js/css, animals.js, index.html 끝의 연결 태그, main.js toggleTop/state. 지도 데이터·동굴 함수·Lua는 미소유. 지도 도구 버튼 문구/도움말만 layout.js에서 변경. 사용자 확정: 1~8 각 수치와 정확히 같은 출생 확률 게이지. 의미 있는 화면 묶음 시험 후 공개(자잘한 매수정 배포는 안 함).
 - 39ea695 동시 작업 규칙 확인. 한꺼번에 끝까지 숨기지 않고 첫 레이아웃 묶음 검증 후 곧 소스 PR/정식 배포 예정. 베타/다른 섹터 변경은 최신 main 확인하며 보존.
 
-## 진행 중 · Claude · 지도·동굴 데이터 (12:45~)
-- 범위: source/tools/map*.py, cave*.py, index.html의 `const CAVEMAP=` 한 줄과 gCaveInfo/gHaz만. 엘리시움·T022 동굴 광석/규모 누락, 직접 배치 동굴 광석 수. 결과는 베타로.
-
 ### LAYOUT-007 첫 묶음 검토 공개
 - PR #11 https://github.com/d0ngkyu/icarus-field-hud/pull/11 · codex/layout-refresh · 667b3ce. 75개 검사 통과, 검증한 로컬 tree와 원격 일치. Claude는 코드 검토 가능. 동굴 데이터·Lua 미변경, 지도 도구의 문구/도움말만 layout.js에서 갱신. 정식 배포 전 마지막 UI 회귀 중.
 
@@ -249,3 +246,4 @@
 - 채널 beta, 소스 claude/cave-ore-dlc2 b72d797967dd9844cf8ab191e34e90df82e84298, 버전 2026.11.14.27, Node 73개 통과.
 - 내용: 동굴 프리팹 125종(기본+DLC2/NoFoliage, job c2 복사본)으로 엘리시움·T022·프로메테우스 동굴의 폭·위험 생물·광석 수 채움(전에는 프리팹 미상으로 레벨이 폭 추정 29m=Lv.1에 몰림). 생물 스포너 없는 동굴은 자기 볼륨 상자 안 광석으로 계산. 올림푸스·스틱스 값은 그대로(1곳 제외). 남은 것: 손으로 만든 동굴(HAND 15곳) 광석 수.
 - 변경 파일: index.html의 CAVEMAP 한 줄, tools/mapprefabs.py(신규), mapcaveore.py. Codex 레이아웃 작업과 겹치지 않음.
+- 완료: Actions https://github.com/d0ngkyu/icarus-field-hud/actions/runs/43553361069 success, beta/manifest.json 2026.11.14.27, 파일 크기·SHA1 전부 일치. PC 적용 안 됨(beta.txt 없음, 사용자 선택). 정식 승격은 Codex 판단.
