@@ -238,3 +238,6 @@
 ## 진행 중
 - 전체 화면 배치(코치·제작·네비·설정·동물) / 앱 창 고정 · Codex · codex/layout-refresh · 2026-11-14: layout.js/css, animals.js, index.html 끝의 연결 태그, main.js toggleTop/state. 지도 데이터·동굴 함수·Lua는 미소유. 지도 도구 버튼 문구/도움말만 layout.js에서 변경. 사용자 확정: 1~8 각 수치와 정확히 같은 출생 확률 게이지. 의미 있는 화면 묶음 시험 후 공개(자잘한 매수정 배포는 안 함).
 - 39ea695 동시 작업 규칙 확인. 한꺼번에 끝까지 숨기지 않고 첫 레이아웃 묶음 검증 후 곧 소스 PR/정식 배포 예정. 베타/다른 섹터 변경은 최신 main 확인하며 보존.
+
+## 진행 중 · Claude · 지도·동굴 데이터 (12:45~)
+- 범위: source/tools/map*.py, cave*.py, index.html의 `const CAVEMAP=` 한 줄과 gCaveInfo/gHaz만. 엘리시움·T022 동굴 광석/규모 누락, 직접 배치 동굴 광석 수. 결과는 베타로.
