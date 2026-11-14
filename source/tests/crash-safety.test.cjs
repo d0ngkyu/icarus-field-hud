@@ -58,3 +58,23 @@ test('new release does not erase repeated crash escalation', t => {
   assert.equal(d.check('new').level, 3);
   assert.equal(d.safeMode(), true);
 });
+
+test('partial crash reports are retried and quarantined after the XML finishes', t => {
+  const {d,crash}=fixture(t);crash('partial');
+  const dir=path.join(d.p.crashDirs[0],'partial'),xml=path.join(dir,'CrashContext.runtime-xml');
+  fs.writeFileSync(xml,'<ErrorMessage>ACCESS_VIOLATION</ErrorMessage><CallStack>');
+  assert.equal(d.check('v1'),null);assert.equal(d.st.seen[dir],undefined);
+  fs.writeFileSync(xml,'<ErrorMessage>ACCESS_VIOLATION</ErrorMessage><CallStack>UE4SS</CallStack>');
+  assert.equal(d.check('v1').level,1);assert.equal(d.st.crashes.length,1);
+});
+
+test('unknown Windows process state cannot rename the game loader',async t=>{
+  const {d}=fixture(t);d.isGameRunning=async()=>null;
+  await assert.rejects(d.setModOn(false),/확인하지 못해/);
+});
+
+test('ore crash can disable the actual ore scanner',t=>{
+  const {d,crash}=fixture(t);crash('ore');
+  const marker=fs.readFileSync(d.p.step,'utf8').replace('fog|','ores|');fs.writeFileSync(d.p.step,marker);
+  assert.equal(d.check('v1').level,1);assert.deepEqual(d.featuresOff(),['ores']);
+});
