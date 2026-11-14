@@ -153,3 +153,54 @@ function extractRaw(pakDir, outDir, test, log) {
 }
 
 module.exports = { extract, extractRaw, openPak, readEntry };
+
+// ---- reading one object out of a big level file without copying the whole file ----
+// Package header (.umap/.uasset, UE4.27 cooked): names, imports, exports.
+function pkgSummary(b) {
+  let o = 0;
+  const i32 = () => { const v = b.readInt32LE(o); o += 4; return v; };
+  const i64 = () => { const v = Number(b.readBigInt64LE(o)); o += 8; return v; };
+  const str = () => { let s; [s, o] = fstr(b, o); return s; };
+  if (b.readUInt32LE(0) !== 0x9E2A83C1) throw new Error('not a package');
+  o = 4; i32(); i32(); i32(); i32();
+  const nc = i32(); o += nc * 20;
+  const total = i32(); str(); i32();
+  const nn = i32(), no = i32();
+  i32(); i32();
+  const ec = i32(), eo = i32(), ic = i32(), io = i32();
+  const names = []; o = no;
+  for (let k = 0; k < nn; k++) { names.push(str()); o += 4; }
+  const imports = []; o = io;
+  for (let k = 0; k < ic; k++) { i64(); const cn = i64(); i32(); const on = i64(); imports.push({ cls: names[cn % 4294967296], name: names[on % 4294967296] }); }
+  const exports = []; o = eo;
+  for (let k = 0; k < ec; k++) {
+    const start = o; const cls = i32(); i32(); i32(); i32(); const on = i64(); i32();
+    const size = i64(), off = i64();
+    exports.push({ cls: cls < 0 ? imports[-cls - 1].name : cls > 0 ? 'export' + cls : '', name: names[on % 4294967296], size, off });
+    o = start + 104;
+  }
+  return { total, names, imports, exports };
+}
+// Copies only the compressed blocks of an entry that cover [start, start+len) of its uncompressed data.
+function rawRange(pak, eo, start, len) {
+  const enc = pak.enc;
+  let o = eo;
+  const f = enc.readUInt32LE(o); o += 4;
+  let blockSize = (f & 0x3f) << 11;
+  if ((f & 0x3f) === 0x3f) { blockSize = enc.readUInt32LE(o); o += 4; }
+  const bc = (f >>> 6) & 0xffff, m = (f >>> 23) & 0x3f;
+  const rd = bit => { let v; if (f & (1 << bit)) { v = enc.readUInt32LE(o); o += 4; } else { v = u64(enc, o); o += 8; } return v; };
+  const off = rd(31), us = rd(30), cs = m ? rd(29) : us;
+  const hdr = 8 + 8 + 8 + 4 + 20 + 1 + 4 + (m ? 4 + 16 * bc : 0);
+  if (!m) return { method: 'none', us, blockSize: us, first: 0, sizes: [len], data: readAt(pak.fd, off + hdr + start, len) };
+  const sizes = bc === 1 ? [cs] : Array.from({ length: bc }, (_, k) => enc.readUInt32LE(o + 4 * k));
+  if (bc === 1) blockSize = us;
+  const first = Math.floor(start / blockSize), last = Math.min(bc - 1, Math.floor((start + len - 1) / blockSize));
+  let pos = 0; for (let k = 0; k < first; k++) pos += sizes[k];
+  const take = sizes.slice(first, last + 1);
+  return { method: pak.methods[m - 1] || '?', us, blockSize, first, sizes: take, data: readAt(pak.fd, off + hdr + pos, take.reduce((a, c) => a + c, 0)) };
+}
+module.exports.pkgSummary = pkgSummary;
+module.exports.rawRange = rawRange;
+module.exports.rawEntry = rawEntry;
+module.exports.readEntry = readEntry;

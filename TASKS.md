@@ -132,3 +132,8 @@
 - 규모 추정: 프리팹의 생물 스폰 지점 수(6~54)를 icarusintel 구간에 맞춤 → <25 Lv.1 SMALL, 25-34 Lv.2 MEDIUM, 35-54 Lv.3 LARGE, 55+ M MEGA. 현재 데이터엔 MEGA 해당 없음(최대 54, CF_MED_002). 추정임을 기록.
 - 지도 오른쪽 레이어 목록: 색 네모 → 항목별 아이콘(SVG: 지도·구름·격자·동굴·별·보스·광맥·간헐천·광석·상자·집·핀·경로·발자취·내 위치).
 - 배포 2026.11.14.17. 검증: node 테스트 전부, JS 문법, 아이콘 화면 캡처. 실제 게임 화면 미확인.
+
+## 2026-11-14 11:35 · Claude · 전체 지도 동굴 (진행 중, 사용자 요청: icarusintel처럼 모든 동굴·정확한 레벨·수중·연결 표시)
+- 원리: 각 맵의 Generated 서브레벨에 IcarusWorldSettings(CaveLocations: 위치+동굴 프리팹)가 저장돼 있음. 멀티 클라이언트에서는 비어 있어 게임 안에서는 못 읽음 → 파일에서 읽기.
+- 맵 파일은 Oodle 압축이라 HUD가 직접 못 풂 → 2단계: (A) 서브레벨 .umap 헤더 + .uexp 크기 복사 → Claude가 WorldSettings 위치 계산 → cavejob.json 작성 → (B) HUD가 그 부분 블록만 복사(1분마다 확인, 재시작 불필요).
+- 추가 파일: source/app/cavejob.js, extract.js에 pkgSummary/rawRange (prefab .uasset으로 Python 파서와 결과 일치 확인). main.js에 개발용 블록 추가(dev.txt 있는 PC만).

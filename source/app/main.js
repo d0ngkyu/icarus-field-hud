@@ -235,6 +235,23 @@ async function start() {
       setTimeout(() => { try { new Worker(path.join(__dirname, 'levjob.js'), { workerData: { pakDir: path.join(gameDir, 'Icarus', 'Content', 'Paks'), outDir: out } }).on('error', e => ulog('level copy failed: ' + e.message)); } catch (e) { ulog('level copy failed: ' + e.message); } }, 20000);
     }
   } catch (e) {}
+  // build PC only: whole-map cave list (cavejob.js). Checks every minute, so a new cavejob.json runs without a restart.
+  try {
+    const md = UPD.modDir(gameDir), out = path.join(md, 'mapcaves'), jobFile = path.join(md, 'cavejob.json');
+    let running = false;
+    const runCaves = () => {
+      if (running || !fs.existsSync(path.join(md, 'dev.txt'))) return;
+      const needA = !fs.existsSync(path.join(out, 'doneA.txt')), needB = fs.existsSync(jobFile) && !fs.existsSync(path.join(out, 'doneB.txt'));
+      if (!needA && !needB) return;
+      running = true;
+      const { Worker } = require('worker_threads');
+      try {
+        new Worker(path.join(__dirname, 'cavejob.js'), { workerData: { pakDir: path.join(gameDir, 'Icarus', 'Content', 'Paks'), outDir: out, jobFile } })
+          .on('exit', () => { running = false; }).on('error', e => { running = false; ulog('cave copy failed: ' + e.message); });
+      } catch (e) { running = false; ulog('cave copy failed: ' + e.message); }
+    };
+    setTimeout(runCaves, 25000); setInterval(runCaves, 60000);
+  } catch (e) {}
   setInterval(() => runUpdate(false), 30 * 60 * 1000);
   watchGame();
 }

@@ -27,7 +27,7 @@ for f in sorted(os.listdir(H + 'hud/fonts')): add(M + 'IcarusHUD/hud/fonts/' + f
 for f in sorted(os.listdir(H + 'hud/maps')): add(M + 'IcarusHUD/hud/maps/' + f, H + 'hud/maps/' + f)
 # the program's own code (the .exe shell itself does not change)
 A = '/home/claude/app/src/'
-for f in ['main.js', 'updater.js', 'preload.js', 'extract.js', 'levjob.js', 'diag.js']: add('app/' + f, A + f)
+for f in ['main.js', 'updater.js', 'preload.js', 'extract.js', 'levjob.js', 'cavejob.js', 'diag.js']: add('app/' + f, A + f)
 version = sys.argv[1] if len(sys.argv) > 1 else time.strftime('%Y.%m.%d.%H%M')
 notes = sys.argv[2] if len(sys.argv) > 2 else ''
 shutil.rmtree(OUT, ignore_errors=True)
