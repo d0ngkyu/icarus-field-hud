@@ -1,10 +1,10 @@
 {
- "version": "2026.11.14.27",
+ "version": "2026.11.14.28",
  "channel": "stable",
- "source": "d7d15a44021ddd1caabd6e2f82d66a09bd835c7c",
- "notes": "화면 간결화, 서버별 성장 계획, 제작 단계 탐색, 동물 차트와 1~8 출생 확률, 창 고정 보완",
+ "source": "f05e1600d3c389424d3b774b4d8fd331128586b1",
+ "notes": "길동무 · 한눈에: 캐릭터 탭, 작은 동물 차트·약점 보완 확률, 기록 검색, 호스트 저장·종료 버튼",
  "config": {},
- "filesPath": "releases/stable/2026.11.14.27/files",
+ "filesPath": "releases/stable/2026.11.14.28/files",
  "files": [
   {
    "p": "game/Icarus/Binaries/Win64/dwmapi.dll",
@@ -55,8 +55,8 @@
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/Scripts/main.lua",
-   "n": 62103,
-   "h": "1d72556c9392b119accaed7a8a1a65268e801be8"
+   "n": 62470,
+   "h": "7978c6ec0a07b2be47ed842cfd99193f30741f80"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/Scripts/animals.lua",
@@ -70,13 +70,13 @@
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/index.html",
-   "n": 960873,
-   "h": "46f6db93a8fab47a664de9a93a61503f269ed191"
+   "n": 960984,
+   "h": "8d6246f500fdb5822f32805df9557ffa917337e3"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/animals.js",
-   "n": 37370,
-   "h": "d941807a53923807f3c682646ff1f9809d6933af"
+   "n": 43055,
+   "h": "1f0208530a28b14fcd8b950b4c7a1e5350d4b215"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/icons.webp",
@@ -125,8 +125,8 @@
   },
   {
    "p": "app/main.js",
-   "n": 18617,
-   "h": "300fdd969ecc67cd8f0997cb941fe1b9f8f706d1"
+   "n": 19444,
+   "h": "ef38c85ddfd64da339c56679a5156472bb3d2fcd"
   },
   {
    "p": "app/updater.js",
@@ -135,8 +135,8 @@
   },
   {
    "p": "app/preload.js",
-   "n": 1622,
-   "h": "f7f07b24ac9d44c55c9e396c5a537549df2fcd28"
+   "n": 1690,
+   "h": "78dd2e5377f3464d3dc71ffcc38c3f583402ef25"
   },
   {
    "p": "app/extract.js",
@@ -155,8 +155,8 @@
   },
   {
    "p": "app/diag.js",
-   "n": 11751,
-   "h": "af6e5a609eaa60d086622d72269428ea471c83cf"
+   "n": 11813,
+   "h": "975e9aafd0d3fb89efe78cdc4cb0cb407368fabc"
   },
   {
    "p": "app/seticon.js",
@@ -165,13 +165,23 @@
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/layout.css",
-   "n": 10683,
-   "h": "e93c8c73ead700ab04cb67c7a66ded96935e17df"
+   "n": 15641,
+   "h": "f076f36b9420411d7ff0ccf62c33a1e97e3ed33a"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/layout.js",
-   "n": 16570,
-   "h": "7841ef57f4ccada7379c17ee6e9635154f4e313c"
+   "n": 23012,
+   "h": "ca12fe821446bb61748fc517aa07bd8fb6a50926"
+  },
+  {
+   "p": "app/game-control.js",
+   "n": 3002,
+   "h": "fc5ebd10b6ed2dc9af0dc161038eb7b10b387802"
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/Scripts/game_control.lua",
+   "n": 3041,
+   "h": "2672ecd85e11ce226aa3c941f54d4e7d80f0e75c"
   }
  ]
 }
