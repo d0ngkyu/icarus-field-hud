@@ -214,3 +214,6 @@
   2. beta = 별도 경로(예: beta/manifest.json + beta/files)로 Claude가 올림. PC에 beta.txt가 있을 때만 updater가 beta를 받음. 기본은 stable.
   3. 실제 배포는 GitHub Actions 단일 절차(concurrency 그룹 1개)가 순서대로 처리, 버전 증가·파일 해시·downgrade 차단 검증 포함 → 동시 배포/덮어쓰기 차단.
 - 현재 상태: 2026.11.14.25는 이 합의 전에 Claude가 stable(main manifest)로 배포함(v1 PR #9 + 동굴 수정). 다음 stable 배포부터 ChatGPT 담당.
+
+## CHANNELS-006 · Codex · 진행
+- 29fb9ac/.25와 정식 Codex·베타 Claude 합의 확인. codex/release-channels에서 updater 채널 선택/복귀, 저장소 기반 빌드·검증, 단일 Actions 배포, 채널 운영 문서/시험 담당. 기존 화면·동굴·Lua 소스는 수정하지 않음. 배포 산출물 직접 수동 쓰기 대신 자동 절차 준비. beta.txt는 사용자 선택 전 생성하지 않음.
