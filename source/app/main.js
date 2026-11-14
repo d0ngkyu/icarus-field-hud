@@ -158,8 +158,8 @@ async function runUpdate(manual) {
   try {
     const r = await UPD.update(gameDir, UPDATE_URL, ulog);
     lastUpd = { ...r, at: Date.now() };
-    // a new update may hold the fix for a crash: switch back on what was switched off
-    if (doctor && r.changed.some(p => /\.lua$/.test(p)) && doctor.onNewVersion(r.version)) sendDiag({ level: 0, text: '새 수정본(' + r.version + ')이 와서 꺼 두었던 기능을 다시 켰습니다. 게임을 다시 켜면 적용됩니다.' });
+    // Keep crash-disabled features and safe mode across updates. A changed Lua file
+    // does not establish that the native crash has been fixed.
     ulog('update ' + r.version + ': ' + r.changed.length + ' changed, ' + r.skipped.length + ' skipped');
     UPD.registerApp(gameDir);
     if (win && !win.isDestroyed()) win.webContents.send('upd', { version: r.version, changed: r.changed, skipped: r.skipped, notes: r.notes, manual: !!manual });
