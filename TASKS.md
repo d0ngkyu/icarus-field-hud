@@ -633,3 +633,7 @@ A/B/C 모두 종료 프로토콜, 업데이트 실패 표시, 개인 월드 격�
 - .34 Actions43570287515 성공26초, 배포0cb1bc9, 원격39개 root/불변hash검증. .33 대비29,234bytes 증가. PC .33 기본 updater에서0changed/1skipped로 rollback, 아직 .34 설치 아님. 집계OFF UI 후 helper 프로세스0 확인; 완료 시 원래ON 복구 예정.
 - 실행 중 helper exe 교체 잠금 가능성 발견. 독립 workspace의 동일 helper로 EPERM 재현, 실제 exit 대기 후 같은 rename 성공/재시작·종료 성공 확인. 설치 실패의 개별 이유는 옛 로그에 미기록이므로 원인 연결은 강한 추정이며 다음 표준 적용으로 확인.
 - Codex codex/collector-update / app activity.js와 main.js 업데이트 생명주기 및 시험 소유. 업데이트 전 helper 종료 완료를 기다리고, 실패/보류/변경없음은 집계 자동 복원, 앱재시작은 새앱이 복원. OFF 선호 유지, 사용자 집계 합계 보존. 상세 skip 이유 로그 추가. 104개 통과(스킵0), 실제 helper 잠금/해제 시험 통과. 테스트 첫 실행은 VM microtask 대기 문제로 정지되어 해당 시험 비동기 동기화 수정 후 통과; 제품 오류와 구분. .35 후속 정식 배포 예정.
+
+
+## COLLECTOR-UPDATE-028 · 정식 배포 인수
+- Codex stable2026.11.14.35 / sourced244fff064785d84883b73e8235ee9fe8c9635e7 (PR21), 2026-11-14 16:23 KST. 104개 검사 및 실제 Windows helper 잠금/해제/재시작 검증, 원격3개 소스 바이트 일치. .34 배포 완료 후 연속 보완이며 현재 배포 담당 Codex 유지. 기존 .33 PC는 활동 집계 OFF로 일회 정상 updater 적용 준비, 설치 뒤 ON 복구 예정. 다음 버전부터 업데이트 시 collector 자동 일시중지/복원.
