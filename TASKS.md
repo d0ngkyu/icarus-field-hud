@@ -518,3 +518,6 @@ A/B/C 모두 종료 프로토콜, 업데이트 실패 표시, 개인 월드 격�
 
 ## UPDATE-URL-020 · 진행 중
 - Codex 앱 업데이트 주소 복구 담당. raw /main/manifest는 cache-bust에도 .29, /refs/heads/main/manifest는 .30 확인. 소스 package updateUrl 명시 브랜치 주소로 수정·검증 후 stable .31 배포 및 기존 안전 updater로 PC 적용 예정. 게임 미실행, 다른 섹터 변경 없음.
+
+## CLAUDE-APPLY-30 · PC 적용 (14:51 KST)
+- 사용자 요청 "작업 확인하고 적용". 게임 미실행 확인(live.js/UE4SS.log 14:09 이후 갱신 없음). CDN manifest .30 확인 후 .29 대비 바뀐 6개(Scripts/main.lua, hud/index.html, hud/layout.js, app main/updater/preload.js)를 릴리스 SHA1 검증본으로 설치, update-channel.json stable=.30·version.txt .30 기록. 설치 후 Lua/HUD 3개 SHA1 일치 재확인. 앱 변경은 HUD 재시작 후 적용. 실게임 확인은 아직.
