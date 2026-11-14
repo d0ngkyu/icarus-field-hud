@@ -599,9 +599,17 @@ A/B/C 모두 종료 프로토콜, 업데이트 실패 표시, 개인 월드 격�
 - stable배포소유 해제. 기존 종료native충돌 원인은 이 작업으로 해결한 것으로 간주하지 않음. 독립싱글도구 변경없음.
 
 
-## 진행 중 · SOLO-HOST-025
+## 착수 기록 · SOLO-HOST-025 (아래 게시 결과 참조)
 - Codex codex/solo-items 독립0.3.4: 실제 지급 실패 status ERROR/0/Single-player standalone mode required 및 world-check MULTI 확인. 사용자 직접 연 월드에서 혼자 플레이 확인. 기존 IsStandalone만으로 개인호스트를 차단하는 결함 수정: 로컬 권한+유효 GameMode+인원1/관전자0 검사. 다른 클라이언트/복수인원/알수없음 차단 유지. source/solo-items 및 standalone만 소유. 게임 실행 중 설치 교체/게임종료 안함. 지급 자체의 native 성공은 여전히 미검증.
 
 
 ### SOLO-HOST-025 · 배포 인수
 - Codex / 독립0.3.4 / source ef27cddebe7f1afea96c78c142826862b08902cc. Lua12개(1인권한호스트 허용, 원격클라이언트/2인/관전자/미확인인원 차단, 접속인원변경 재검사 포함), exe 자체/연결/32레이아웃 검사 통과. 원격ZIP 검증 후 manifest 게시. 현재 게임 실행 중으로 설치 교체 대기. 실제 지급 성공은 아직 확인되지 않음.
+
+
+## SOLO-HOST-025 · 0.3.4 게시 / 게임 종료 후 적용 대기
+- 사용자 직접 연 월드 혼자 플레이 확인. 실제0.3.3 status ERROR/0/Single-player standalone mode required, world-check MULTI였음: 지급 함수 호출 전 IsStandalone 판정에서 차단. 이번 원인은 실제 로그로 확인했으며 native 지급 성공/실패는 아직 시험 전.
+- IsStandalone 외에 로컬 controller HasAuthority + 유효 GameplayStatics.GetGameMode + GetNumPlayers()==1 + GetNumSpectators()==0인 HOST 허용. 준비확인/요청 공통 predicate, 객체 캐시 없음/F11 명시 조작 때만 호출. 원격클라이언트/복수인원/관전자/알수없는 인원은 차단. 상태에 '1인 호스트 확인' 표시. Lua gsub 다중 반환으로 status 끝에 불필요한 |0이 붙던 문제도 괄호로 단일값 처리.
+- Lua mock12개 통과(호스트허용, 원격차단,2인/관전자/무효GameMode/nil/0인원, 다음 요청 인원변경, 상태4필드 포함). exe 자체/연결/4크기x8탭 레이아웃 검사 통과. GetNumPlayers/GetNumSpectators API 근거 CONNECTION.md. 실제 게임 버전에서 새 경로 실행/가방 지급은 아직 미확인.
+- source ef27cddebe7f1afea96c78c142826862b08902cc, manifest92a6fe865fd0c4ae22ca231712bd5357857bb95a. 원격ZIP SHA2561931bd4cf8204a10d8460f3db000073bf4eeabd5341d21b52da9bdac7145609e 및9개 내부 크기/hash 검증. 실CDN0.3.4, 원격fetch 후 source 의미diff 없음. outputs/IcarusSoloTools-0.3.4.zip.
+- PC 게임 실행중 PID21648, 설치본0.3.3 유지. 설치 파일 교체/게임종료/세이브수정 안함. 다음: 게임 정상종료→도구 재실행·0.3.4 업데이트→싱글 호스트 재입장→돌1개 F11로 실제 지급 확인. 이전 미성공 요청은 자동 재실행하지 않음. 독립 채널 배포 소유 해제, 인게임 검증 대기.
