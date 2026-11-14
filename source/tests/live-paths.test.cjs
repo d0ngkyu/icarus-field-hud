@@ -11,7 +11,7 @@ const appDir = path.resolve(__dirname, '../app');
 function load(name, mocks = {}, extra = '') {
   const module = { exports: {} };
   const context = {
-    module, exports: module.exports, __dirname: appDir, Buffer, console,
+    module, exports: module.exports, __dirname: appDir, Buffer, console, AbortSignal,
     process: { env: {}, execPath: process.execPath },
     require: name => Object.hasOwn(mocks, name) ? mocks[name] : require(name),
     ...mocks.globals,
@@ -181,4 +181,17 @@ test('an older (cached) manifest never replaces files from a newer update', asyn
   assert.equal(fs.readFileSync(lua, 'utf8'), 'lua 2026.11.14.9');
   set('2026.11.14.10'); await u.update(dir, 'https://mock.invalid');
   assert.equal(fs.readFileSync(lua, 'utf8'), 'lua 2026.11.14.10');
+});
+
+for(const failure of ['download','running','write'])test('update preserves old paired files on '+failure,async t=>{
+  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'hud-transaction-'));t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));
+  for(const n of ['a','b'])fs.writeFileSync(path.join(dir,n),'old-'+n);
+  const payload=Buffer.from('new'),h=crypto.createHash('sha1').update(payload).digest('hex');
+  const manifest={version:'2',files:['a','b'].map(n=>({p:'game/'+n,n:3,h}))};
+  const fakeFs=Object.create(fs);fakeFs.renameSync=(src,dst)=>{if(failure==='write'&&dst===path.join(dir,'b'))throw Error('file locked');return fs.renameSync(src,dst);};
+  const u=updater({fs:fakeFs,electron:{net:{fetch:async url=>String(url).includes('manifest.json')?{ok:true,json:async()=>manifest}:{ok:true,arrayBuffer:async()=>{if(failure==='download'&&String(url).endsWith('/b'))throw Error('offline');return payload;}}}}}).module.exports;
+  const r=await u.update(dir,'https://mock.invalid',null,async()=>failure!=='running');
+  assert.equal(r.changed.length,0);assert.equal(r.appChanged,false);
+  assert.equal(fs.readFileSync(path.join(dir,'a'),'utf8'),'old-a');assert.equal(fs.readFileSync(path.join(dir,'b'),'utf8'),'old-b');
+  if(failure==='running')assert.equal(r.deferred,true);else assert.ok(r.skipped.length);
 });
