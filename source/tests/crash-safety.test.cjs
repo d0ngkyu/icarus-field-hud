@@ -78,3 +78,13 @@ test('ore crash can disable the actual ore scanner',t=>{
   const marker=fs.readFileSync(d.p.step,'utf8').replace('fog|','ores|');fs.writeFileSync(d.p.step,marker);
   assert.equal(d.check('v1').level,1);assert.deepEqual(d.featuresOff(),['ores']);
 });
+
+test('loaded UE4SS module alone is not crash-stack evidence and keeps quarantine',t=>{
+ const {d,crash}=fixture(t);crash('exit');d.setSafeMode(true);
+ const dir=path.join(d.p.crashDirs[0],'exit');fs.writeFileSync(path.join(dir,'CrashContext.runtime-xml'),'<ErrorMessage>ACCESS_VIOLATION</ErrorMessage><CallStack>Icarus!UGameEngine::PreExit</CallStack><Modules>UE4SS.dll dwmapi.dll</Modules>');
+ const info=d.readCrash(dir);assert.equal(info.mod,false);assert.equal(info.loaderPresent,true);assert.equal(info.phase,'exit');assert.equal(d.check('v31').level,0);assert.equal(d.safeMode(),true);assert.deepEqual(d.featuresOff(),[]);
+});
+test('portable stack is examined when normal stack is empty',t=>{
+ const {d,crash}=fixture(t);crash('portable');const dir=path.join(d.p.crashDirs[0],'portable');fs.writeFileSync(path.join(dir,'CrashContext.runtime-xml'),'<ErrorMessage>ACCESS_VIOLATION</ErrorMessage><CallStack></CallStack><PortableCallStack>UE4SS 0x001</PortableCallStack>');
+ assert.equal(d.readCrash(dir).mod,true);
+});
