@@ -275,3 +275,7 @@
 - 조사 중 게임 프로세스 실행 확인; 종료/메모리 접근 없음. 실제 인게임 반영·멀티플레이 전파 범위 미검증. 다음: 사용자가 변경 범위/목표값을 지정하면 종료 상태 백업 후 별도 구현 및 검증. 본 요청은 가능성 조사만.
 
 - COMPACT-008 추가 요청: 게임 시작/호스트 월드 수동 저장/게임 종료. Codex가 app main.js/preload 및 신규 game-control 모듈, main.lua는 WORLD_READY 뒤 명령 처리 연결만 추가 소유. 로컬 SDK에서 AIcarusGameModeSurvival.ForceImmediateProspectSave, 저장 진행 상태/시각, UMG_EscapeMenu.QuitGame 선언 확인. 임의 콘솔 명령/강제 종료 금지, 수동 요청만 수행하고 저장 완료와 요청 전달을 구분. 지도·동굴/기존 스캔 로직은 보존.
+
+
+## 진행 중 · SOLO-TUNER-010
+- Codex · codex/solo-tuner · 2026-11-14. 사용자 요청: 싱글월드에서 수치 조정하는 프로그램. 독립 source/solo-tuner/ 및 자체 시험/문서만 소유. COMPACT-008의 HUD/App/Lua와 겹치지 않음. 재시작 적용형 XP/재능 편집 및 기본 체력·스태미나·속도·무게 데이터 모드, 백업/복원/게임 실행 중 쓰기 차단 구현. 실제 수치 변경은 앱에서 사용자가 선택. 실시간 native 조정은 안정성 확인 전 제공하지 않음. 기존 stable 배포 잠금 획득 아님.
