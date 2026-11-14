@@ -1030,11 +1030,11 @@ document.addEventListener('click',e=>{const c=e.target.dataset&&e.target.dataset
 const HUD_VERSION='__HUD_VERSION__';
 {const st=document.createElement('style');st.textContent='#tb .tbv{-webkit-app-region:no-drag;background:transparent;border:1px solid rgba(243,155,43,.45);color:#f3c27a;font:600 11px Oxanium,sans-serif;padding:2px 8px;margin-right:8px;cursor:pointer}#tb .tbv:hover{background:rgba(243,155,43,.15)}#tb .tbv.new{border-color:#4fd18b;color:#4fd18b}#tb .tbo{font:600 11px Oxanium,sans-serif;color:#4fd18b;margin-right:10px;letter-spacing:.06em;white-space:nowrap}#tb .tbo:empty{display:none}#tb .tbo::before{content:"●";margin-right:5px;font-size:9px;vertical-align:1px}';document.head.appendChild(st)}
 setTimeout(()=>{const A=window.hudApp;const vb=$('tbver');const pv=HUD_VERSION.startsWith('__')?'개발판':HUD_VERSION;
- if(vb)vb.textContent='v'+pv+' ⟳';
+ if(vb)vb.textContent='길동무 · 한눈에 ⟳';vb.title='정식 '+pv;
  if(!A||!A.info||!A.checkUpdate){$('updinfo').textContent='데이터 '+pv+' · 업데이트 기능은 HUD 프로그램을 트레이에서 종료하고 다시 켜면 나타납니다';$('updbtn').onclick=()=>location.reload();$('optMacro').disabled=true;
   if(vb)vb.onclick=()=>location.reload();return}
- vb.onclick=()=>{vb.textContent='확인 중…';A.checkUpdate().then(()=>A.info()).then(i=>{vb.textContent='v'+(i.version||pv)+' ⟳'})};
- const show=()=>A.info().then(i=>{if(vb)vb.textContent='v'+(i.version||pv)+' ⟳';$('updinfo').textContent='데이터 '+(i.version||pv)+' · 프로그램 '+i.app+(i.last?' · 마지막 확인 '+new Date(i.last.at).toLocaleTimeString():'');$('optMacro').checked=!!i.macros});show();
+ vb.onclick=()=>{vb.textContent='확인 중…';A.checkUpdate().then(()=>A.info()).then(i=>{vb.textContent='길동무 · 한눈에 ⟳';vb.title='정식 '+(i.version||pv)})};
+ const show=()=>A.info().then(i=>{if(vb)vb.textContent='길동무 · 한눈에 ⟳';vb.title='정식 '+(i.version||pv);$('updinfo').textContent='데이터 '+(i.version||pv)+' · 프로그램 '+i.app+(i.last?' · 마지막 확인 '+new Date(i.last.at).toLocaleTimeString():'');$('optMacro').checked=!!i.macros});show();
  $('updbtn').onclick=()=>{$('updinfo').textContent='확인 중…';A.checkUpdate().then(show)};
  $('optMacro').onchange=e=>A.setMacros(e.target.checked).then(on=>{e.target.checked=on;toast(on?'반자동 기능 켜짐 · 게임을 다시 켜면 적용됩니다':'반자동 기능 꺼짐 · 게임을 다시 켜면 적용됩니다',true)});
  A.onUpd(u=>{if(u.error){toast('업데이트 확인 실패: '+u.error);return}

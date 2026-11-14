@@ -138,6 +138,13 @@ function buildTray() {
   ]));
 }
 
+let gameControlAction=null;
+ipcMain.handle('gameControl',async (_e,action)=>{
+ if(updateTask||restartPending)return {message:'HUD 업데이트가 끝난 뒤 다시 눌러 주세요.'};
+ if(action==='exit'){const answer=await dialog.showMessageBox(win,{type:'warning',message:'호스트 게임을 종료할까요?',detail:'접속한 친구들도 연결이 끊깁니다. 게임에서 Esc 메뉴를 연 상태에서 저장 처리 확인 후 종료를 요청합니다.',buttons:['취소','저장 후 종료'],defaultId:0,cancelId:0});if(answer.response!==1)return {message:'종료 요청을 취소했습니다.'};}
+ if(!gameControlAction)gameControlAction=require('./game-control.js').createControl({modDir:()=>gameDir&&UPD.modDir(gameDir),gameUp,openExternal:url=>shell.openExternal(url)});
+ return gameControlAction(action);
+});
 ipcMain.handle('state', () => state());
 ipcMain.handle('toggleTop', () => toggleTop());
 ipcMain.handle('toggleCompact', () => toggleCompact());
