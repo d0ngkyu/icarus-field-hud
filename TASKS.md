@@ -163,3 +163,15 @@
 - 기기 반영 주의: device_commit은 같은 파일명을 다시 보내면 옛 내용이 갈 수 있음 → 매번 새 이름으로 올림(.21 index.html 재반영 확인).
 - 동물창 미반영(사용자 보고): animals.lua가 창이 화면 최상위일 때만(IsInViewport) 읽음 → 부모 메뉴 안에 열린 창도 인정(GetParent). 실패 이유를 UE4SS.log "animals: …"로 1회씩 기록, 다른 동물 창(PersistentMountInfo 등)은 이름만 확인. 게임 재시작 후 적용.
 - 2026.11.14.23: 맵 파일에서 읽은 전체 동굴 표시(CAVEMAP). 올림푸스 143·스틱스 163·프로메테우스 220·엘리시움 223·T022 187 + 전초기지. 동굴마다 정확한 프리팹(맵의 BP_IcarusCaveAISpawner.LinkedCavePrefab) → 폭 기준 레벨 1개, 그 동굴의 위험 생물 최소~최대, 물 동굴(프리팹 안 Cave_ 물 300㎡·깊이 20m 이상) 파란색, 출구 2곳 이상 관통 표시. 플레이 중 기록한 동굴과 60m 안이면 기록본은 숨김(메모 유지). 광석 수는 단계 B2(복셀 위치·종류) 대기 → 들어오면 레벨 = 폭 단계와 광석 단계(<25/25-34/35-54/55+) 평균(반올림). 시험 cavemap.test.cjs 추가(62개 통과). 도구 mapcaves/mapparse/mapcavetable/mapcavebuild.py.
+
+## 2026-11-14 11:55 · Claude → Codex · V1 마무리 정보 교환 (사용자: 둘 다 깨어 있으니 빠르게 맞춰서 v1 마무리)
+- 현재 main = 배포본. .23(eccbf42) 이후 Claude가 이어서 올리는 것: 수중 동굴 기준 변경, 동굴 이름에서 폭 제거, 광석 수 반영(.24 예정).
+- Claude 담당(건드리지 말아 주세요): `index.html`의 `const CAVEMAP=` 한 줄(자동 생성, 약 65KB)과 `gCaveInfo/gHaz/mapCaves`, `caveInfo/drawCave`, `cavejob.js`, `source/tools/map*.py, cave*.py`, `animals.lua`의 진단(M.why).
+- Codex v1 작업은 **최신 main에서 브랜치**를 따 주세요(.23 이상). CAVEMAP 줄과 충돌하면 Claude 쪽 값을 그대로 두면 됩니다. PR 올리면 Claude가 바로 검토·병합·배포합니다(배포는 Claude만).
+- 확정된 사실(실제 게임 파일 기준, 모의 아님):
+  - 동굴 위치·프리팹: 맵 Generated 서브레벨의 `BP_IcarusCaveAISpawner.LinkedCavePrefab` + `BP_CaveInstance` 루트 위치. 올림푸스 143 / 스틱스 163 / 프로메테우스 220 / 엘리시움 223 / T022 187.
+  - 광석 수: 동굴 프리팹 바위 조각 5m 안의 `BP_Voxel_*` 수. CF_MED_004 = 29개로 icarusintel 팝업(ORE #29)과 일치.
+  - 수중 동굴(사용자 정의: 물속에 잠긴 동굴) = 입구가 지상 호수(`BP_InteractableLake` 테두리) 안 + 수면 근처/아래. 동굴 안 물웅덩이는 해당 없음.
+  - 레벨 = 폭 단계(<60/60-100/100-150/150+m)와 광석 단계(<25/25-34/35-54/55+)의 평균(반올림). 폭은 레벨 계산에만 쓰고 화면에는 안 씀(사용자 요청).
+- 동물창: .22에서 메뉴 안 창도 인정 + UE4SS.log "animals: …" 진단. 재시작 후 아직 창 미오픈("no animal window"). 사용자가 열면 이유 확인 예정.
+- Codex에 요청: v1 범위(남은 항목 목록)를 TASKS.md에 적어 주시면 Claude가 남은 것 중 겹치지 않는 것을 맡겠습니다.

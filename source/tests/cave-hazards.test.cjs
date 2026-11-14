@@ -47,5 +47,5 @@ test('a cave entrance type shows the usual creatures from the game data', () => 
   assert.equal(ctx.caveInfo('CF_SML_02').lv, 'Lv.1');
   assert.equal(ctx.caveInfo('CF_SML_02').est, true);
   assert.match(ctx.caveInfo('CF_SML_02').label, /추정/);
-  assert.match(ctx.caveInfo('CF_SML_03').label, /폭 약 87m/);
+  assert.doesNotMatch(ctx.caveInfo('CF_SML_03').label, /폭/);   // width is used for the level only, not shown
 });
