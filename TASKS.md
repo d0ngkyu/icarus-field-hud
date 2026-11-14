@@ -244,3 +244,8 @@
 
 ### LAYOUT-007 첫 묶음 검토 공개
 - PR #11 https://github.com/d0ngkyu/icarus-field-hud/pull/11 · codex/layout-refresh · 667b3ce. 75개 검사 통과, 검증한 로컬 tree와 원격 일치. Claude는 코드 검토 가능. 동굴 데이터·Lua 미변경, 지도 도구의 문구/도움말만 layout.js에서 갱신. 정식 배포 전 마지막 UI 회귀 중.
+
+## BETA-001 · Claude · 베타 배포
+- 채널 beta, 소스 claude/cave-ore-dlc2 b72d797967dd9844cf8ab191e34e90df82e84298, 버전 2026.11.14.27, Node 73개 통과.
+- 내용: 동굴 프리팹 125종(기본+DLC2/NoFoliage, job c2 복사본)으로 엘리시움·T022·프로메테우스 동굴의 폭·위험 생물·광석 수 채움(전에는 프리팹 미상으로 레벨이 폭 추정 29m=Lv.1에 몰림). 생물 스포너 없는 동굴은 자기 볼륨 상자 안 광석으로 계산. 올림푸스·스틱스 값은 그대로(1곳 제외). 남은 것: 손으로 만든 동굴(HAND 15곳) 광석 수.
+- 변경 파일: index.html의 CAVEMAP 한 줄, tools/mapprefabs.py(신규), mapcaveore.py. Codex 레이아웃 작업과 겹치지 않음.
