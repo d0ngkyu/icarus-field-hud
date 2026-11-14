@@ -103,3 +103,11 @@
   - 한 번 이상하게 읽힌 동물은 같은 세션에서 다시 읽지 않음. 목록 개수가 7이 아니면 배열을 아예 안 읽음.
   - main.lua: 값이 바뀔 때만 HUD로 보냄.
 - 검증: source/tests/animals_read_once.py (가짜 객체로 18초 동안 배열 읽기 1회, 다시 열면 1회, 잘못된 동물 0회), Lua 문법, node 테스트 전부 통과. 실제 게임 미확인.
+
+## 2026-11-14 10:55 · Claude · 동굴 위험: 게임 데이터 평균 + PR #5 병합
+- 동굴 프리팹 70개(Prefabs/Cave/CAVE_*) 분석: `CaveActorSpawnMap`의 생물별 Min/MaxSpawnNumber. 동굴웜·벌집·박쥐 둥지·거미 둥지·땅상어.
+- 게임 속 입구 액터 이름은 `BP_CaveEntrance_CF_SML_03_C` 형식(사용자 PC 로그 10:28 확인). 입구 종류 하나를 여러 동굴(1~10종)이 같이 씀 → 입구별로 후보 동굴들의 보통 범위(최솟값·최댓값의 중앙값)와 최대치를 표시. 동굴 레벨도 후보가 섞이면 "Lv.1~2".
+- 프리팹에는 SML·MED만 있음 → Lv.3·메가(M)는 현재 게임 데이터에 해당 없음.
+- 생성 도구: source/tools/cavepref.py, cavedata.py (caveraw/ → CAVEDATA). 테스트 cave-hazards 3개.
+- Codex PR #5(교배 관측 달성률) 검토·병합: 내 .14 변경(값 바뀔 때만 전송)이 HUD 12초 만료와 충돌하는 문제를 Codex가 잡아 캐시 재전송으로 수정 — 배열 읽기는 늘지 않음 확인(animals_read_once.py).
+- 배포 2026.11.14.15. 검증: node 45개, Lua·JS 문법. 실제 게임 표시는 미확인.

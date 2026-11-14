@@ -1,6 +1,6 @@
 {
- "version": "2026.11.14.14",
- "notes": "동물 상세 정보를 3초마다가 아니라 상세창을 열 때 한 번만 읽어 튕김 위험을 줄였습니다.",
+ "version": "2026.11.14.15",
+ "notes": "동굴에 마우스를 올리면 게임 데이터 기준으로 보통 몇 마리(동굴웜·벌집·박쥐 둥지 등)인지 나옵니다. 동물 탭에 교배 관측 달성률이 추가됐습니다.",
  "config": {},
  "files": [
   {
@@ -52,8 +52,8 @@
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/Scripts/main.lua",
-   "n": 58148,
-   "h": "042a77efbcb64570e23f9621fabd190eb21da7de"
+   "n": 58433,
+   "h": "473d1b63940d676e435ab505d1fea891df4a9e02"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/Scripts/animals.lua",
@@ -67,13 +67,13 @@
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/index.html",
-   "n": 877347,
-   "h": "3238da6f6ed049f28ef39cbdfd043018dc219e10"
+   "n": 880040,
+   "h": "a22cd8164c6a0927483807e12c39b2feb6b8c794"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/animals.js",
-   "n": 11152,
-   "h": "6bd321aaf19cfa1f6cecc8bc49ee41e65c3f348e"
+   "n": 17264,
+   "h": "ecb57802d5c58f19788ff985627bfcda105cae0f"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/icons.webp",

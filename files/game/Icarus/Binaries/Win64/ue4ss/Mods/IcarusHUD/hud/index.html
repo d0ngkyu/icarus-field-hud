@@ -499,10 +499,11 @@ function hazTypical(mp,size){if(!size)return'';const lv=size===4?'Lv.M':'Lv.'+si
   for(const kind in mp.haz[k].n)(per[kind]||(per[kind]=[])).push(mp.haz[k].n[kind])}
  if(!n)return'';const parts=Object.entries(per).map(([k,v])=>{while(v.length<n)v.push(0);return k+' '+range(v)});
  return'보통 '+(parts.length?parts.join(', '):'위험 생물 적음')+' (가 본 '+lv+' 동굴 '+n+'곳 기준)'}
-function hazText(mp,key){const h=mp.haz&&mp.haz[key];const o=mp.lm[key];const size=o?caveInfo(o[0].slice(2)).size:0;
- if(!h){const typ=hazTypical(mp,size);return typ||'위험: 아직 모름 (가까이 가면 기록)'}
+function hazText(mp,key){const h=mp.haz&&mp.haz[key];const o=mp.lm[key];const ci=o?caveInfo(o[0].slice(2)):{size:0};const size=ci.size;
+ const dl=ci.data?dataHaz(ci.data)+(ci.data.n>1?' (같은 입구 동굴 '+ci.data.n+'종 기준)':' (게임 데이터)'):'';
+ if(!h){const typ=dl||hazTypical(mp,size);return typ||'위험: 아직 모름 (가까이 가면 기록)'}
  const parts=Object.entries(h.n).map(([k,v])=>k+' '+v);const ago=Math.round((Date.now()-h.at)/60000);
- return'위험: '+(parts.length?parts.join(', '):'본 것 없음')+' · '+(ago<60?ago+'분 전':ago<1440?Math.round(ago/60)+'시간 전':new Date(h.at).toLocaleDateString())+' 확인'}
+ return(dl?dl+'\n':'')+'내가 본 것: '+(parts.length?parts.join(', '):'없음')+' · '+(ago<60?ago+'분 전':ago<1440?Math.round(ago/60)+'시간 전':new Date(h.at).toLocaleDateString())}
 
 // ---------- recording ----------
 window.__mapIngest=m=>{
@@ -572,9 +573,19 @@ function gridName(x,y){const b=MAPB[S.world];if(!b)return'';const i=Math.floor((
 // ---------- caves by size, memo labels ----------
 const BOSSN={SandWorm:'샌드웜',Scorpion:'거대 전갈',AlphaWolf:'검은 늑대 (알파)',LavaHunter:'용암 사냥꾼',HammerheadSlug:'망치머리 민달팽이',SandwyrmQueen:'샌드웜 여왕'};
 const bossName=t=>{const r=t.slice(2).split('#')[0];return BOSSN[r]||r};
-const CAVEB={CF:'숲',AC:'설원',DC:'사막',TU:'툰드라',GL:'초원',SW:'늪',LC:'화산',VO:'화산',RF:'열대',JN:'정글',CN:'협곡',RD:'붉은 협곡',AR:'설원',DS:'사막',EL:'엘리시움'};
+const CAVEB={IC:'빙하',CF:'숲',AC:'설원',DC:'사막',TU:'툰드라',GL:'초원',SW:'늪',LC:'화산',VO:'화산',RF:'열대',JN:'정글',CN:'협곡',RD:'붉은 협곡',AR:'설원',DS:'사막',EL:'엘리시움'};
+// From the game's own cave prefabs (Prefabs/Cave/CAVE_*): for each cave-entrance type, the caves that use it
+// (n), their levels (lv, most common z), and per creature [usual min, usual max, highest max]:
+// w worms, h bee hives, b bat nests, s spider nests, l land shark. Built by tools/cavedata.py.
+const CAVEDATA={"AC_SML_02_DLC2":{"n":2,"lv":[1,2],"z":2,"bio":"TU","w":[1,4,4],"b":[0,1,1]},"AC_SML_03_DLC2":{"n":3,"lv":[2],"z":2,"bio":"TU","w":[1,4,4],"b":[0,1,1]},"CF_SML_01":{"n":3,"lv":[1,2],"z":1,"bio":"CF","w":[1,3,7],"h":[0,0,2]},"CF_SML_02":{"n":10,"lv":[1,2],"z":1,"bio":"AC","w":[1,4,10],"h":[0,0,1],"b":[0,0,3],"l":[0,0,1]},"CF_SML_03":{"n":2,"lv":[2],"z":2,"bio":"CF","w":[2,5,5],"h":[1,1,1]},"DC_SML_03":{"n":7,"lv":[1,2],"z":1,"bio":"DC","w":[1,3,6],"h":[0,1,2]},"GL_SML_01":{"n":2,"lv":[1,2],"z":2,"bio":"GL","w":[1,6,6],"h":[0,1,1]},"GL_SML_02":{"n":1,"lv":[2],"z":2,"bio":"GL","w":[0,2,2],"h":[0,3,3]},"GL_SML_03":{"n":3,"lv":[1,2],"z":1,"bio":"GL","w":[1,3,5],"h":[0,1,2]},"IC_SML_01":{"n":2,"lv":[1],"z":1,"bio":"AC","w":[0,4,4]},"IC_SML_03":{"n":5,"lv":[1,2],"z":2,"bio":"AC","w":[1,4,9],"b":[0,1,2]},"LC_SML_01":{"n":4,"lv":[1,2],"z":2,"bio":"LC","w":[2,8,10],"h":[0,1,1]},"LC_SML_02":{"n":5,"lv":[1,2],"z":2,"bio":"LC","w":[1,3,6],"h":[0,0,2],"s":[0,0,4]},"LC_SML_03":{"n":4,"lv":[1,2],"z":1,"bio":"LC","w":[1,4,7],"h":[1,1,1]},"SW_SML_01":{"n":2,"lv":[1,2],"z":2,"bio":"SW","w":[1,5,5],"h":[0,3,3]},"SW_SML_02":{"n":1,"lv":[2],"z":2,"bio":"SW","h":[1,3,3]},"SW_SML_03":{"n":3,"lv":[1,2],"z":1,"bio":"SW","w":[1,3,6],"h":[0,1,2]},"TU_SML_01":{"n":3,"lv":[1],"z":1,"bio":"AC","w":[0,2,4]},"TU_SML_02":{"n":2,"lv":[2],"z":2,"bio":"AC","w":[1,6,6],"b":[0,3,3]},"TU_SML_03":{"n":4,"lv":[1,2],"z":2,"bio":"AC","w":[1,4,6],"b":[0,1,2]}};
+const HAZN={w:'동굴웜',h:'벌집',b:'박쥐 둥지',s:'거미 둥지',l:'땅상어'};
+function caveData(id){return CAVEDATA[(id||'').replace(/^BP_CaveEntrance_/,'').replace(/_C$/,'')]||null}
+function dataHaz(d){if(!d)return'';const parts=[];for(const k of ['w','h','b','s','l']){const v=d[k];if(!v)continue;
+ parts.push(HAZN[k]+' '+(v[0]===v[1]?v[0]:v[0]+'~'+v[1])+(v[2]>v[1]?' (최대 '+v[2]+')':''))}
+ return parts.length?'보통 '+parts.join(', '):'위험 생물 거의 없음'}
 // cave size -> level: SML Lv.1, MED Lv.2, LRG Lv.3, mega caves get an M; 0 = size unknown
-function caveInfo(id){const u=(id||'').toUpperCase();const mega=/MEGA|HUGE|XLRG|_XL_|GIANT/.test(u);
+function caveInfo(id){const cd=caveData(id);if(cd){const lv=cd.lv.length>1?'Lv.'+cd.lv[0]+'~'+cd.lv[cd.lv.length-1]:'Lv.'+cd.z;
+  return{size:cd.z,bio:CAVEB[cd.bio]||'',lv,label:lv+' '+(cd.lv.length>1?'동굴':['','작은 동굴','중간 동굴'][cd.z]||'동굴'),ent:false,data:cd}}const u=(id||'').toUpperCase();const mega=/MEGA|HUGE|XLRG|_XL_|GIANT/.test(u);
  const size=mega?4:/LRG|LARGE|_LG_|_L_/.test(u)?3:/MED|MEDIUM/.test(u)?2:/SML|SMALL|_SM_|_S_/.test(u)?1:0;
  const bio=CAVEB[(u.match(/(?:^|_)([A-Z]{2})_(?:SML|MED|LRG|MEGA)/)||[])[1]||u.split('_')[0]]||'';
  const lv=size===4?'Lv.M':size?'Lv.'+size:'';
@@ -698,7 +709,7 @@ function wpButton(x,y,z,kind){return `<button class="mini" data-mwp="${Math.roun
 let selKey=null;
 function showInfo(h){const box=$('mapinfo'),mp=M();let t='',body='';selKey=h.key||null;requestDraw();
  const cell=r=>{const g=gridName(r[0],r[1]);return(g?g+' · ':'')+fmtD(r)};
- if(h.kind==='cave'){const ci=h.ci||{label:'동굴'};t=ci.label+(ci.bio?' ('+ci.bio+')':'');body=`<div class="bench">${cell([h.ref[1],h.ref[2]])}${ci.ent?' · 입구형':''}</div><div class="bench">${hazText(M(),h.key)}</div>${wpButton(h.ref[1],h.ref[2],h.ref[3],h.ref[0])}`}
+ if(h.kind==='cave'){const ci=h.ci||{label:'동굴'};t=ci.label+(ci.bio?' ('+ci.bio+')':'');body=`<div class="bench">${cell([h.ref[1],h.ref[2]])}${ci.ent?' · 입구형':''}</div><div class="bench">${hazText(M(),h.key).replace(/\n/g,"<br>")}</div>${wpButton(h.ref[1],h.ref[2],h.ref[3],h.ref[0])}`}
  else if(h.kind==='wp'){t='나침반 목표';body=`<div class="bench">${cell([h.ref[0],h.ref[1]])}</div><div class="bt"><button class="mini" id="mwpclr">✕ 이 표시 지우기</button></div><div class="bench" style="margin-top:4px">게임 나침반의 표시까지 지우려면 게임에서 F7을 누르세요.</div>`}
  else if(h.kind==='deep'){t='심층 광맥 자리';body=`<div class="bench">${cell([h.ref[1],h.ref[2]])} · 가까이 가면 광석 종류가 표시됩니다</div>${wpButton(h.ref[1],h.ref[2],h.ref[3],h.ref[0])}`}
  else if(h.kind==='boss'){t='월드 보스: '+bossName(h.ref[0]);body=`<div class="bench">${cell([h.ref[1],h.ref[2]])}${h.ref[5]?' · 처치됨 (다시 나타날 때까지 대기)':' · 살아 있음'}</div>${wpButton(h.ref[1],h.ref[2],h.ref[3])}`}
@@ -909,7 +920,7 @@ document.addEventListener('click',e=>{const c=e.target.dataset&&e.target.dataset
  if(c==='map'&&S.maps&&S.world)delete S.maps[S.world];
  e.target.textContent='지움 ✓';setTimeout(()=>e.target.textContent='지우기',1500);save();draw()});
 // update notices and the helper switch
-const HUD_VERSION='2026.11.14.14';
+const HUD_VERSION='2026.11.14.15';
 {const st=document.createElement('style');st.textContent='#tb .tbv{-webkit-app-region:no-drag;background:transparent;border:1px solid rgba(243,155,43,.45);color:#f3c27a;font:600 11px Oxanium,sans-serif;padding:2px 8px;margin-right:8px;cursor:pointer}#tb .tbv:hover{background:rgba(243,155,43,.15)}#tb .tbv.new{border-color:#4fd18b;color:#4fd18b}#tb .tbo{font:600 11px Oxanium,sans-serif;color:#4fd18b;margin-right:10px;letter-spacing:.06em;white-space:nowrap}#tb .tbo:empty{display:none}#tb .tbo::before{content:"●";margin-right:5px;font-size:9px;vertical-align:1px}';document.head.appendChild(st)}
 setTimeout(()=>{const A=window.hudApp;const vb=$('tbver');const pv=HUD_VERSION.startsWith('__')?'개발판':HUD_VERSION;
  if(vb)vb.textContent='v'+pv+' ⟳';
