@@ -43,6 +43,6 @@ test('a cave entrance type shows the usual creatures from the game data', () => 
   assert.equal(ctx.hazText(mp, 'c@1,1'), '보통 동굴웜 2~5, 벌집 1 (같은 입구 동굴 2종 기준)');
   mp.haz = { 'c@1,1': { at: Date.now(), n: { '동굴웜': 3 } } };
   assert.match(ctx.hazText(mp, 'c@1,1'), /^보통 동굴웜 2~5, 벌집 1 .*\n내가 본 것: 동굴웜 3/);
-  assert.equal(ctx.caveInfo('CF_SML_02').lv, 'Lv.1~3');
-  assert.match(ctx.caveInfo('CF_SML_03').label, /MEDIUM/);
+  assert.equal(ctx.caveInfo('CF_SML_02').lv, 'Lv.1');
+  assert.match(ctx.caveInfo('CF_SML_03').label, /폭 약 87m/);
 });
