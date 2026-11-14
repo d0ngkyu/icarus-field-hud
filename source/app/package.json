@@ -5,6 +5,6 @@
  "description": "Icarus Field HUD",
  "main": "main.js",
  "author": "IcarusHUD",
- "updateUrl": "https://raw.githubusercontent.com/d0ngkyu/icarus-field-hud/main",
+ "updateUrl": "https://raw.githubusercontent.com/d0ngkyu/icarus-field-hud/refs/heads/main",
  "contentVersion": "2026.11.13.1"
 }
