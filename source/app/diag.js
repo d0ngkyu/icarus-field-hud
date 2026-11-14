@@ -1,6 +1,6 @@
 // Self-check: notices when the game crashed, guesses why, steps around it, and writes a report.
 // Steps, from mild to strong: switch off the one feature that was running -> safe mode -> offer to turn the mod off.
-// A new update from the update site switches everything back on, because it may contain the fix.
+// Updates preserve crash quarantine; a version change is not evidence of a fix.
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
@@ -132,11 +132,14 @@ class Doctor {
       this.st.seen[c.dir] = c.at;
       const info = this.readCrash(c.dir);
       const stepNow = this.lastStep();
-      const rec = { at: c.at, mod: info.mod, msg: info.msg, step: stepNow && stepNow.name, version };
+      // The live marker may belong to an older run, or to a run after the crash.
+      // Only a preceding, nearby marker is evidence of what was running.
+      const matchedStep = stepNow && stepNow.at > 0 && c.at >= stepNow.at && c.at - stepNow.at <= 120000;
+      const rec = { at: c.at, mod: info.mod, msg: info.msg, step: matchedStep ? stepNow.name : null, version };
       this.st.crashes.push(rec);
       this.log('crash found: ' + JSON.stringify(rec));
       if (!info.mod) { note = { level: 0, text: '게임이 튕겼지만 모드(UE4SS) 흔적은 없었습니다. 게임 자체 문제로 보입니다.' }; continue; }
-      const recent = this.st.crashes.filter(x => x.mod && x.version === version && Date.now() - x.at < 3 * 86400e3).length;
+      const recent = this.st.crashes.filter(x => x.mod && Date.now() - x.at < 3 * 86400e3).length;
       const f = featOf(rec.step || '');
       const off = this.featuresOff();
       if (recent <= 1 && SWITCHABLE.has(f) && !off.includes(f)) {
@@ -154,15 +157,9 @@ class Doctor {
     return note;
   }
 
-  // a new update arrived: it may hold the fix, so switch the features back on
+  // Compatibility entry point: never lift quarantine merely because an update arrived.
   onNewVersion(version) {
-    if (!this.st.offVersion || this.st.offVersion === version) return false;
-    const had = this.featuresOff().length || this.safeMode();
-    this.setFeaturesOff([]);
-    this.setSafeMode(false);
-    this.st.offVersion = '';
-    this.save();
-    return !!had;
+    return false;
   }
 
   status() {
