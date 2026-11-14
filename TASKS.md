@@ -156,3 +156,9 @@
 - MAP-SELECTION-004 최종 동기화: .20 / 93b01f7 통합, 동굴 폭 분류 반영. cave-hazards 시험 충돌은 양쪽 폭/추정 검사 유지로 해결. PR #7, Claude 검토/배포 대기.
 
 - 최종 인계: PR #8 https://github.com/d0ngkyu/icarus-field-hud/pull/8 / codex/map-selection-v20 (.20 기반). PR #7은 중간 동기화 브랜치의 Git 병합 충돌을 피하기 위해 대체 후 닫음. 최종 소스·시험·기록은 #8에 모두 보존. Node 59개 재통과, Windows CRLF에서도 지도 시험 실행 확인.
+
+## 2026-11-14 · Claude · PR #8 통합 + 전체 동굴 목록 + 동물창
+- PR #8(지도 선택) 검토: Node 59개 통과, 실제 수신 세계/열람 세계 분리 확인. main에 ff 병합, 2026.11.14.21 배포.
+- 전체 동굴 목록: cavejob.js가 pak 마운트 경로를 무시해 Terrain_022만 찾던 문제 수정(이제 016/017/019/021/022+전초기지 886개 헤더). 맵 파일 안에 동굴 실체(BP_CaveInstance + 프리팹 이름, 입구, 광석 BP_Voxel)가 들어 있음 → 위치·정확한 프리팹·동굴 안 광석 수를 직접 계산 예정. 단계 B(필요 블록만 복사, job b1) 실행 중. 도구 source/tools/mapcaves.py, cavepref.py(수출 항목 104바이트로 수정).
+- 기기 반영 주의: device_commit은 같은 파일명을 다시 보내면 옛 내용이 갈 수 있음 → 매번 새 이름으로 올림(.21 index.html 재반영 확인).
+- 동물창 미반영(사용자 보고): animals.lua가 창이 화면 최상위일 때만(IsInViewport) 읽음 → 부모 메뉴 안에 열린 창도 인정(GetParent). 실패 이유를 UE4SS.log "animals: …"로 1회씩 기록, 다른 동물 창(PersistentMountInfo 등)은 이름만 확인. 게임 재시작 후 적용.

@@ -11,7 +11,7 @@ for i,k in ipairs({"Vitality","Endurance","Muscle","Agility","Hardiness","Toughn
 comp=obj{bHasGeneratedGenetics=true,CreatureSex=1,CreatureGenetics={GetArrayNum=function() return 7 end,ForEach=function(self,f) reads=reads+1 for i,g in ipairs(genes) do f(i,{get=function() return g end}) end end}}
 actorA.GetComponentByClass=function() return comp end
 panelOpen=true
-panel=obj{GetFullName=function() return "UMG_MountInterface_V2_C_1" end,IsInViewport=function() return panelOpen end,IsVisible=function() return true end,LinkedMount=actorA}
+panel=obj{GetFullName=function() return "UMG_MountInterface_V2_C_1" end,IsInViewport=function() return panelOpen end,IsVisible=function() return true end,GetParent=function() return nil end,LinkedMount=actorA}
 function FindAllOf() return {panel} end
 function StaticFindObject() return obj{} end
 ''')

@@ -5,7 +5,12 @@ src = open(os.path.join(os.path.dirname(__file__), 'cavepref.py')).read()
 src = "\n".join(l for l in src.splitlines() if not l.startswith(("D = ", "man = ")))
 g = {'__name__': 'x'}; exec(src.split("if __name__ == '__main__':")[0], g)
 import ooz
-def decomp(raw, us, sizes, bs=65536):
+def decomp(raw, us, sizes, bs=None):
+    if bs is None:
+        for b in (1048576, 65536, 262144, 131072, 524288):
+            try: return decomp(raw, us, sizes, b)
+            except RuntimeError: pass
+        raise RuntimeError('no block size fits')
     out = b''; o = 0
     for s in sizes:
         out += ooz.decompress(raw[o:o+s], us if len(sizes) == 1 else min(bs, us - len(out))); o += s
@@ -39,14 +44,14 @@ if __name__ == '__main__':
         full = sizes.get(base)
         if not full: print('no uexp for', fn); continue
         idx[full] = rows
-        rs = sorted((r['u'], r['u'] + r['s']) for r in rows)
-        cur = None
-        for a, z in rs:
-            if cur and a - cur[1] < 131072: cur[1] = max(cur[1], z)
+        B = 1048576; bl = sorted({k for r in rows for k in range(r['u'] // B, (r['u'] + r['s'] - 1) // B + 1)})
+        run = None
+        for k in bl:
+            if run and k == run[1] + 1: run[1] = k
             else:
-                if cur: job.append(dict(file=full, start=cur[0], len=cur[1]-cur[0]))
-                cur = [a, z]
-        if cur: job.append(dict(file=full, start=cur[0], len=cur[1]-cur[0]))
-    json.dump(dict(ranges=job), open(os.path.join(out, 'cavejob.json'), 'w'))
+                if run: job.append(dict(file=full, start=run[0] * B, len=(run[1] - run[0] + 1) * B))
+                run = [k, k]
+        if run: job.append(dict(file=full, start=run[0] * B, len=(run[1] - run[0] + 1) * B))
+    json.dump(dict(id='b1', final=True, bundle=r'\.part\d+$', ranges=job), open(os.path.join(out, 'cavejob.json'), 'w'))
     json.dump(idx, open(os.path.join(out, 'index.json'), 'w'))
     print(len(idx), 'tiles', len(job), 'ranges', sum(r['len'] for r in job) // 1024, 'KB')
