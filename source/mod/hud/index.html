@@ -810,6 +810,7 @@ body.compact #pane-coach .grid2>*:not(#coachsec){display:none!important}
 body.compact #sbar .it.wide{display:none}
 </style>
 <div id="toasts"></div>
+<script src="animals.js"></script>
 <script>
 (()=>{
 // ===== tabs, status bar, notifications, settings =====
@@ -819,8 +820,9 @@ left.id='leftsec';right.id='rightsec';
 const navsec=mid.querySelector('section');navsec.id='navsec';
 const tree=$('treesec'),coach=$('coachsec'),mapv=$('mapview');
 const mk=(id,html)=>{const d=document.createElement('div');d.className='pane';d.id=id;if(html)d.innerHTML=html;return d};
-const P={coach:mk('pane-coach','<div class="grid2"></div>'),craft:mk('pane-craft','<div class="grid3"></div>'),nav:mk('pane-nav'),map:mk('pane-map'),help:mk('pane-help','<div class="grid2"></div>')};
-const after=wrap;for(const k of ['coach','craft','nav','map','help'])after.parentNode.insertBefore(P[k],wrap);
+const P={coach:mk('pane-coach','<div class="grid2"></div>'),craft:mk('pane-craft','<div class="grid3"></div>'),nav:mk('pane-nav'),map:mk('pane-map'),animals:mk('pane-animals'),help:mk('pane-help','<div class="grid2"></div>')};
+const after=wrap;for(const k of ['coach','craft','nav','map','animals','help'])after.parentNode.insertBefore(P[k],wrap);
+if(window.mountAnimalPanel)window.mountAnimalPanel(P.animals);
 // coach tab: coach + quick shortage summary
 coach.style.margin='0';P.coach.firstChild.appendChild(coach);
 const quick=document.createElement('section');quick.id='quicksec';quick.innerHTML='<h2>지금 모아야 할 것</h2><div id="quick"></div><div class="bt" style="margin-top:8px"><button class="mini" data-go="craft">제작 탭에서 자세히</button> <button class="mini" data-go="nav">네비게이션으로 찾기</button></div>';
@@ -877,7 +879,7 @@ P.help.firstChild.innerHTML=`
 게임 데이터와 아이콘은 게임 제작사(RocketWerkz)의 것입니다. 이 프로그램은 개인용 팬 도구입니다.</div></section>`;
 $('zslot').append($('zm'),$('zp'));$('sslot').append($('snd').parentNode);$('uslot').append($('unfold'));zctl.remove();
 // tab bar
-const TABS=[['coach','코치'],['craft','제작'],['nav','네비'],['map','지도'],['help','설정']];
+const TABS=[['coach','코치'],['craft','제작'],['nav','네비'],['map','지도'],['animals','동물'],['help','설정']];
 const bar=document.createElement('nav');bar.id='tabbar';
 bar.innerHTML=TABS.map(([k,n],i)=>`<button class="tab" data-tab="${k}">${n}<span class="k">${i+1}</span><span class="bd" id="bd-${k}"></span></button>`).join('')+'<span class="sp"></span>';
 document.body.insertBefore(bar,P.coach);
@@ -897,7 +899,7 @@ function setTab(k){if(!P[k])k='coach';cur=k;S.tab2=k;
 window.__setTab=setTab;
 bar.addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(b)setTab(b.dataset.tab)});
 document.addEventListener('click',e=>{const g=e.target.closest('[data-go]');if(g)setTab(g.dataset.go)});
-document.addEventListener('keydown',e=>{if(e.ctrlKey&&!e.altKey&&e.key>='1'&&e.key<='5'){e.preventDefault();setTab(TABS[+e.key-1][0])}
+document.addEventListener('keydown',e=>{if(e.ctrlKey&&!e.altKey&&e.key>='1'&&e.key<='6'){e.preventDefault();setTab(TABS[+e.key-1][0])}
  if(e.ctrlKey&&(e.key==='f'||e.key==='F')){const s={craft:'q',nav:'navq',map:'mapq'}[cur];if(s){e.preventDefault();$(s).focus();$(s).select()}}});
 // settings
 const opt=(id,key,def)=>{const el=$(id);el.checked=S[key]===undefined?def:!!S[key];el.onchange=()=>{S[key]=el.checked;save()}};
@@ -991,7 +993,7 @@ function toast(msg,ok){if(S.optToast===false)return;const t=document.createEleme
 window.__toast=toast;
 // hook incoming game messages: toast + auto tab
 const prevLive=window.__icarusLive;
-window.__icarusLive=m=>{const before=lastT;prevLive(m);if(lastT===before)return;
+window.__icarusLive=m=>{if(window.__animalIngest)window.__animalIngest(m);const before=lastT;prevLive(m);if(lastT===before)return;
  if(m.msg)toast(m.msg,/달성|모았|끝|켜짐/.test(m.msg));
  if((m.r||m.i)&&S.optAuto!==false&&cur!=='craft'&&!document.body.classList.contains('compact'))setTab('craft');
  refreshBars()};

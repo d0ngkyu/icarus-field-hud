@@ -188,6 +188,7 @@ async function performUpdate(manual) {
 const TESTYES = !!process.env.HUD_TEST_YES; // automated checks only: answer the setup questions with yes
 const ask = o => (TESTYES ? 0 : dialog.showMessageBoxSync(o));
 async function start() {
+  ulog('startup: ' + __dirname + ' / closeWithGame=' + (cfg.closeWithGame !== false));
   gameDir = UPD.findGame(cfg);
   if (!gameDir) {
     dialog.showMessageBoxSync({ type: 'info', title: 'Icarus HUD', message: 'Icarus 게임 폴더를 찾지 못했습니다.', detail: 'Steam 라이브러리의 steamapps\\common\\Icarus 폴더를 골라 주세요.', buttons: ['폴더 고르기'] });
@@ -232,15 +233,15 @@ async function start() {
   watchGame();
 }
 
-// close together with the game: once the game has been seen running, quit after it has been gone for ~20 s.
-// A crash note keeps the window open so the person can read it.
+// Steam tracks the game's child processes, including the HUD. Persist crash
+// diagnostics and exit too, instead of keeping Steam in the "running" state.
 function gameUp() {
   return new Promise(res => require('child_process').execFile('tasklist', ['/FI', 'IMAGENAME eq Icarus-Win64-Shipping.exe', '/NH'],
     { windowsHide: true, timeout: 5000 }, (e, out) => res(e ? null : /Icarus-Win64-Shipping/i.test(out || ''))));
 }
 function watchGame() {
   if (process.platform !== 'win32') return;
-  let seen = false, gone = 0, busy = false;
+  let seen = (process.argv || []).includes('--icarus-auto'), gone = 0, busy = false;
   setInterval(async () => {
     if (busy || quitting || updateTask || restartPending) return;
     busy = true;
@@ -252,13 +253,14 @@ function watchGame() {
       if (!seen || cfg.closeWithGame === false || ++gone < 2) return;
       let note = null;
       try { if (doctor) note = doctor.check((lastUpd && lastUpd.version) || PKG.contentVersion || ''); }
-      catch (e) { ulog('close deferred: diagnosis failed: ' + e.message); return; }
-      if (note) sendDiag(note);
-      if (note || Date.now() - lastNoteAt < 5 * 60000) { showWin(); seen = false; return; }
+      catch (e) { ulog('exit diagnosis failed; original game crash files remain: ' + e.message); }
+      if (note) ulog('exit diagnosis: ' + note.text);
+      try { if (doctor) fs.writeFileSync(path.join(app.getPath('userData'), 'last-exit-report.txt'), doctor.report({reason:'game closed'})); }
+      catch (e) { ulog('exit report failed: ' + e.message); }
       ulog('game closed: closing the HUD too');
       quitting = true; app.quit();
     } finally { busy = false; }
-  }, 10000);
+  }, 3000);
 }
 app.whenReady().then(start);
 

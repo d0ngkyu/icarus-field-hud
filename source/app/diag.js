@@ -7,12 +7,13 @@ const os = require('os');
 const { execFile } = require('child_process');
 
 const FEAT_KO = {
+  animals: '동물 상세 정보 읽기',
   fog: '탐험 기록(안개) 읽기', bosses: '월드 보스 읽기', worldmarks: '맵 전체 동굴·광맥 읽기', landmarks: '주변 동굴·간헐천 찾기',
   progress: '레벨·해금 읽기(성장 코치)', macros: '반자동 기능(F3~F6)', tick: '기본 상태 읽기', key_show: 'F8 제작대 읽기', key_add: 'F9 목록 추가',
   key_inv: 'F10 다시 읽기', macro: '반자동 기능(F3~F6)', idle: '(쉬는 중)', hazards: '동굴 위험 생물 찾기', ores: '주변 광석·동물 찾기',
 };
 const featOf = stepName => (stepName === 'macro' ? 'macros' : stepName);
-const SWITCHABLE = new Set(['fog', 'bosses', 'worldmarks', 'landmarks', 'progress', 'macros', 'hazards']);
+const SWITCHABLE = new Set(['fog', 'bosses', 'worldmarks', 'landmarks', 'progress', 'macros', 'hazards', 'animals']);
 
 function paths(gameDir, modDir, userData) {
   const local = process.env.LOCALAPPDATA || path.join(os.homedir(), 'AppData', 'Local');

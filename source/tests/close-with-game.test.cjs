@@ -1,5 +1,5 @@
 // Run with: node --test source/tests/close-with-game.test.cjs (no Electron install needed).
-// Checks that the HUD closes only after the game it saw has gone, and stays open for a crash note.
+// Checks game exit, auto-launch, diagnosis failures and update coordination.
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -7,12 +7,12 @@ const path = require('node:path');
 const vm = require('node:vm');
 const appDir = path.resolve(__dirname, '../app');
 
-function harness({ cfgClose = true, note = null, recentNote = false } = {}) {
+function harness({ cfgClose = true, note = null, recentNote = false, auto = false } = {}) {
   let tick, running = true, quit = 0, shown = 0, tasklistFails = false;
   const ctx = {
     module: { exports: {} }, __dirname: appDir, Buffer, console,
-    process: { env: {}, execPath: process.execPath, platform: 'win32' },
-    setInterval: (f, ms) => { if (ms === 10000) tick = f; }, setTimeout() {}, clearTimeout() {}, clearInterval() {},
+    process: { env: {}, execPath: process.execPath, platform: 'win32', argv: auto ? ['--icarus-auto'] : [] },
+    setInterval: (f, ms) => { if (ms === 3000) tick = f; }, setTimeout() {}, clearTimeout() {}, clearInterval() {},
     require: n => ({
       electron: {
         app: { requestSingleInstanceLock: () => true, disableHardwareAcceleration() {}, getPath: () => '', on() {},
@@ -47,6 +47,12 @@ test('never quits if the game was not seen (HUD opened by itself)', async () => 
   assert.equal(h.quit(), 0);
 });
 
+test('auto-launched HUD exits even if the game closed before its first check', async () => {
+  const h = harness({ auto: true }); h.running = false;
+  await h.step(); assert.equal(h.quit(), 0);
+  await h.step(); assert.equal(h.quit(), 1);
+});
+
 test('stays open when the setting is off, or when Windows cannot be asked', async () => {
   const off = harness({ cfgClose: false });
   await off.step(); off.running = false; await off.step(); await off.step(); await off.step();
@@ -56,13 +62,13 @@ test('stays open when the setting is off, or when Windows cannot be asked', asyn
   assert.equal(h.quit(), 0);
 });
 
-test('a crash note keeps the window open and shows it', async () => {
+test('crash notices do not keep Steam running after the game has exited', async () => {
   const h = harness({ note: { level: 1, text: '튕김' } });
   await h.step(); h.running = false; await h.step(); await h.step();
-  assert.equal(h.quit(), 0); assert.equal(h.shown(), 1);
+  assert.equal(h.quit(), 1); assert.equal(h.shown(), 0);
   const r = harness({ recentNote: true });
   await r.step(); r.running = false; await r.step(); await r.step();
-  assert.equal(r.quit(), 0); assert.equal(r.shown(), 1);
+  assert.equal(r.quit(), 1); assert.equal(r.shown(), 0);
 });
 
 test('an unknown process check breaks consecutive absence', async () => {
@@ -72,10 +78,10 @@ test('an unknown process check breaks consecutive absence', async () => {
   await h.step(); assert.equal(h.quit(), 1);
 });
 
-test('failed crash diagnosis must not close the HUD and lose the report', async () => {
+test('failed crash diagnosis logs the failure without leaving a Steam child alive', async () => {
   const h = harness(); await h.step(); h.running = false; await h.step();
   h.run('doctor.check = () => { throw new Error("crash directory unavailable"); }');
-  await h.step(); assert.equal(h.quit(), 0);
+  await h.step(); assert.equal(h.quit(), 1);
 });
 
 test('game exit waits for a pending update and duplicate requests share that update', async () => {
