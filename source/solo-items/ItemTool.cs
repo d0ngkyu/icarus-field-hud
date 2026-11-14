@@ -7,6 +7,8 @@ using System.Diagnostics;
 using System.Collections.Generic;
 using System.Web.Script.Serialization;
 using System.Windows.Forms;
+using System.Drawing.Drawing2D;
+using System.Runtime.InteropServices;
 
 public class Item {
     public string id {get;set;}
@@ -20,6 +22,10 @@ public class ItemTool : Form {
     readonly ListView list = new ListView();
     readonly NumericUpDown amount = new NumericUpDown();
     readonly Label message = new Label();
+    readonly Label selectedName = new Label(), selectedEnglish = new Label(), resultCount = new Label();
+    Button prepare;
+    readonly Color muted=Color.FromArgb(147,160,173), gold=Color.FromArgb(220,186,132), panel=Color.FromArgb(23,30,38);
+    readonly ImageList rowHeight = new ImageList();
     readonly Timer timer = new Timer();
     readonly Item[] catalog;
     string lastId = "";
@@ -68,37 +74,80 @@ public class ItemTool : Form {
         return target;
     }
     void Add(Control c,int x,int y,int w,int h) {c.SetBounds(x,y,w,h);Controls.Add(c);}
-    Label TextLabel(string s,int x,int y,int w,int h) {var c=new Label{Text=s};Add(c,x,y,w,h);return c;}
-    void ActionButton(string s,int x,int y,int w,Action a) {
-        var c=new Button{Text=s};Add(c,x,y,w,36);
+    Label TextLabel(string s,int x,int y,int w,int h) {var c=new Label{Text=s,BackColor=Color.Transparent};Add(c,x,y,w,h);return c;}
+    Button ActionButton(string s,int x,int y,int w,Action a) {
+        var c=new Button{Text=s,FlatStyle=FlatStyle.Flat,BackColor=Color.FromArgb(34,44,55),ForeColor=ForeColor,Cursor=Cursors.Hand};
+        c.FlatAppearance.BorderSize=0;c.FlatAppearance.MouseOverBackColor=Color.FromArgb(48,61,74);Add(c,x,y,w,38);
         c.Click+=(o,e)=>{try{a();}catch(Exception ex){message.Text=ex.Message;}};
+        return c;
+    }
+    [DllImport("dwmapi.dll")] static extern int DwmSetWindowAttribute(IntPtr h,int attr,ref int value,int size);
+    protected override void OnHandleCreated(EventArgs e) {base.OnHandleCreated(e);try{int on=1;DwmSetWindowAttribute(Handle,20,ref on,4);}catch{}}
+    protected override void OnPaint(PaintEventArgs e) {
+        base.OnPaint(e);var g=e.Graphics;g.SmoothingMode=SmoothingMode.AntiAlias;
+        using(var b=new SolidBrush(panel)){g.FillRectangle(b,28,155,630,477);g.FillRectangle(b,678,155,334,477);g.FillRectangle(b,28,652,984,94);}
+        using(var pen=new Pen(Color.FromArgb(44,55,67))){g.DrawRectangle(pen,28,155,630,477);g.DrawRectangle(pen,678,155,334,477);g.DrawLine(pen,702,351,988,351);}
+        using(var pen=new Pen(gold,2)){g.DrawLine(pen,29,155,100,155);}
+        using(var b=new LinearGradientBrush(new Rectangle(702,205,286,74),Color.FromArgb(37,49,61),panel,0f))g.FillRectangle(b,702,205,286,74);
+        using(var pen=new Pen(Color.FromArgb(103,91,72))){g.DrawEllipse(pen,917,209,60,60);g.DrawEllipse(pen,930,222,34,34);g.DrawLine(pen,909,239,985,239);}
     }
     public ItemTool() {
         catalog=LoadCatalog();
-        Text="아이카루스 · 싱글 아이템 도구";
-        ClientSize=new Size(830,660); MinimumSize=new Size(846,699);
+        Text="ICARUS · 아이템 보급소";
+        ClientSize=new Size(1040,800); FormBorderStyle=FormBorderStyle.FixedSingle;MaximizeBox=false;
         StartPosition=FormStartPosition.CenterScreen;
-        Font=new Font("맑은 고딕",10); BackColor=Color.FromArgb(242,245,248);
+        Font=new Font("맑은 고딕",10); BackColor=Color.FromArgb(14,19,25);ForeColor=Color.FromArgb(232,237,242);DoubleBuffered=true;
         AutoScaleMode=AutoScaleMode.None;
-        TextLabel("필요한 아이템, 직접 선택하세요",24,18,780,36).Font=new Font("맑은 고딕",17,FontStyle.Bold);
-        TextLabel("싱글 전용 · 생성 요청은 게임에서 F11을 눌러 실행합니다.",26,59,780,28);
+        var brand=TextLabel("I C A R U S   /   F I E L D   S U P P L Y",30,24,600,22);brand.ForeColor=gold;brand.Font=new Font("Segoe UI",9,FontStyle.Bold);
+        TextLabel("아이템 보급소",27,54,640,48).Font=new Font("맑은 고딕",26,FontStyle.Bold);
+        TextLabel("탐험에 필요한 것을 찾고, 다음 여정을 준비하세요.",30,113,700,25).ForeColor=muted;
+        var badge=TextLabel("●  SINGLE PLAYER",814,48,198,30);badge.ForeColor=gold;badge.TextAlign=ContentAlignment.MiddleRight;badge.Font=new Font("Segoe UI",10,FontStyle.Bold);
+        var version=TextLabel("DESKTOP EDITION   /   0.2",784,84,228,24);version.ForeColor=muted;version.TextAlign=ContentAlignment.MiddleRight;version.Font=new Font("Segoe UI",9);
         game.Text=@"C:\Program Files (x86)\Steam\steamapps\common\Icarus";
-        Add(game,26,101,575,28);
-        ActionButton("폴더 선택",613,96,190,()=>{using(var d=new FolderBrowserDialog{Description="Icarus 게임 폴더 선택"}){if(d.ShowDialog()==DialogResult.OK) game.Text=d.SelectedPath;}});
-        ActionButton("① 모드 설치 / 갱신",26,142,220,()=>{Install(game.Text);message.Text="설치 완료. 게임을 실행하고 싱글 월드에 입장하세요.";});
-        ActionButton("모드 사용 해제",258,142,170,()=>{
+        TextLabel("게임 연결",48,666,130,24).Font=new Font("맑은 고딕",10,FontStyle.Bold);
+        TextLabel("처음 한 번, 게임을 종료한 상태에서 모드를 설치하세요.",170,666,790,24).ForeColor=muted;
+        game.BorderStyle=BorderStyle.None;game.BackColor=panel;game.ForeColor=muted;game.Font=new Font("Segoe UI",9);Add(game,48,705,550,24);
+        ActionButton("폴더 변경",620,697,100,()=>{using(var d=new FolderBrowserDialog{Description="Icarus 게임 폴더 선택"}){if(d.ShowDialog()==DialogResult.OK) game.Text=d.SelectedPath;}});
+        ActionButton("모드 설치 / 갱신",732,697,160,()=>{Install(game.Text);message.Text="설치 완료. 게임을 실행하고 싱글 월드에 입장하세요.";});
+        ActionButton("해제",904,697,86,()=>{
             AssertStopped();string target=ModPath(game.Text);
             if(!File.Exists(Path.Combine(target,"solo-items-owner.txt"))) throw new Exception("이 도구로 설치한 모드가 없습니다.");
             File.Delete(Path.Combine(target,"enabled.txt"));File.Delete(Path.Combine(target,"request.txt"));
             message.Text="모드를 해제했습니다. 이미 얻은 아이템은 유지됩니다.";
         });
-        TextLabel("② 아이템 검색 (한글 / 영어 / 내부 이름 · 검색 결과 최대 200개)",26,193,777,24);
-        Add(search,26,223,777,29);search.TextChanged+=(o,e)=>FilterItems();
+        TextLabel("아이템 라이브러리",48,176,300,28).Font=new Font("맑은 고딕",12,FontStyle.Bold);
+        resultCount.ForeColor=muted;resultCount.BackColor=panel;resultCount.TextAlign=ContentAlignment.MiddleRight;resultCount.Font=new Font("Segoe UI",9);Add(resultCount,370,176,266,26);
+        TextLabel("검색",48,225,44,28).ForeColor=gold;
+        search.BorderStyle=BorderStyle.FixedSingle;search.BackColor=Color.FromArgb(32,42,53);search.ForeColor=ForeColor;
+        search.AccessibleName="아이템 검색";Add(search,98,222,538,29);search.TextChanged+=(o,e)=>FilterItems();
+        TextLabel("한글 · 영어 이름으로 검색",48,264,560,22).ForeColor=muted;
         list.View=View.Details;list.FullRowSelect=true;list.MultiSelect=false;list.HideSelection=false;
-        list.Columns.Add("아이템",260);list.Columns.Add("영어 이름",225);list.Columns.Add("내부 이름",265);
-        Add(list,26,262,777,255);
-        TextLabel("수량",26,536,50,27);amount.Minimum=1;amount.Maximum=100;amount.Value=1;Add(amount,80,533,90,30);
-        ActionButton("③ 요청 준비 → 게임에서 F11",187,529,390,()=>{
+        list.BorderStyle=BorderStyle.None;list.BackColor=panel;list.ForeColor=ForeColor;list.HeaderStyle=ColumnHeaderStyle.None;list.OwnerDraw=true;
+        list.Columns.Add("아이템",300);list.Columns.Add("영어 이름",270);rowHeight.ImageSize=new Size(1,43);list.SmallImageList=rowHeight;
+        list.DrawItem+=(o,e)=>{};
+        list.DrawSubItem+=(o,e)=>{
+            bool chosen=e.Item.Selected;Color bg=chosen?Color.FromArgb(48,52,52):(e.ItemIndex%2==0?panel:Color.FromArgb(26,34,43));
+            using(var b=new SolidBrush(bg)) e.Graphics.FillRectangle(b,e.Bounds);
+            if(chosen && e.ColumnIndex==0) using(var b=new SolidBrush(gold))e.Graphics.FillRectangle(b,e.Bounds.X,e.Bounds.Y,3,e.Bounds.Height);
+            var rect=new Rectangle(e.Bounds.X+14,e.Bounds.Y,e.Bounds.Width-24,e.Bounds.Height);
+            TextRenderer.DrawText(e.Graphics,e.SubItem.Text,Font,rect,e.ColumnIndex==0?(chosen?gold:ForeColor):muted,TextFormatFlags.VerticalCenter|TextFormatFlags.EndEllipsis|TextFormatFlags.SingleLine);
+        };
+        Add(list,48,298,588,312);
+        list.SelectedIndexChanged+=(o,e)=>{
+            bool chosen=list.SelectedItems.Count==1;
+            selectedName.Text=chosen?list.SelectedItems[0].Text:"아이템을 선택하세요";
+            selectedEnglish.Text=chosen?list.SelectedItems[0].SubItems[1].Text:"왼쪽 목록에서 필요한 아이템을 골라 주세요.";
+            if(prepare!=null)prepare.Enabled=chosen;
+        };
+        TextLabel("선택한 아이템",702,176,286,26).ForeColor=muted;
+        var mark=TextLabel("SUPPLY  /  01",720,229,185,27);mark.ForeColor=gold;mark.Font=new Font("Segoe UI",13,FontStyle.Bold);mark.BackColor=Color.FromArgb(33,44,55);
+        selectedName.Text="아이템을 선택하세요";selectedName.Font=new Font("맑은 고딕",16,FontStyle.Bold);selectedName.BackColor=panel;selectedName.AutoEllipsis=true;Add(selectedName,702,290,286,34);
+        selectedEnglish.Text="왼쪽 목록에서 필요한 아이템을 골라 주세요.";selectedEnglish.ForeColor=muted;selectedEnglish.Font=new Font("맑은 고딕",9);selectedEnglish.BackColor=panel;selectedEnglish.AutoEllipsis=true;Add(selectedEnglish,702,326,286,24);
+        TextLabel("보급 수량",702,373,180,26).Font=new Font("맑은 고딕",11,FontStyle.Bold);
+        TextLabel("1–100개",902,375,86,24).ForeColor=muted;
+        amount.Minimum=1;amount.Maximum=100;amount.Value=1;amount.Font=new Font("Segoe UI",18,FontStyle.Bold);amount.BackColor=Color.FromArgb(32,42,53);amount.ForeColor=ForeColor;amount.BorderStyle=BorderStyle.FixedSingle;Add(amount,702,410,286,42);
+        int bx=702;foreach(int n in new[]{1,10,50,100}){int value=n;var b=ActionButton(n.ToString(),bx,464,64,()=>amount.Value=value);b.Height=30;bx+=74;}
+        prepare=ActionButton("생성 요청 준비   →",702,516,286,()=>{
             if(list.SelectedItems.Count!=1) throw new Exception("목록에서 아이템을 선택하세요.");
             string target=ModPath(game.Text);
             if(!File.Exists(Path.Combine(target,"enabled.txt"))) throw new Exception("게임 종료 후 먼저 모드를 설치하세요.");
@@ -108,19 +157,24 @@ public class ItemTool : Form {
             File.WriteAllText(p+".tmp",request,Utf8);File.Move(p+".tmp",p);
             lastId=request.Split('|')[0];message.Text="요청 준비 완료. 2분 이내 게임으로 돌아가 F11을 누르세요.";
         });
-        ActionButton("요청 취소",589,529,214,()=>{
+        prepare.Height=46;prepare.BackColor=gold;prepare.ForeColor=Color.FromArgb(25,29,32);prepare.Font=new Font("맑은 고딕",12,FontStyle.Bold);prepare.FlatAppearance.MouseOverBackColor=Color.FromArgb(239,206,157);prepare.Enabled=false;
+        var hint=TextLabel("게임으로 돌아가  F11  을 누르세요.",702,575,286,24);hint.ForeColor=muted;hint.TextAlign=ContentAlignment.MiddleCenter;
+        var cancel=ActionButton("대기 요청 취소",702,600,286,()=>{
             string target=ModPath(game.Text);
             if(File.Exists(Path.Combine(target,"processing.txt"))) throw new Exception("이미 처리 중인 요청은 취소할 수 없습니다.");
             File.Delete(Path.Combine(target,"request.txt"));lastId="";message.Text="대기 요청을 취소했습니다.";
         });
-        message.Text="게임 종료 → 모드 설치 → 싱글 입장 → 아이템 선택 → 요청 준비 → F11";
-        message.ForeColor=Color.FromArgb(29,70,100);Add(message,26,580,777,68);
+        cancel.Height=24;cancel.BackColor=panel;cancel.ForeColor=muted;cancel.Font=new Font("맑은 고딕",9);
+        message.Text="준비됨  ·  아이템을 선택해 보급 요청을 준비하세요.";
+        message.ForeColor=muted;message.Font=new Font("맑은 고딕",9);Add(message,28,762,984,32);
         timer.Interval=1000;timer.Tick+=(o,e)=>ReadStatus();timer.Start();
-        FormClosed+=(o,e)=>timer.Dispose();FilterItems();
+        FormClosed+=(o,e)=>{timer.Dispose();rowHeight.Dispose();};FilterItems();
     }
     void FilterItems() {
         string q=search.Text.Trim();list.BeginUpdate();list.Items.Clear();
-        foreach(var i in catalog.Where(i=>(i.name+" "+i.english+" "+i.id).IndexOf(q,StringComparison.OrdinalIgnoreCase)>=0).Take(200)) {
+        var matches=catalog.Where(i=>(i.name+" "+i.english+" "+i.id).IndexOf(q,StringComparison.OrdinalIgnoreCase)>=0).ToArray();
+        resultCount.Text=matches.Length.ToString("N0")+" ITEMS"+(matches.Length>200?"   /   200 표시":"");
+        foreach(var i in matches.Take(200)) {
             var row=new ListViewItem(new[]{i.name,i.english,i.id});row.Tag=i.id;list.Items.Add(row);
         }
         list.EndUpdate();
