@@ -35,7 +35,7 @@ function create({state,save,platform=process.platform,spawnFn=spawn,now=Date.now
  const earned=state.activityAwards&&typeof state.activityAwards==='object'&&!Array.isArray(state.activityAwards)?state.activityAwards:{};state.activityAwards=earned;
  if(state.activityAwardsVersion!==2){for(const [k,,,levels] of groups)for(const [old]of levels)if(number(s[k])>=old)earned['activity-'+k+'-'+old]=true;state.activityAwardsVersion=2;}
  function award(){const all=achievements(s,earned);for(const a of all)if(a.unlocked)earned[a.id]=true;return all;}
- let child=null,prev={},lastSave=now(),text='',status='off',generation=0,lastPose=null,sprintHeld=false,inputAt=0;
+ let child=null,prev={},lastSave=now(),text='',status='off',generation=0,lastPose=null,sprintHeld=false,inputAt=0,paused=false,retiring=null;
  function setStatus(value){status=value;onStatus(value);}
  function day(){const d=new Date(now());const key=d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();if(s.lastDay!==key){s.days++;s.lastDay=key;}}
  function accept(data){if(!data||typeof data!=='object'||['clicks','right','wheel','distance','idle'].some(k=>!Number.isFinite(data[k])||data[k]<0))return false;
@@ -46,7 +46,7 @@ function create({state,save,platform=process.platform,spawnFn=spawn,now=Date.now
   sprintHeld=data.sprintHeld===true;inputAt=now();
   day();award();setStatus('on');if(now()-lastSave>=60000){save();lastSave=now();}return true;
  }
- function start(){if(child||state.activityEnabled===false)return;if(platform!=='win32'){setStatus('unavailable');return;}
+ function start(){if(child||retiring||paused||state.activityEnabled===false)return;if(platform!=='win32'){setStatus('unavailable');return;}
   const mine=++generation;prev={};text='';setStatus('starting');
   try{child=spawnFn(path.join(__dirname,'ActivityCounter.exe'),[String(parent)],{windowsHide:true,stdio:['pipe','pipe','pipe']});
    child.stdin.on('error',()=>{});child.stdout.setEncoding('utf8');child.stdout.on('data',chunk=>{if(mine!==generation)return;text+=chunk;if(text.length>8192){stop();setStatus('error');return;}let at;while((at=text.indexOf('\n'))>=0){const line=text.slice(0,at);text=text.slice(at+1);try{accept(JSON.parse(line));}catch{}}});
@@ -54,6 +54,8 @@ function create({state,save,platform=process.platform,spawnFn=spawn,now=Date.now
   }catch{child=null;setStatus('error');}
  }
  function stop(){generation++;lastPose=null;sprintHeld=false;if(child){child.stdin.end();child.kill();child=null;}save();setStatus('off');}
+ async function pause(){paused=true;if(retiring)throw Error('활동 집계 종료를 기다리는 중입니다.');const old=child;if(!old)return;retiring=old;await new Promise((resolve,reject)=>{let timer;const done=()=>{clearTimeout(timer);retiring=null;resolve();if(!paused)start();};old.once('exit',done);timer=setTimeout(()=>reject(Error('활동 집계 종료를 확인하지 못해 업데이트를 보류합니다.')),3000);stop();});}
+ function resume(){paused=false;start();}
  function enable(on){state.activityEnabled=!!on;on?start():stop();save();return info();}
  function info(){return {enabled:state.activityEnabled!==false,status,stats:{...s},achievements:award()};}
  function boot(){if(state.activityEnabled!==false){s.launches++;day();award();save();start();}}
@@ -64,6 +66,6 @@ function create({state,save,platform=process.platform,spawnFn=spawn,now=Date.now
   if(dt<=0||dt>5||d>100||d/dt>60)return;
   s.gameMeters+=d;if(old.sprint&&next.sprint)s.sprintMeters+=d;award();
  }
- return {boot,stop,enable,info,accept,position};
+ return {boot,stop,enable,info,accept,position,pause,resume};
 }
 module.exports={achievements,create};
