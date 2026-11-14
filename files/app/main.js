@@ -165,7 +165,13 @@ function runUpdate(manual) {
 async function performUpdate(manual) {
   if (!UPDATE_URL || !gameDir) return null;
   try {
-    const r = await UPD.update(gameDir, UPDATE_URL, ulog);
+    if (process.platform === 'win32' && await gameUp() !== false) {
+      ulog('update deferred: game is running or its state is unknown');
+      if(manual && win && !win.isDestroyed())win.webContents.send('upd',{error:'게임 종료 후 업데이트를 적용합니다.',manual:true});
+      return null;
+    }
+    const r = await UPD.update(gameDir, UPDATE_URL, ulog, async () => process.platform !== 'win32' || await gameUp() === false);
+    if(r.deferred){ulog('update deferred: game started during download');return null;}
     lastUpd = { ...r, at: Date.now() };
     // Keep crash-disabled features and safe mode across updates. A changed Lua file
     // does not establish that the native crash has been fixed.
@@ -258,6 +264,10 @@ function watchGame() {
       try { if (doctor) fs.writeFileSync(path.join(app.getPath('userData'), 'last-exit-report.txt'), doctor.report({reason:'game closed'})); }
       catch (e) { ulog('exit report failed: ' + e.message); }
       ulog('game closed: closing the HUD too');
+      // Install only after the server session ended. A network failure is
+      // logged by runUpdate and must not keep the HUD alive indefinitely.
+      await runUpdate(false);
+      if (restartPending) return;
       quitting = true; app.quit();
     } finally { busy = false; }
   }, 3000);

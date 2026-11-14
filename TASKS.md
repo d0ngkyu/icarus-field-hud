@@ -120,3 +120,9 @@
 - 생성 도구: source/tools/cavepref.py, cavedata.py (caveraw/ → CAVEDATA). 테스트 cave-hazards 3개.
 - Codex PR #5(교배 관측 달성률) 검토·병합: 내 .14 변경(값 바뀔 때만 전송)이 HUD 12초 만료와 충돌하는 문제를 Codex가 잡아 캐시 재전송으로 수정 — 배열 읽기는 늘지 않음 확인(animals_read_once.py).
 - 배포 2026.11.14.15. 검증: node 45개, Lua·JS 문법. 실제 게임 표시는 미확인.
+
+## 2026-11-14 11:05 · Claude · PR #6 검토·배포
+- Codex PR #6 (codex/system-safety, 0dc4fac): 재접속·월드 이동 시 읽기 중단/초기화, 로컬 플레이어만 사용, 인벤토리 객체 보관 안 함, 배열 개수 상한, 단축키·자동작업 중복 방지, 게임 실행 중 업데이트 보류(종료 때 적용), 전체 다운로드 검증 후 설치·실패 시 되돌림, 진단 보완.
+- 직접 확인: node 테스트 52개 + Lua 모의 실행(fengari 설치해 실행) 통과, Lua 문법, animals_read_once.py. `IsA("/Script/Engine.Actor")` 문자열 형식은 UE4SS API(IsA(string FullClassName)) 확인.
+- 참고(위험 낮음): 위치를 못 읽는 순간에도 세션을 초기화해 45초 준비 대기가 다시 걸림 — 탈것·로딩에서 자주 생기면 조정 필요.
+- 배포 2026.11.14.16. 실제 장시간 플레이 검증은 남음.

@@ -1,6 +1,6 @@
 {
- "version": "2026.11.14.15",
- "notes": "동굴에 마우스를 올리면 게임 데이터 기준으로 보통 몇 마리(동굴웜·벌집·박쥐 둥지 등)인지 나옵니다. 동물 탭에 교배 관측 달성률이 추가됐습니다.",
+ "version": "2026.11.14.16",
+ "notes": "튕김 위험 경로 보완: 재접속·월드 이동 중 읽기 멈춤, 내 캐릭터만 읽기, 게임 실행 중엔 업데이트 보류 후 종료 때 적용.",
  "config": {},
  "files": [
   {
@@ -52,13 +52,13 @@
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/Scripts/main.lua",
-   "n": 58433,
-   "h": "473d1b63940d676e435ab505d1fea891df4a9e02"
+   "n": 61938,
+   "h": "a4da9ed552da12e17fe29f33a2494815c7501bf3"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/Scripts/animals.lua",
-   "n": 4294,
-   "h": "26e59574d665ba1199db613a4fb1197746bb9d50"
+   "n": 4373,
+   "h": "76ae3730ad615d96355e1f7276af0aa8b3bd11b9"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/Scripts/bp_names.lua",
@@ -68,7 +68,7 @@
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/index.html",
    "n": 880040,
-   "h": "a22cd8164c6a0927483807e12c39b2feb6b8c794"
+   "h": "2252c852ebfd80d9566ae6dbb272795c0433bfcc"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/animals.js",
@@ -122,13 +122,13 @@
   },
   {
    "p": "app/main.js",
-   "n": 16181,
-   "h": "9dab86f4c278f837bcb080480aa6191c770c9f09"
+   "n": 16864,
+   "h": "519718e1a3dc6edf7a8b56c025459e4f96afbda7"
   },
   {
    "p": "app/updater.js",
-   "n": 8172,
-   "h": "6a2bd89ccd27ba28ed851f61dca464dcaab3b8e9"
+   "n": 9329,
+   "h": "b34a662f63084293a4cdc5acf7bb11334aaa4e49"
   },
   {
    "p": "app/preload.js",
@@ -147,8 +147,8 @@
   },
   {
    "p": "app/diag.js",
-   "n": 10914,
-   "h": "422adf25f237dbe8869869f4106c673dd03f0445"
+   "n": 11751,
+   "h": "af6e5a609eaa60d086622d72269428ea471c83cf"
   }
  ]
 }

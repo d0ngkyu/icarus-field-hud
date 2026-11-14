@@ -13,7 +13,7 @@ const FEAT_KO = {
   key_inv: 'F10 다시 읽기', macro: '반자동 기능(F3~F6)', idle: '(쉬는 중)', hazards: '동굴 위험 생물 찾기', ores: '주변 광석·동물 찾기',
 };
 const featOf = stepName => (stepName === 'macro' ? 'macros' : stepName);
-const SWITCHABLE = new Set(['fog', 'bosses', 'worldmarks', 'landmarks', 'progress', 'macros', 'hazards', 'animals']);
+const SWITCHABLE = new Set(['fog', 'bosses', 'worldmarks', 'landmarks', 'progress', 'macros', 'hazards', 'animals', 'ores']);
 
 function paths(gameDir, modDir, userData) {
   const local = process.env.LOCALAPPDATA || path.join(os.homedir(), 'AppData', 'Local');
@@ -61,8 +61,11 @@ class Doctor {
     this.log = log || (() => {});
     this.st = { seen: {}, crashes: [], offVersion: '', lastLogSig: '' };
     try { Object.assign(this.st, JSON.parse(fs.readFileSync(this.p.state, 'utf8'))); } catch (e) {}
+    if (!this.st.seen || typeof this.st.seen !== 'object' || Array.isArray(this.st.seen)) this.st.seen = {};
+    if (!Array.isArray(this.st.crashes)) this.st.crashes = [];
+    this.st.crashes = this.st.crashes.filter(x => x && Number.isFinite(x.at));
     // first run: crashes from before the HUD was installed are not ours to act on
-    if (!this.st.init) { for (const c of this.newCrashes()) this.st.seen[c.dir] = c.at; this.st.init = 1; this.save(); }
+    if (!this.st.init) { for (const c of this.newCrashes()) if(Date.now()-c.at>120000)this.st.seen[c.dir] = c.at; this.st.init = 1; this.save(); }
   }
   save() { try { fs.writeFileSync(this.p.state, JSON.stringify(this.st, null, 1)); } catch (e) {} }
 
@@ -119,9 +122,10 @@ class Doctor {
       }
     } catch (e) {}
     const msg = (ctx.match(/<ErrorMessage>([\s\S]*?)<\/ErrorMessage>/) || [])[1] || (ctx.match(/Unhandled Exception:[^\r\n]*/) || [])[0] || '';
-    const stack = (ctx.match(/<CallStack>([\s\S]*?)<\/CallStack>/) || [])[1] || '';
+    const stack = (ctx.match(/<(?:CallStack|PortableCallStack)>([\s\S]*?)<\/(?:CallStack|PortableCallStack)>/) || [])[1] || '';
+    const complete = /<\/(?:CallStack|PortableCallStack)>/.test(ctx) || /Unhandled Exception:[^\r\n]+/.test(ctx);
     const all = msg + '\n' + stack + '\n' + ctx.slice(-20000);
-    return { msg: msg.replace(/&apos;/g, "'").replace(/&quot;/g, '"').trim().slice(0, 300), mod: /UE4SS|dwmapi/i.test(all), stack: stack.slice(0, 4000), raw: ctx };
+    return { complete, msg: msg.replace(/&apos;/g, "'").replace(/&quot;/g, '"').trim().slice(0, 300), mod: /UE4SS|dwmapi/i.test(all), stack: stack.slice(0, 4000), raw: ctx };
   }
 
   // look at what happened since last time and step around it; returns a short note for the user or null
@@ -130,8 +134,11 @@ class Doctor {
     if (!found.length) return null;
     let note = null;
     for (const c of found) {
-      this.st.seen[c.dir] = c.at;
       const info = this.readCrash(c.dir);
+      // The game creates the directory before finishing the XML. Retry next
+      // time instead of permanently acknowledging an empty/partial report.
+      if (!info.complete) continue;
+      this.st.seen[c.dir] = c.at;
       const stepNow = this.lastStep();
       // The live marker may belong to an older run, or to a run after the crash.
       // Only a preceding, nearby marker is evidence of what was running.
@@ -139,7 +146,7 @@ class Doctor {
       const rec = { at: c.at, mod: info.mod, msg: info.msg, step: matchedStep ? stepNow.name : null, version };
       this.st.crashes.push(rec);
       this.log('crash found: ' + JSON.stringify(rec));
-      if (!info.mod) { note = { level: 0, text: '게임이 튕겼지만 모드(UE4SS) 흔적은 없었습니다. 게임 자체 문제로 보입니다.' }; continue; }
+      if (!info.mod) { note = { level: 0, text: '게임 충돌 기록에서 UE4SS 흔적을 확인하지 못했습니다. 원인은 아직 확정할 수 없습니다.' }; continue; }
       const recent = this.st.crashes.filter(x => x.mod && Date.now() - x.at < 3 * 86400e3).length;
       const f = featOf(rec.step || '');
       const off = this.featuresOff();
@@ -148,7 +155,7 @@ class Doctor {
         note = { level: 1, text: `게임이 튕길 때 HUD 모드가 "${FEAT_KO[f] || f}"을(를) 하고 있었습니다. 이 기능만 꺼 두었습니다. 게임을 다시 켜면 적용됩니다.` };
       } else if (!this.safeMode() && recent <= 2) {
         this.setSafeMode(true);
-        note = { level: 2, text: '모드 때문에 게임이 또 튕겨서 안전 모드로 바꿨습니다. 재료 계산·F8·F9·나침반만 켜 둡니다. 게임을 다시 켜면 적용됩니다.' };
+        note = { level: 2, text: 'UE4SS가 포함된 충돌 기록을 확인해 안전 모드로 바꿨습니다. 추가 검색 기능을 줄입니다. 원인 함수는 미확정이며 게임을 다시 켜면 적용됩니다.' };
       } else {
         note = { level: 3, text: '안전 모드에서도 게임이 튕겼습니다. 설정 탭의 "모드 끄고 게임하기"를 누르면 모드 없이 게임할 수 있습니다. 보고서를 만들어 보내 주세요.' };
       }
@@ -173,10 +180,11 @@ class Doctor {
   }
 
   isGameRunning() {
-    return new Promise(res => execFile('tasklist', ['/FI', 'IMAGENAME eq Icarus-Win64-Shipping.exe', '/NH'], { windowsHide: true }, (e, out) => res(!e && /Icarus-Win64-Shipping/i.test(out || ''))));
+    return new Promise(res => execFile('tasklist', ['/FI', 'IMAGENAME eq Icarus-Win64-Shipping.exe', '/NH'], { windowsHide: true, timeout: 5000 }, (e, out) => res(e ? null : /Icarus-Win64-Shipping/i.test(out || ''))));
   }
   async setModOn(on) {
-    if (await this.isGameRunning()) throw new Error('게임을 먼저 꺼 주세요');
+    const running = await this.isGameRunning();
+    if (running !== false) throw new Error(running ? '게임을 먼저 꺼 주세요' : '게임 실행 상태를 확인하지 못해 모드 변경을 보류했습니다.');
     if (on && fs.existsSync(this.p.loaderOff) && !fs.existsSync(this.p.loader)) fs.renameSync(this.p.loaderOff, this.p.loader);
     if (!on && fs.existsSync(this.p.loader)) { if (fs.existsSync(this.p.loaderOff)) fs.unlinkSync(this.p.loaderOff); fs.renameSync(this.p.loader, this.p.loaderOff); }
     return this.modOn();
