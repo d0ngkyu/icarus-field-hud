@@ -1,6 +1,6 @@
 {
- "version": "2026.11.14.17",
- "notes": "동굴 규모를 SMALL/MEDIUM/LARGE(Lv.1~3)로 나눴습니다. 지도 레이어 목록에 항목별 아이콘을 넣었습니다.",
+ "version": "2026.11.14.18",
+ "notes": "개발용: 전체 지도 동굴 목록 준비 (일반 사용자에게는 변화 없음)",
  "config": {},
  "files": [
   {
@@ -68,7 +68,7 @@
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/index.html",
    "n": 882476,
-   "h": "e6c076e6655568760eab134f536214d1d305480f"
+   "h": "29c876fe2b20101d07bf3293956b755717ea05ac"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/animals.js",
@@ -122,8 +122,8 @@
   },
   {
    "p": "app/main.js",
-   "n": 16864,
-   "h": "519718e1a3dc6edf7a8b56c025459e4f96afbda7"
+   "n": 17944,
+   "h": "f6523d3236edc5808be946f954b42502cef391b9"
   },
   {
    "p": "app/updater.js",
@@ -137,13 +137,18 @@
   },
   {
    "p": "app/extract.js",
-   "n": 6408,
-   "h": "8e326135b3758b20fa49a1a07b82cc825823f29c"
+   "n": 9219,
+   "h": "ea2a46b935340f197098afd0922c287e9b61341c"
   },
   {
    "p": "app/levjob.js",
    "n": 1582,
    "h": "04cf88adc6401595f272cc3cd3d1d5953d60169a"
+  },
+  {
+   "p": "app/cavejob.js",
+   "n": 3277,
+   "h": "c637a0d52fa1cc0046eda91012300f61710f3e45"
   },
   {
    "p": "app/diag.js",
