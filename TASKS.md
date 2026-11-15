@@ -690,3 +690,11 @@ A/B/C 모두 종료 프로토콜, 업데이트 실패 표시, 개인 월드 격�
 - Codex stable2026.11.16.2, source 0eb8001151a5ce932e100472bc57c0b44933e66e (PR23). .16.1 이후 21개 명칭 교정/지역 찾기 우선 배포. 설치 Game.locres 한국어 D_Biomes39개 전수 대조,110검사/원격6파일 바이트/브라우저 수풀 확대·목록 격리 확인. 게임 실행 중 설치 파일 교체 금지, 현재 발행 담당 Codex.
 - 수풀은 기존 데이터에서 Grove→작은 숲 오역. 현재 수풀/신록 테라스/링 호수 등 게임 표기로 교정. 기존39개 앵커 유지. Pro_Abyss 및 지하 영역 좌표는 미확인으로 범위 한계 보존.
 - OPTIMIZATION-030 추가 요구: 체감 가능한 잔끊김·게임 CPU/메모리/GPU 부담 감소, 전후 실측 비교 표시. 측정 불가 항목/개선 없음은 정직하게 표시, 설정 적용 초록과 실제 성능 개선을 구분. 측정 방식/가용성·오버헤드는 아직 검증 전. 지도 우선 배포 완료 뒤 재개하며 최적화 코드/게임 설정 변경은 아직 없음.
+
+
+## MAP-REGION-LABELS-031 · .16.2 배포 완료 / 설치 대기
+- PR23 source0eb8001151a5ce932e100472bc57c0b44933e66e, stable2026.11.16.2 배포48814e6d607ffdbf96eacb26a11598d728f63493. Actions https://github.com/d0ngkyu/icarus-field-hud/actions/runs/43739143685 성공29초(test11/publish10). 원격40파일 root/불변 경로 크기·SHA1 전부 일치. 110검사 통과, 소스6개 원격바이트 및 브라우저 수풀 확대/지도 목록 분리/JS오류0 확인.
+- 설치 게임 ko-KR Game.locres D_Biomes39개 대조,21개 이름 수정. 수풀은 Grove를 '작은 숲'으로 임의 번역한 것이 원인, 실제 슬롯 누락 아님. 지역 찾기 콤보로 작은 영역 선택·중심확대/지역이름ON/따라가기OFF, 캐릭터 이동 없음. 지도 앵커39개 유지, Pro_Abyss 및 지하 영역은 검증 위치 없어 추가하지 않음. MAP-REGIONS.md 및 fixture에 근거 보존.
+- 로컬 조사: pyooz0.0.8를 workspace에만 설치해 게임 번역 압축 해제. 최초 ooz 패키지 이름/ko 경로/UTF8 출력 오류 해결; 게임 원본은 읽기만. 제품에 외부 의존성·전체번역 포함 없음. 로컬 mixed CRLF 병합 충돌은 이미 검증한 원격 동일6파일을 기준으로 checkout/index 정렬 후 FF하여 보존.
+- PC version.txt2026.11.16.1 확인: 이전 지도 업데이트가 실제 설치된 것은 확인. 현재 게임 실행중으로 .16.2 교체/게임종료/세이브 변경 없음. 새 버전 설치는 정상 종료 후 updater 확인 필요. 배포 소유 해제. Claude 확인/동의는 미확인.
+- 다음: OPTIMIZATION-030 재개. 서버장용/개인용 두 버튼·사용시점·상태색·백업복원과 CPU/메모리/GPU/프레임 끊김 전후 실측 요구. 설정 적용과 실제 개선은 별도, 미측정/개선없음 숨기지 않기. 현재 조사만 완료, 최적화 소스/게임설정 변경 없음. 설치 GameUserSettings에는 sg/custom 품질 쌍, FrameLimit, MaxShadowCascades, bContactShadows, bUseSimpleBuildingShadows 등이 존재. 공식FAQ https://steamcommunity.com/app/1149460/discussions/0/7179373038238970739/ 를 참조. 호스트PC 로컬 그래픽 부담 완화와 서버 시뮬레이션 최적화를 혼동하지 않는다.
