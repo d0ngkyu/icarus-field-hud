@@ -1,10 +1,10 @@
 {
- "version": "2026.11.16.8",
+ "version": "2026.11.16.9",
  "channel": "stable",
- "source": "c969a76fad497df59b9ee088474d840a743ab9b3",
- "notes": "최적화 사용법: 게임 완전 종료부터 4단계 안내, 모드 하나만 선택, 오류 확인과 복원 방법",
+ "source": "b1615d429e609d2ae4083ff4f9e6c97a33f13a2c",
+ "notes": "지도 레드 엑조틱 전용 레이어: 나무·식물 위치와 관측 상태, 방문·파밍 체크",
  "config": {},
- "filesPath": "releases/stable/2026.11.16.8/files",
+ "filesPath": "releases/stable/2026.11.16.9/files",
  "files": [
   {
    "p": "game/Icarus/Binaries/Win64/dwmapi.dll",
@@ -55,8 +55,8 @@
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/Scripts/main.lua",
-   "n": 47795,
-   "h": "c2289b6b1dcb719f8f001becfac845c722fb1a24"
+   "n": 48005,
+   "h": "58851bc1e1ae74e0658b55e8a387d478c3a04cd3"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/Scripts/animals.lua",
@@ -70,8 +70,8 @@
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/index.html",
-   "n": 966680,
-   "h": "235df9429b8ddf9671d33cceb03fb93be14a1ee7"
+   "n": 968231,
+   "h": "26da475a480765d254edee3a701c63b1b80b0e7e"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/animals.js",
@@ -230,13 +230,13 @@
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/Scripts/map_observation.lua",
-   "n": 3513,
-   "h": "85a79db08e3dfd3c9075b2fd7dbaac5ee97d3154"
+   "n": 4905,
+   "h": "45581a5a4774c770ccc3d0bd319715fe3525fe28"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/map-status.js",
-   "n": 4794,
-   "h": "1c19e04a23796d107724036385320551202d6f8d"
+   "n": 5011,
+   "h": "e3b36a982499d6a5a0ed5fd1ae04e27dbe4a4a54"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/map-party.js",
