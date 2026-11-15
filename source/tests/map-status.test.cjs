@@ -35,3 +35,11 @@ test('exotic static spawn retains unknown until matching actual exotic observati
  const m=map(),spot=['x:Exotic',100,100,0],sk=life.key(spot);m.lm[sk]=spot;life.aggregate(m,[],1);assert.equal(life.entry(m,sk),null);
  const o=['v:Exotic',100,100,0,1],k=life.key(o);m.ore[k]=o;life.observe(m,o,2);life.aggregate(m,[],3);assert.equal(life.entry(m,sk).state,'depleted');
 });
+
+test('red plant depletion and return require counts; red tree ignores purple observations',()=>{
+ const m=map(),plant=['r:Plant',10,20,0,-1],k=life.key(plant);life.observe(m,plant,1);assert.equal(life.entry(m,k),null);
+ [3,0,-1,4].forEach((v,i)=>life.observe(m,[...plant.slice(0,4),v],i+2));assert.equal(life.entry(m,k).state,'reset');
+ const tree=['r:Tree',100,100,0,-1],tk=life.key(tree);m.lm[tk]=tree;
+ for(const tag of ['d:Exotic','d:Iron']){const o=[tag,100,100,0,0];m.lm[life.key(o)]=o;life.observe(m,o,10)}life.aggregate(m,[],11);assert.equal(life.entry(m,tk),null);
+ const red=['d:Exotic_Red_Raw',100,100,0,0];m.lm[life.key(red)]=red;life.observe(m,red,12);life.aggregate(m,[],13);assert.equal(life.entry(m,tk).state,'depleted');
+});

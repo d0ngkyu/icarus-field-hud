@@ -1,7 +1,7 @@
 /* Observation history only. Missing/unloaded actors are never proof of depletion. */
 (function(root){
  'use strict';
- const supported=new Set(['cave','boss','ore','exo','deep','dep','gey']);
+ const supported=new Set(['cave','boss','ore','exo','redexo','deep','dep','gey']);
  const labels={unknown:'상태 미확인',active:'자원 확인',depleted:'소진 확인',killed:'처치 확인',visited:'방문 확인',farmed:'파밍 체크',completed:'완료 기록',reset:'다시 활성화',installed:'추출기 설치됨'};
  const colors={unknown:'#98a6b3',active:'#66d99d',depleted:'#a0a7b0',killed:'#a0a7b0',visited:'#75c9e8',farmed:'#d8b56e',completed:'#d8b56e',reset:'#66d99d',installed:'#75c9e8'};
  const valid=o=>Array.isArray(o)&&typeof o[0]==='string'&&Number.isFinite(o[1])&&Number.isFinite(o[2]);
@@ -12,6 +12,7 @@
  function observe(mp,o,now){if(!valid(o))return;const k=key(o),t=o[0][0],n=o[4],old=entry(mp,k);let state;
   if(t==='b'&&(n===0||n===1))state=n?'killed':old&&old.state==='killed'?'reset':'active';
   if(t==='v'&&(n===0||n===1))state=n?'depleted':old&&['depleted','farmed'].includes(old.state)?'reset':'active';
+  if(t==='r'&&o[0]==='r:Plant'&&Number.isFinite(n)&&n>=0)state=n===0?'depleted':old&&['depleted','farmed'].includes(old.state)?'reset':'active';
   if(t==='d'&&Number.isFinite(n)&&n>=0)state=n===0?'depleted':old&&old.quantity===0?'reset':'active';
   if(t==='g'&&o[0]==='g:Enzyme'&&Number.isFinite(n)&&n>=0)state=old&&Number.isFinite(old.quantity)&&n<old.quantity?'reset':n>0?'completed':'active';
   if(t==='g'&&o[0]==='g:Oil'&&(n===0||n===1))state=n?'installed':'active';
@@ -36,8 +37,8 @@
    else if(old&&old.state==='depleted')update(mp,c.key,'reset',now,{partial:true,observed:true,knownNodes:nodes.length});
   }
   // Static exotic/deep spawn points are locations, not proof that a resource exists.
-  for(const [k,o] of Object.entries(mp.lm||{})){if(!['x','e'].includes(o[0][0]))continue;
-   const candidates=Object.entries(o[0][0]==='x'?{...mp.ore,...mp.lm}:mp.lm).filter(([id,v])=>id!==k&&(['v','d'].includes(v[0][0]))&&(o[0][0]!=='x'||/exotic/i.test(v[0]))&&Math.hypot(v[1]-o[1],v[2]-o[2])<2500&&r[id]&&now-r[id].at<90000);
+  for(const [k,o] of Object.entries(mp.lm||{})){if(!['x','e'].includes(o[0][0])&&o[0]!=='r:Tree')continue;
+   const candidates=Object.entries(o[0][0]==='x'?{...mp.ore,...mp.lm}:mp.lm).filter(([id,v])=>id!==k&&(['v','d'].includes(v[0][0]))&&(o[0][0]!=='x'||/exotic/i.test(v[0]))&&(o[0]!=='r:Tree'||v[0]==='d:Exotic_Red_Raw')&&Math.hypot(v[1]-o[1],v[2]-o[2])<2500&&r[id]&&now-r[id].at<90000);
    if(candidates.length){candidates.sort((a,b)=>Math.hypot(a[1][1]-o[1],a[1][2]-o[2])-Math.hypot(b[1][1]-o[1],b[1][2]-o[2]));const e=r[candidates[0][0]];r[k]={...e};}
   }
  }
