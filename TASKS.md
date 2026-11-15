@@ -896,3 +896,8 @@ A/B/C 모두 종료 프로토콜, 업데이트 실패 표시, 개인 월드 격�
 
 ## GAME-NEWS-043 · 진행 중 (Codex)
 - codex/game-news 소유: 신규 source/app/news.js, hud/news.js, main/preload 뉴스 IPC, layout/personalize/tab-keys 소식 탭 연결 및 관련검사. 사용자 번역 API 방식 승인, 기존동물 .16.11 완료 후 착수. 공식Steam 뉴스만 조회, Google Translation Basic 키는 PC암호화 보관/배포금지, 누를때만번역·본문해시캐시·로컬45만자 제한(계정과금보장 아님). 계정/키 연결은 아직 없음. 배포잠금없음.
+
+## GAME-NEWS-043 · 소스 검증 완료
+- Codex 공식Steam 최근8개/1시간캐시/수동1분제한/대표사진·더보기·원문·한국어번역 버튼, 소식10번째탭 및0/Shift+)단축키/개인탭순서포함. 게임Lua/게임설정변경없음.
+- Google Basic v2 API키는 safeStorage 암호화·평문배포금지, 본문해시64건캐시·4000문자분할·단일번역·월45만자요청제한·실패예약유지. 계정전체과금제한아님. 키삭제뒤캐시유지. 아직 API키없음/Google실요청 미검증.
+- 162개Node/Fengari 검사성공. 실제Steam Week258 원문9496자·사진3개 및최근8건 확인, 브라우저이미지/원문/키미연결오류/0키활성pane 확인·콘솔오류0. GAME-NEWS.md 절차/한계. 정식발행/PC적용은다음기록.
