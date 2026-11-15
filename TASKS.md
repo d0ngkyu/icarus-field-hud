@@ -673,3 +673,9 @@ A/B/C 모두 종료 프로토콜, 업데이트 실패 표시, 개인 월드 격�
 - Olympus6/Styx13/Prometheus20 지역명, 기본ON/설정유지/줌 영문/겹침억제/미탐험 앵커 어둡게. 정적 HUD 렌더만 추가.108검사 및 브라우저 화면 검증 완료. 한국어는 HUD 번역, 좌표 출처와 제한은 MAP-REGIONS.md. 프로메테우스는 기존 지형이미지 미설치 상태에서도 라벨/격자 표시 확인. 실게임 FPS 측정 없음.
 - PC version.txt는2026.11.14.35, 게임 실행 중 재확인. 게임 종료/설치파일 교체/세이브 변경 없음. 설치 완료로 기록하지 않는다. 기존 updater는 게임 종료 시 확인·적용 후 HUD 종료를 수행한다. 다음 확인: 게임 정상종료 후 .16.1 설치 및 지도 지역명 확인.
 - 소스·stable 발행 소유 해제, 적용대기. 후속 담당은 main/TASKS/manifest에서 이어간다. Claude 읽음/동의 미확인. 로컬 commit은 identity 미설정으로 실패했으나 GitHub connector PR22로 원격 반영·검증했고 work/icarus-map-regions는 remote main으로 fast-forward하여 clean. 전체 게임 종료충돌 해결과 무관.
+
+
+## OPTIMIZATION-030 · 진행 중 (Codex / 2026-11-16)
+- 요청: 설정에 서버장용·개인용 최적화 두 버튼, 사용 시점 안내, 초록/노랑/빨강 적용 표시. codex/game-optimization에서 신규 optimizer 모듈/설정UI/시험 및 main.js·preload.js IPC 연결만 소유. 지도·동굴·동물·Lua 변경 없음.
+- 설치 게임 GameUserSettings와 공식 문서로 지원 항목 확인. 게임 종료 상태에서 백업·설정 적용·재읽기 검증·복원. 색은 설정 일치/대기 또는 변경/오류를 나타내며 실제 FPS 개선 보장과 구분. 호스트용은 로컬 호스트 PC 여유 확보용이며 서버 AI/틱/저장/월드 조작을 의미하지 않는다.
+- 현재 구현·검증 시작, 배포 잠금 없음. 다른 작업 소유권 유지.
