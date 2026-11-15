@@ -423,6 +423,10 @@ body.app.mapmode #mapview{height:calc(100vh - 176px)}
   <div class="bench" id="mapstat" style="margin-top:4px"></div>
   <h2>레이어</h2>
   <div id="maplayers"></div>
+  <h2>서버원</h2><div id="mapparty" class="bench" style="max-height:230px;overflow:auto"></div>
+  <label><input type="checkbox" id="partyrecord"> 이동 기록 수집</label><label><input type="checkbox" id="partytrails"> 이동 경로 보기</label>
+  <button class="mini" id="partyclear">서버원 이동 기록 지우기</button>
+  <div class="bench">약 3초마다 수신 · 이름을 누르면 위치로 이동합니다. 색상을 눌러 바꿀 수 있습니다. 미수신 위치는 숨깁니다. 기록은 켠 이후부터 최대 300점/명 보관합니다.</div>
   <h2>저장한 경로</h2><div id="routelist" class="bench"></div><h2>광석 필터</h2>
   <select id="mapore"><option value="">전체 보기</option></select>
   <h2>아이템 위치 찾기</h2>
@@ -458,6 +462,7 @@ body.app.mapmode #mapview{height:calc(100vh - 176px)}
 </div>
 <script src="regions.js"></script>
 <script src="map-status.js"></script>
+<script src="map-party.js"></script>
 <script>
 (()=>{
 // ===== interactive map: everything is recorded from the game while you play =====
@@ -481,9 +486,9 @@ window.__mapViewWorld=()=>session.view;
 const M=(w=session.view)=>{S.maps=S.maps||{};const m=S.maps[w]=S.maps[w]||{lm:{},ore:{},track:[],pins:[],paths:[],rings:[],notes:{}};if(!m.seen){m.seen={};for(const p of m.track)markSeen(m,p[0],p[1])}tidyDeposits(m);return m};
 const SEEN=10000;function markSeen(m,x,y){if(!Number.isFinite(x)||!Number.isFinite(y))return;const i=Math.floor(x/SEEN),j=Math.floor(y/SEEN);for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++){const k=(i+a)+','+(j+b);if(!m.seen[k]){m.seen[k]=1;m.seenRev=(m.seenRev||0)+1}}}
 S.mapv=Object.assign({x:0,y:0,s:0.25,rot:0,follow:true,flip:0,L:{terr:1,fog:0,grid:1,cave:1,exo:1,boss:1,dep:1,gey:1,ore:1,box:1,home:1,pins:1,paths:1,track:1,me:1}},S.mapv||{});
-const V=S.mapv;if(V.L.regions===undefined)V.L.regions=1;if(V.L.terr===undefined)V.L.terr=1;if(V.L.exo===undefined)V.L.exo=1;if(V.L.boss===undefined)V.L.boss=1;if(V.L.fog===undefined)V.L.fog=0;if(!V.ori2){V.rot=1;V.ori2=1}V.flip=0;
+const V=S.mapv;if(V.L.party===undefined)V.L.party=1;if(V.L.regions===undefined)V.L.regions=1;if(V.L.terr===undefined)V.L.terr=1;if(V.L.exo===undefined)V.L.exo=1;if(V.L.boss===undefined)V.L.boss=1;if(V.L.fog===undefined)V.L.fog=0;if(!V.ori2){V.rot=1;V.ori2=1}V.flip=0;
 const LAYERS=[['terr','지형 (게임 지도)','#6b8a4a'],['fog','미탐험 가리기 (HUD 방문 기록)','#333'],['regions','지역 이름','#f3e8cb'],['grid','격자','#2b3a44'],['cave','동굴 (규모별 Lv.1~3·M)','#4fc6c0'],['exo','엑조틱 지점','#b77bff'],['boss','월드 보스','#ff4a4a'],['dep','심층 광맥','#e0a050'],['gey','간헐천','#7bd96a'],['ore','광석 노드 (F10)','#b9c2c8'],
- ['box','보관함 (기억)','#f39b2b'],['home','기지','#ffffff'],['pins','내 핀','#ff6a55'],['paths','내 경로','#58b7e8'],['track','이동 기록','#58b7e8'],['me','내 위치','#4fd18b']];
+ ['box','보관함 (기억)','#f39b2b'],['home','기지','#ffffff'],['pins','내 핀','#ff6a55'],['paths','내 경로','#58b7e8'],['track','이동 기록','#58b7e8'],['party','서버원 위치','#63d2ff'],['me','내 위치','#4fd18b']];
 const ORECOL={Metal:'#c9cdd2',Iron:'#c9cdd2',Copper:'#e07b4a',Gold:'#f2d14b',Platinum:'#b9d3e8',Titanium:'#9fb0c2',Aluminium:'#d6dde4',Silica:'#f0ece0',Sulfur:'#e9e04a',
  Coal:'#555',Clay:'#b8774f',Obsidian:'#6b5b8f',Scoria:'#8e4a3a',Salt:'#f5f5f5',Oxite:'#7fd7ff',Exotic:'#d36bff',Ice:'#a8e6ff',Stone:'#8d8d8d',Cobalt:'#4a6fe0',Lead:'#7d8a96',Frozen:'#a8e6ff'};
 const oreCol=t=>{for(const k in ORECOL)if(t.indexOf(k)>=0)return ORECOL[k];return '#b9c2c8'};
@@ -535,7 +540,17 @@ function hazText(mp,key){if(key&&key.startsWith('g:')){const r=mapCaves()[+key.s
  return(dl?dl+'\n':'')+'내가 본 것: '+(parts.length?parts.join(', '):'없음')+' · '+(ago<60?ago+'분 전':ago<1440?Math.round(ago/60)+'시간 전':new Date(h.at).toLocaleDateString())}
 
 // ---------- recording ----------
-const life=window.HudMapStatus;
+const life=window.HudMapStatus,party=window.HudMapParty;
+let partyPanelSig='';
+function renderParty(){if(!party)return;const mp=M(),s=party.store(mp),now=currentMap()?Date.now():Infinity,rows=s?Object.entries(s.members).filter(([,e])=>!e.self):[];
+ const signature=JSON.stringify([session.view,mp.activeScope,s&&s.record,s&&s.showTrails,rows.map(([k,e])=>[k,e.color,e.present,party.fresh(e,now)])]);if(signature===partyPanelSig)return;partyPanelSig=signature;
+ $('mapparty').innerHTML=rows.map(([k,e],i)=>'<div style="display:flex;align-items:center;gap:6px;margin:6px 0"><input type="color" id="partycolor'+i+'" aria-label="서버원 색상" value="'+e.color+'" style="width:30px;height:26px;padding:1px"><button class="mini" id="partygo'+i+'" '+(party.fresh(e,now)?'':'disabled')+'>'+esc(e.n)+'</button><span>'+(!e.present?'목록에서 사라짐':party.fresh(e,now)?'수신 중':'위치 미수신')+'</span></div>').join('')||'아직 확인된 다른 서버원이 없습니다.';
+ rows.forEach(([k,e],i)=>{$('partycolor'+i).onchange=ev=>{party.setColor(s,k,ev.target.value);save();renderParty();requestDraw()};$('partygo'+i).onclick=()=>{if(!currentMap()||!party.fresh(e,Date.now()))return;V.x=e.p[0];V.y=e.p[1];V.follow=false;followBtn();requestDraw()}});
+ $('partyrecord').checked=!!(s&&s.record);$('partytrails').checked=!!(s&&s.showTrails);$('partyrecord').disabled=!s;$('partytrails').disabled=!s;
+}
+$('partyrecord').onchange=e=>{party.recording(party.store(M()),e.target.checked);save();renderParty();requestDraw()};
+$('partytrails').onchange=e=>{const s=party.store(M());if(s)s.showTrails=e.target.checked;save();renderParty();requestDraw()};
+$('partyclear').onclick=()=>{const s=party.store(M());if(s)for(const e of Object.values(s.members))e.trail=[];save();requestDraw()};
 function lifeCaves(mp,w=session.view){const rows=(CAVEMAP[w]||[]).map((r,i)=>({key:'g:'+i,x:r[0],y:r[1]}));
  for(const[k,o]of Object.entries(mp.lm))if(['c','w'].includes(o[0][0])&&!rows.some(c=>Math.hypot(c.x-o[1],c.y-o[2])<6000))rows.push({key:k,x:o[1],y:o[2],z:o[3]});return rows;}
 function statusBadge(mp,h){if(!life||!life.supported.has(h.kind))return;const e=life.entry(mp,h.key);if(!e)return;
@@ -557,6 +572,7 @@ window.__mapIngest=m=>{
  if(!S.world||!m.w||m.w==='?')return;
  const mp=M(S.world);
  if(typeof m.scope==='string')mp.activeScope=session.active(now)?m.scope||null:null;
+ if(party&&m.party&&session.active(now))party.ingest(mp,m.party,now);
  const put=(store,a)=>{const t=a[0];if(!t)return;const k=t[0];if(k==='a')return;
   const dst=(k==='v')?mp.ore:mp.lm;const key=k==='b'?t:(k==='d'||k==='c')?keyOf(k,a[1],a[2]):keyOf(t,a[1],a[2]);const was=dst[key];
   if(k==='c'&&t==='c:Cave'&&was&&was[0]!=='c:Cave')return;
@@ -569,7 +585,7 @@ window.__mapIngest=m=>{
  if(m.fog&&m.fog.r&&m.fog.r.length){mp.gfog=m.fog;delete FOGM[S.world]}
  if(m.p){const tr=mp.track,last=tr[tr.length-1];if(!last||Math.hypot(last[0]-m.p[0],last[1]-m.p[1])>2500){tr.push([Math.round(m.p[0]),Math.round(m.p[1])]);if(tr.length>8000)tr.splice(0,tr.length-8000)}}
  if(life&&selKey&&session.view===S.world){const n=$('mlstate'),e=life.entry(mp,selKey);if(n){n.textContent=life.describe(e)+(e?' · '+ago(e.at):'');n.style.color=life.colors[e&&e.state]||'#98a6b3'}}
- if(m.lm||m.ore||m.players||m.inv&&m.inv.ore)save();
+ if(m.lm||m.ore||m.players||m.party||m.inv&&m.inv.ore)save();
  if(mapOn())requestDraw();
 };
 
@@ -730,6 +746,7 @@ function drawMap(){if(!W)return;const mp=M();hits=[];
   if(has.length){ctx.strokeStyle='#ffc56b';ctx.lineWidth=2;ctx.beginPath();ctx.arc(a,c,14,0,7);ctx.stroke();ctx.font='12px "Noto Sans KR"';ctx.fillText(has.map(k=>nm(k)+' '+b.i[k]).join(', '),a+10,c-8)}
   noteLabel(mp.notes[boxKey(b)],a,c);hits.push({x:a,y:c,r:8,kind:'box',ref:b,key:boxKey(b)})}
  if(currentMap()&&L.home&&S.home){const[a,b]=toS(S.home[0],S.home[1]);ctx.font='20px sans-serif';ctx.textAlign='center';ctx.fillText('🏠',a,b+7);ctx.textAlign='left';noteLabel(mp.notes.home,a,b);hits.push({x:a,y:b,r:12,kind:'home',key:'home'})}
+ if(party&&L.party)party.draw(ctx,party.store(mp),toS,currentMap()?Date.now():Infinity,true);renderParty();
  for(const h of hits)statusBadge(mp,h);
  // Labels remain legible above POIs; unknown anchors dim with the visited fog.
  if(L.regions&&window.HudRegions)window.HudRegions.draw(ctx,session.view,toS,W,H,V.s,(x,y)=>{
@@ -885,7 +902,7 @@ window.__mapShown=()=>{fillOre();renderRoutes();setTimeout(resize,30)};
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&mapOn())resize()});
 try{new ResizeObserver(()=>{if(mapOn())resize()}).observe(document.getElementById('mapwrap'))}catch(e){}
 window.addEventListener('resize',()=>{if(mapOn())resize()});
-let lastConnection=false;setInterval(()=>{const live=session.active(Date.now());if(live!==lastConnection){lastConnection=live;if(mapOn())requestDraw()}},1000);
+let lastConnection=false;setInterval(()=>{const live=session.active(Date.now());if(mapOn()&&party&&party.store(M()))requestDraw();if(live!==lastConnection){lastConnection=live;if(mapOn())requestDraw()}},1000);
 })();
 </script>
 <style>
@@ -1047,7 +1064,7 @@ document.addEventListener('click',e=>{const c=e.target.dataset&&e.target.dataset
  if(c==='map'&&S.maps&&window.__mapViewWorld)delete S.maps[window.__mapViewWorld()];if(c==='map'&&window.__mapRecordsChanged)window.__mapRecordsChanged();
  e.target.textContent='지움 ✓';setTimeout(()=>e.target.textContent='지우기',1500);save();draw()});
 // update notices and the helper switch
-const HUD_VERSION='2026.11.16.6';
+const HUD_VERSION='2026.11.16.7';
 {const st=document.createElement('style');st.textContent='#tb .tbv{-webkit-app-region:no-drag;background:transparent;border:1px solid rgba(243,155,43,.45);color:#f3c27a;font:600 11px Oxanium,sans-serif;padding:2px 8px;margin-right:8px;cursor:pointer}#tb .tbv:hover{background:rgba(243,155,43,.15)}#tb .tbv.new{border-color:#4fd18b;color:#4fd18b}#tb .tbo{font:600 11px Oxanium,sans-serif;color:#4fd18b;margin-right:10px;letter-spacing:.06em;white-space:nowrap}#tb .tbo:empty{display:none}#tb .tbo::before{content:"●";margin-right:5px;font-size:9px;vertical-align:1px}';document.head.appendChild(st)}
 setTimeout(()=>{const A=window.hudApp;const vb=$('tbver');const pv=HUD_VERSION.startsWith('__')?'개발판':HUD_VERSION;
  const edition='ICARUS HUD';let updateMood='idle';

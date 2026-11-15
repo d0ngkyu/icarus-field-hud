@@ -1,10 +1,10 @@
 {
- "version": "2026.11.16.6",
+ "version": "2026.11.16.7",
  "channel": "stable",
- "source": "1942b0a0e813116c96bba43a9ca64a4a770d52fb",
- "notes": "지도: 보스 상태 갱신, 소진 마커 보존, 서버별 방문·파밍·자원 관측 기록. 미확인 상태 구분",
+ "source": "a8bb360d23031ec2e380472479b7d13d49432bbd",
+ "notes": "엘리시움·프로메테우스 지도 배경 추가. 서버원 위치·닉네임·색상과 선택형 이동 기록",
  "config": {},
- "filesPath": "releases/stable/2026.11.16.6/files",
+ "filesPath": "releases/stable/2026.11.16.7/files",
  "files": [
   {
    "p": "game/Icarus/Binaries/Win64/dwmapi.dll",
@@ -55,8 +55,8 @@
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/Scripts/main.lua",
-   "n": 47489,
-   "h": "04870d0573bf27388efc4e7769fc802b17cb281a"
+   "n": 47795,
+   "h": "c2289b6b1dcb719f8f001becfac845c722fb1a24"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/Scripts/animals.lua",
@@ -70,8 +70,8 @@
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/index.html",
-   "n": 964003,
-   "h": "9f2ac5567b92156220f74c43a0ab8b4daef91229"
+   "n": 966680,
+   "h": "bf06bfaeab0d83036c7314a0f964ce0d74533917"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/animals.js",
@@ -230,13 +230,28 @@
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/Scripts/map_observation.lua",
-   "n": 1416,
-   "h": "f4e26611830145f143e4f8efe4d0a71d0dec45f2"
+   "n": 3513,
+   "h": "85a79db08e3dfd3c9075b2fd7dbaac5ee97d3154"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/map-status.js",
    "n": 4794,
    "h": "1c19e04a23796d107724036385320551202d6f8d"
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/map-party.js",
+   "n": 2846,
+   "h": "668586510fedd2ddb2cdf6a71a1c19584215dd76"
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/maps/Terrain_019.webp",
+   "n": 1249016,
+   "h": "80e07942280d008c7ea553d233941ddfc8c1ffb6"
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/maps/Terrain_021.webp",
+   "n": 959694,
+   "h": "eabd45281749c7e49ccd9fc4a72ac9f4d5a88e64"
   }
  ]
 }
