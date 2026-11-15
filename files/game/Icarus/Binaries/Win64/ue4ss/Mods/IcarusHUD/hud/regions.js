@@ -1,13 +1,13 @@
 /* Static atlas labels. No telemetry, polling or game-memory reads.
  * Anchors: Icarus Field Guide interactive maps, 2026-11-16 (see MAP-REGIONS.md).
- * Coordinates are percentages of the north-up 806400 cm map. Korean labels are
- * HUD translations; English game names remain available when zoomed in.
+ * Coordinates are percentages of the north-up 806400 cm map. Korean labels match installed ko-KR Game.locres D_Biomes (2026-11-16).
+ * English game names remain available when zoomed in.
  */
 (function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;else root.HudRegions=api;})(typeof globalThis==='object'?globalThis:this,function(){
  'use strict';
  const data={
   Terrain_016:[
-   ['Forest','삼림',69.455,69.126],['River Lands','강 유역',30.943,21.639],
+   ['Forest','숲',69.455,69.126],['River Lands','강 지대',30.943,21.639],
    ['Arctic','극지',44.243,54.038],['Desert','사막',17.777,65.082],
    ['Desert Canyons','사막 협곡',79.018,24.693],['Southern Glacier','남부 빙하',84.271,87.938]
   ],
@@ -15,22 +15,22 @@
    ['The Great River','큰 강',44.117,50.489],['Dry Ridge','드라이 릿지',31.482,33.412],
    ['Enclosed Wood','막힌 숲',56.046,67.177],['Oasis','오아시스',79.066,78.011],
    ['The Wall','장벽',14.248,61.371],['Alpine Valley','고산 계곡',61.936,10.498],
-   ['Frozen Traverse','얼어붙은 길',71.009,48.397],['Grove','작은 숲',32.839,15.238],
-   ['Ice Flats','얼음 평원',12.261,16.927],['Ring Lake','고리 호수',90.773,43.128],
-   ['Snowy Plateau','눈 덮인 고원',46.853,82.986],['Verdant Terraces','푸른 단구',7.487,27.514],
-   ['Dusty Barrens','먼지 황무지',90.963,64.254]
+   ['Frozen Traverse','얼어붙은 횡단 지역',71.009,48.397],['Grove','수풀',32.839,15.238],
+   ['Ice Flats','얼음 평원',12.261,16.927],['Ring Lake','링 호수',90.773,43.128],
+   ['Snowy Plateau','눈 덮인 고원',46.853,82.986],['Verdant Terraces','신록 테라스',7.487,27.514],
+   ['Dusty Barrens','먼지투성이 불모지',90.963,64.254]
   ],
   Terrain_019:[
-   ['Alpine Steppe','고산 초원',33.26,54.273],['Ashlands','잿빛 땅',85.832,62.676],
+   ['Alpine Steppe','알파인 스텝',33.26,54.273],['Ashlands','애쉬랜드',85.832,62.676],
    ['Ice Sheet','빙상',33.853,73.428],['Marshlands','습지대',69.706,25.389],
-   ['Basalt Expansion','현무암 지대',59.891,8.897],['Basalt Valley','현무암 계곡',78.342,19.359],
-   ['Frigid Lowlands','혹한 저지대',45.261,62.084],['Glacial Cascade','빙하 폭포',16.584,11.465],
-   ['Grassy Plains','풀밭 평원',49.105,36.396],['Lava Flows','용암 지대',89.936,16.042],
-   ['Lava Pool','용암 웅덩이',81.911,92.434],['Middle Ice Sheet','중부 빙상',44.207,89.422],
-   ['Rolling Tundra','툰드라 구릉',34.567,16.344],['Shallow Mire','얕은 늪',72.672,23.426],
-   ['Still Water','고요한 물가',8.926,33.1],['Sylvan Range','삼림 산맥',60.041,52.591],
-   ['The Pillars','기둥 지대',27.044,40.483],['Upper Ice Sheet','상부 빙상',35.576,74.955],
-   ['Wetlands','습지',13.856,53.425],['Wildwoods','야생 숲',35.098,28.693]
+   ['Basalt Expansion','현무암 확장',59.891,8.897],['Basalt Valley','현무암 계곡',78.342,19.359],
+   ['Frigid Lowlands','냉랭 저지대',45.261,62.084],['Glacial Cascade','빙하 폭포',16.584,11.465],
+   ['Grassy Plains','잔디 평원',49.105,36.396],['Lava Flows','라바 플로우',89.936,16.042],
+   ['Lava Pool','용암 웅덩이',81.911,92.434],['Middle Ice Sheet','중간 빙상',44.207,89.422],
+   ['Rolling Tundra','롤링 툰드라',34.567,16.344],['Shallow Mire','얕은 진창',72.672,23.426],
+   ['Still Water','고여있는 물',8.926,33.1],['Sylvan Range','울창한 목장',60.041,52.591],
+   ['The Pillars','기둥',27.044,40.483],['Upper Ice Sheet','상위 빙상',35.576,74.955],
+   ['Wetlands','습지',13.856,53.425],['Wildwoods','와일드우드',35.098,28.693]
   ]
  };
  for(const rows of Object.values(data)){for(const row of rows)Object.freeze(row);Object.freeze(rows)}Object.freeze(data);

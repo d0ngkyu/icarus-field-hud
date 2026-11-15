@@ -1,10 +1,10 @@
 {
- "version": "2026.11.16.1",
+ "version": "2026.11.16.2",
  "channel": "stable",
- "source": "f71154cde60434caecb3ed37d89dbd70ba045bb1",
- "notes": "지도 지역 이름 추가: 올림푸스·스틱스·프로메테우스 39곳. 레이어 켜기/끄기, 확대 영문명, 미탐험 이름 어둡게 표시",
+ "source": "0eb8001151a5ce932e100472bc57c0b44933e66e",
+ "notes": "수풀·신록 테라스 등 지역명 21개를 게임 한국어 표기로 교정. 지역 찾기에서 이름을 고르면 해당 위치로 확대",
  "config": {},
- "filesPath": "releases/stable/2026.11.16.1/files",
+ "filesPath": "releases/stable/2026.11.16.2/files",
  "files": [
   {
    "p": "game/Icarus/Binaries/Win64/dwmapi.dll",
@@ -70,8 +70,8 @@
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/index.html",
-   "n": 960653,
-   "h": "6cab1c083b74d102233573f432905933ba2b6d5b"
+   "n": 961637,
+   "h": "2aee54f0afb8c22d78ff9cffcef26f463b59465e"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/animals.js",
@@ -210,8 +210,8 @@
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/regions.js",
-   "n": 4393,
-   "h": "f6b7768622e0171dd903b5ba00b0633157ff5932"
+   "n": 4452,
+   "h": "d4c550211b270b58524965ea5744cd975e401d26"
   }
  ]
 }

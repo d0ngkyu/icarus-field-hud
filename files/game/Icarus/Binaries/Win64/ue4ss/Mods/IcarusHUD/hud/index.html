@@ -417,6 +417,7 @@ body.app.mapmode #mapview{height:calc(100vh - 176px)}
  <section id="mapside">
   <h2>지도</h2>
   <label for="mapselect">열람할 지도</label><select id="mapselect" style="width:100%;margin:6px 0" aria-label="열람할 지도"></select>
+  <label for="mapregion">지역 찾기</label><select id="mapregion" style="width:100%;margin:6px 0" aria-label="지역 찾기" title="지역을 고르면 이름이 보이도록 확대합니다. 게임 속 캐릭터는 이동하지 않습니다."></select>
   <div class="bt"><button class="mini" id="mtcurrent">현재 맵으로</button><button class="mini" id="mtfit">전체 지도 보기</button></div>
   <div class="bench" id="mapworld">맵 정보 없음 — 게임에 들어가면 자동으로 기록됩니다</div>
   <div class="bench" id="mapstat" style="margin-top:4px"></div>
@@ -718,7 +719,7 @@ function drawMap(){if(!W)return;const mp=M();hits=[];
   noteLabel(mp.notes[boxKey(b)],a,c);hits.push({x:a,y:c,r:8,kind:'box',ref:b,key:boxKey(b)})}
  if(currentMap()&&L.home&&S.home){const[a,b]=toS(S.home[0],S.home[1]);ctx.font='20px sans-serif';ctx.textAlign='center';ctx.fillText('🏠',a,b+7);ctx.textAlign='left';noteLabel(mp.notes.home,a,b);hits.push({x:a,y:b,r:12,kind:'home',key:'home'})}
  // Labels remain legible above POIs; unknown anchors dim with the visited fog.
- if(L.regions&&window.HudRegions)HudRegions.draw(ctx,session.view,toS,W,H,V.s,(x,y)=>{
+ if(L.regions&&window.HudRegions)window.HudRegions.draw(ctx,session.view,toS,W,H,V.s,(x,y)=>{
   if(!L.fog)return true;const i=Math.floor(x/SEEN),j=Math.floor(y/SEEN);
   for(let a=i-1;a<=i+1;a++)for(let b=j-1;b<=j+1;b++)if(mp.seen[a+','+b]&&Math.hypot(x-(a+.5)*SEEN,y-(b+.5)*SEEN)<=SEEN*.76)return true;return false;
  });
@@ -744,7 +745,7 @@ function fitMap(){const b=MAPB[session.view];if(!b||!W||!H)return;
  V.s=Math.max(.01,Math.min(30,.9*Math.min(W/(V.rot&1?dx:dy),H/(V.rot&1?dy:dx))));V.follow=false;followBtn();save();requestDraw()}
 function selectMap(w,automatic=false){if(!MAPB[w])return;
  S.mapViews=S.mapViews||{};S.mapViews[session.view]={x:V.x,y:V.y,s:V.s,rot:V.rot,follow:V.follow};
- session.select(w);S.mapBrowse=w;
+ session.select(w);S.mapBrowse=w;regionOptions();
  const saved=S.mapViews[w];if(saved)Object.assign(V,saved);else{V.x=0;V.y=0;V.s=.06;V.follow=false}
  drawing=null;drag=null;hits=[];fogCacheKey='';setTool(null);closeInfo();cv.classList.remove('drag');
  if(window.__hoverTip)window.__hoverTip(null);$('mapcoord').textContent='';$('mapore').value='';fillOre();
@@ -757,6 +758,13 @@ $('mapselect').value=session.view;
 $('mapselect').onchange=e=>selectMap(e.target.value);
 $('mtcurrent').onclick=()=>{if(session.active(Date.now()))selectMap(session.world,true)};
 $('mtfit').onclick=fitMap;
+function regionOptions(){const rows=window.HudRegions?.data[session.view]||[];
+ $('mapregion').innerHTML='<option value="">'+(rows.length?'이름 선택 → 지도에서 보기':'확인된 지역 이름 없음')+'</option>'+rows.map((r,i)=>'<option value="'+i+'">'+esc(r[1])+' · '+esc(r[0])+'</option>').join('');$('mapregion').disabled=!rows.length;
+}
+regionOptions();
+$('mapregion').onchange=e=>{if(e.target.value==='')return;const r=(window.HudRegions?.data[session.view]||[])[Number(e.target.value)];if(!r)return;
+ [V.x,V.y]=window.HudRegions.world(r);V.s=Math.max(.22,V.s);V.follow=false;V.L.regions=1;document.querySelector('[data-ml="regions"]').checked=true;followBtn();save();requestDraw();
+};
 // ---------- sidebar ----------
 const LAYERICON={"terr": "<path d=\"M2 4l4-2 4 2 4-2v10l-4 2-4-2-4 2z\" fill=\"#3d5a2a\" stroke=\"#9fc27a\"/><path d=\"M6 2v10M10 4v10\" stroke=\"#9fc27a\"/>", "fog": "<path d=\"M4 11h8a3 3 0 0 0 0-6 4 4 0 0 0-7.5 1A2.5 2.5 0 0 0 4 11z\" fill=\"#8a949c\"/>", "grid": "<path d=\"M2 2h12v12H2zM6 2v12M10 2v12M2 6h12M2 10h12\" fill=\"none\" stroke=\"#d8c7a8\" stroke-width=\"1.2\"/>", "cave": "<path d=\"M2 13Q2 3 8 3t6 10z\" fill=\"#4fd1c8\" stroke=\"#061012\" stroke-width=\"1.5\"/><path d=\"M5 13Q5 8 8 8t3 5z\" fill=\"#061012\"/>", "exo": "<path d=\"M8 1l2 5h5l-4 3 1.6 5L8 11l-4.6 3L5 9 1 6h5z\" fill=\"#b77bff\" stroke=\"#14081f\"/>", "boss": "<path d=\"M8 1l7 7-7 7-7-7z\" fill=\"#e8433a\" stroke=\"#170404\"/><circle cx=\"6.3\" cy=\"7.3\" r=\"1.1\" fill=\"#fff\"/><circle cx=\"9.7\" cy=\"7.3\" r=\"1.1\" fill=\"#fff\"/>", "dep": "<path d=\"M8 2l5 6-5 6-5-6z\" fill=\"none\" stroke=\"#e0a050\" stroke-width=\"2\"/>", "gey": "<path d=\"M8 1C5 6 4 8 4 10a4 4 0 0 0 8 0c0-2-1-4-4-9z\" fill=\"#7bd96a\" stroke=\"#0b1a08\"/>", "ore": "<path d=\"M3 11l2-6 5-2 4 4-2 6-6 1z\" fill=\"#b9c2c8\" stroke=\"#30363a\"/><path d=\"M6 7l3 1 1 3\" stroke=\"#30363a\" fill=\"none\"/>", "box": "<path d=\"M2 5h12v9H2z\" fill=\"#a8641a\" stroke=\"#f39b2b\"/><path d=\"M2 5l2-3h8l2 3M2 9h12\" stroke=\"#f39b2b\" fill=\"none\"/>", "home": "<path d=\"M2 8l6-6 6 6v6H2z\" fill=\"#fff\" stroke=\"#333\"/><path d=\"M6.5 14v-4h3v4\" fill=\"#333\"/>", "pins": "<path d=\"M8 15s5-5 5-9A5 5 0 0 0 3 6c0 4 5 9 5 9z\" fill=\"#ff6a55\" stroke=\"#3a0d08\"/><circle cx=\"8\" cy=\"6\" r=\"1.8\" fill=\"#fff\"/>", "paths": "<path d=\"M2 13c3-1 2-5 6-6s3-4 6-5\" fill=\"none\" stroke=\"#58b7e8\" stroke-width=\"2\"/><circle cx=\"2\" cy=\"13\" r=\"1.5\" fill=\"#58b7e8\"/><circle cx=\"14\" cy=\"2\" r=\"1.5\" fill=\"#58b7e8\"/>", "track": "<path d=\"M2 13c3-1 2-5 6-6s3-4 6-5\" fill=\"none\" stroke=\"#58b7e8\" stroke-width=\"2\" stroke-dasharray=\"2 2\"/>", "me": "<path d=\"M8 1l5 13-5-3-5 3z\" fill=\"#4fd18b\" stroke=\"#062012\"/>"};
 $('maplayers').innerHTML=LAYERS.map(([k,n,c])=>`<label title="${k==='regions'?'올림푸스·스틱스·프로메테우스의 지역 이름. 확대하면 영문 이름도 표시합니다. 미탐험 가리기를 켜면 이름도 어두워집니다.':''}"><input type="checkbox" data-ml="${k}" ${V.L[k]?'checked':''}>${LAYERICON[k]?`<svg class="lic" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">${LAYERICON[k]}</svg>`:`<span class="sw" style="background:${c}"></span>`}${n}</label>`).join('');
@@ -1024,7 +1032,7 @@ document.addEventListener('click',e=>{const c=e.target.dataset&&e.target.dataset
  if(c==='map'&&S.maps&&window.__mapViewWorld)delete S.maps[window.__mapViewWorld()];if(c==='map'&&window.__mapRecordsChanged)window.__mapRecordsChanged();
  e.target.textContent='지움 ✓';setTimeout(()=>e.target.textContent='지우기',1500);save();draw()});
 // update notices and the helper switch
-const HUD_VERSION='2026.11.16.1';
+const HUD_VERSION='2026.11.16.2';
 {const st=document.createElement('style');st.textContent='#tb .tbv{-webkit-app-region:no-drag;background:transparent;border:1px solid rgba(243,155,43,.45);color:#f3c27a;font:600 11px Oxanium,sans-serif;padding:2px 8px;margin-right:8px;cursor:pointer}#tb .tbv:hover{background:rgba(243,155,43,.15)}#tb .tbv.new{border-color:#4fd18b;color:#4fd18b}#tb .tbo{font:600 11px Oxanium,sans-serif;color:#4fd18b;margin-right:10px;letter-spacing:.06em;white-space:nowrap}#tb .tbo:empty{display:none}#tb .tbo::before{content:"●";margin-right:5px;font-size:9px;vertical-align:1px}';document.head.appendChild(st)}
 setTimeout(()=>{const A=window.hudApp;const vb=$('tbver');const pv=HUD_VERSION.startsWith('__')?'개발판':HUD_VERSION;
  const edition='ICARUS HUD';let updateMood='idle';
