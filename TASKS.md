@@ -816,3 +816,7 @@ A/B/C 모두 종료 프로토콜, 업데이트 실패 표시, 개인 월드 격�
 
 ## OPTIMIZATION-GUIDE-037 · 진행 중 (Codex)
 - 사용자 요청: 최적화 사용 순서·둘 중 하나 선택·완전 종료·문제시 대처를 쉬운 한국어로 표시. codex/optimization-guide, source/mod/hud/optimization.js의 안내/상태 문구만 소유. 백엔드 프리셋·게임 설정 변경 없음. 이전 로딩 문제와 모드 교체 인과관계는 미확정이며 번갈아 누르면 반드시 오류라는 설명은 하지 않음. 검증 후 stable 묶음 배포, 현재 배포잠금 없음.
+
+
+## OPTIMIZATION-GUIDE-037 · stable 배포 인수
+- Codex stable2026.11.16.8 sourcec969a76fad497df59b9ee088474d840a743ab9b3(PR29), feature50c8f5689dc6ee5f121525c87c20f2fa0690c19a. 현재 stable.7/beta.27, 열린 타 PR/진행중 배포 없음 확인. source/mod/hud/optimization.js 문구·안내 레이아웃만 변경,145개 검사/브라우저 확인/원격blob일치. 실제 게임설정 변경/실게임 시험 없음. 발행담당 Codex.
