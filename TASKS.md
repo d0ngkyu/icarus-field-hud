@@ -884,3 +884,11 @@ A/B/C 모두 종료 프로토콜, 업데이트 실패 표시, 개인 월드 격�
 
 ## PERFORMANCE-041 / ANIMAL-AUTO-042 · stable 배포 인수
 - Codex stable2026.11.16.11 sourcee14e7bb7bfd2ce56308568ffd8d6e07d852fa59b(PR32), feature8f1e577c77f1081f59df992497d88534e2639ace. stable.10/beta.27/다른 열린 PR 없음 확인.158검사,11소스 원격일치,9탭 브라우저/자동등록·삭제·복원 확인. 신규 getter 실게임/FPS 미검증. 현재 게임OFF, 설치 전 재확인. 발행담당 Codex.
+
+
+## PERFORMANCE-041 / ANIMAL-AUTO-042 · .16.11 배포·PC 적용 완료 (2026-11-16)
+- PR32 sourcee14e7bb7bfd2ce56308568ffd8d6e07d852fa59b, stable2026.11.16.11 배포de0d3af0fa292e0fe8a18623f6e1af9cfa0fe596. Actions https://github.com/d0ngkyu/icarus-field-hud/actions/runs/43758126853 성공31초(test12/publish11).158검사/11소스 원격일치/49배포파일 root·불변98검증/42설치파일 SHA1·크기 전부일치.
+- 게임OFF 확인 후 기존HUD 업데이트 버튼으로5파일변경(2026-11-15T20:28:14Z), 실제창빌드.16.11 확인. 게임시작·종료·세이브/설정 변경없음. 소스·배포잠금해제. Claude읽음미확인.
+- 숨은네비재작성 및 위치전용패킷 동굴계산 생략/동물수집분산. 상세창자동등록·서버구분·삭제·소유자/혈통/외형 표시. UI합성검증 완료, 새native getter 실게임/재접속 소유권/게임FPS 미검증. 상세 PERFORMANCE-ANIMALS-REVIEW.md. 전체 안정성/FPS 보장 아님.
+- 로컬FF 병합은 추가 배포소유기록 때문에 TASKS 충돌예방 차단됨. 동일소스 검증된 feature로 먼저FF 후main FF하여 손실없이 해결. Actions checkout/setup-node v4 런타임폐기 경고는후속정비대상, 이번test/publish 성공.
+- 다음순서 GAME-NEWS-043 공식소식+번역API. 사용자API선택 확정, 계정/키/과금 미연결. 공유캐시/한도/키보관 설계부터 진행, 자동 결제승인 아님.
