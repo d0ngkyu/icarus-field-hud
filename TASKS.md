@@ -659,3 +659,10 @@ A/B/C 모두 종료 프로토콜, 업데이트 실패 표시, 개인 월드 격�
 ## MAP-REGION-LABELS-029 · 구현 착수 (Codex / 2026-11-16)
 - 사용자 적용 요청. codex/map-region-labels에서 지역명 정적 데이터·표시 모듈·index.html 지도 레이어 연결·관련 시험을 맡는다. 동굴 데이터/타 기능 변경 없음. 좌표·명칭 근거를 확인한 지도만 표시하며 모르는 위치를 추정해 채우지 않는다.
 - 명칭 레이어 저장/맵 전환/줌 겹침 억제/미탐험 처리 검증 후 stable 배포 예정. 아직 배포 잠금 및 PC 적용 없음.
+
+
+## MAP-REGION-LABELS-029 · stable 배포 인수 (2026-11-16)
+- 담당 Codex, stable 2026.11.16.1, source f71154cde60434caecb3ed37d89dbd70ba045bb1 (PR22). 최신 main/manifest .35 및 beta .27 확인. 현재 이 변경의 배포 소유 Codex.
+- 지역명 39개: Olympus6/Styx13/Prometheus20. 한국어 HUD 번역·확대 영문명, layer 저장, 라벨 중복 억제, 방문 미확인 앵커 14% 밝기. 게임 Data.pak 영문명 및 Field Guide 지도 앵커를 대조. MAP-REGIONS.md 참조. 게임 메모리·Lua·저장종료·동굴 데이터 변경 없음.
+- Node/Fengari108 통과/실패0/스킵0, 원격4파일 바이트 일치. UI 1280x800: 스틱스 배치/줌 영문/레이어 OFF 새로고침 유지/fog 어두움/프로메테우스 분리 확인, JS오류0. 초기 테스트 DOM 모형 미지원·preview CSS MIME 오류는 각각 코드 템플릿/preview MIME 수정으로 해결. 소스 줄바꿈 정규화 후 재검증.
+- PC에 게임 Icarus-Win64-Shipping 실행 중 확인. 강제 종료/설치파일 교체하지 않고 정상 updater에 맡긴다. PC 적용 완료 아님. 정식 Actions 발행·원격 manifest hash 확인 후 결과 추가 예정.
