@@ -1,10 +1,10 @@
 {
- "version": "2026.11.16.3",
+ "version": "2026.11.16.4",
  "channel": "stable",
- "source": "ee52e39c8d67432c585ab3345e9b125d8f31b9ee",
- "notes": "설정에 서버장·개인 최적화, 사양 추천, 백업 복원, CPU·RAM·GPU 전후 측정 추가. 게임 종료 후 적용",
+ "source": "e71653fdbb54792db72f1175fb8922afe0ba21d1",
+ "notes": "최적화 버튼 잠김 수정. 게임 실행 중 차단 이유 표시, 종료 후 재시도와 HUD만 실행하는 적용 순서 안내",
  "config": {},
- "filesPath": "releases/stable/2026.11.16.3/files",
+ "filesPath": "releases/stable/2026.11.16.4/files",
  "files": [
   {
    "p": "game/Icarus/Binaries/Win64/dwmapi.dll",
@@ -71,7 +71,7 @@
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/index.html",
    "n": 961676,
-   "h": "7881f12f444460df7281cf4e852594220176376e"
+   "h": "25c3ad9faf05882fafdb1d5fd5840f8290db241d"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/animals.js",
@@ -225,8 +225,8 @@
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/optimization.js",
-   "n": 7407,
-   "h": "81a3db224c6917471c9f3fe8c4caa73f6c3e4408"
+   "n": 7998,
+   "h": "da89321497b03a18810adc27d48c08979928afa4"
   }
  ]
 }
