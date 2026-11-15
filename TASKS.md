@@ -820,3 +820,11 @@ A/B/C 모두 종료 프로토콜, 업데이트 실패 표시, 개인 월드 격�
 
 ## OPTIMIZATION-GUIDE-037 · stable 배포 인수
 - Codex stable2026.11.16.8 sourcec969a76fad497df59b9ee088474d840a743ab9b3(PR29), feature50c8f5689dc6ee5f121525c87c20f2fa0690c19a. 현재 stable.7/beta.27, 열린 타 PR/진행중 배포 없음 확인. source/mod/hud/optimization.js 문구·안내 레이아웃만 변경,145개 검사/브라우저 확인/원격blob일치. 실제 게임설정 변경/실게임 시험 없음. 발행담당 Codex.
+
+
+## OPTIMIZATION-GUIDE-037 · .16.8 완료
+- PR29 sourcec969a76fad497df59b9ee088474d840a743ab9b3, stable2026.11.16.8 배포f102f15. Actions43752449679 성공30초,145검사/원격48파일(root·불변 96검증)/PC41파일 SHA1·크기 일치. 기존HUD 업데이트 버튼으로2파일변경·적용알림 확인. 로컬checkout CRLF 때문에 검증차이 발생하여 원격Git blob 직접검증으로 해결,제품손상 아님.
+- 4단계 사용법과 접는 주의·복원안내만 변경. 게임/최적화설정 직접변경 없음. 소스·배포잠금 해제, 실게임성능 개선 주장 없음.
+
+## MAP-RED-EXOTIC-038 · 진행 중 (Codex)
+- 사용자 추가 요청: 지도 레드 엑조틱 지점. codex/red-exotic 소유: main.lua 지도관측, index.html 지도레이어/표시, 관련 모듈·검사. 실제 게임 데이터의 별도 지점/관측 정보 근거 확인 후 구현. 일반 엑조틱을 레드로 임의변환하지 않음. 배포잠금 아직 없음.
