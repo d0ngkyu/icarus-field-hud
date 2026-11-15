@@ -698,3 +698,8 @@ A/B/C 모두 종료 프로토콜, 업데이트 실패 표시, 개인 월드 격�
 - 로컬 조사: pyooz0.0.8를 workspace에만 설치해 게임 번역 압축 해제. 최초 ooz 패키지 이름/ko 경로/UTF8 출력 오류 해결; 게임 원본은 읽기만. 제품에 외부 의존성·전체번역 포함 없음. 로컬 mixed CRLF 병합 충돌은 이미 검증한 원격 동일6파일을 기준으로 checkout/index 정렬 후 FF하여 보존.
 - PC version.txt2026.11.16.1 확인: 이전 지도 업데이트가 실제 설치된 것은 확인. 현재 게임 실행중으로 .16.2 교체/게임종료/세이브 변경 없음. 새 버전 설치는 정상 종료 후 updater 확인 필요. 배포 소유 해제. Claude 확인/동의는 미확인.
 - 다음: OPTIMIZATION-030 재개. 서버장용/개인용 두 버튼·사용시점·상태색·백업복원과 CPU/메모리/GPU/프레임 끊김 전후 실측 요구. 설정 적용과 실제 개선은 별도, 미측정/개선없음 숨기지 않기. 현재 조사만 완료, 최적화 소스/게임설정 변경 없음. 설치 GameUserSettings에는 sg/custom 품질 쌍, FrameLimit, MaxShadowCascades, bContactShadows, bUseSimpleBuildingShadows 등이 존재. 공식FAQ https://steamcommunity.com/app/1149460/discussions/0/7179373038238970739/ 를 참조. 호스트PC 로컬 그래픽 부담 완화와 서버 시뮬레이션 최적화를 혼동하지 않는다.
+
+
+## OPTIMIZATION-030 · Codex 재개 (2026-11-16)
+- 사용자 기능 추가 요청으로 codex/game-optimization 재개. 최신 .16.2 포함 main으로 FF 후 app optimizer/성능확인 신규모듈, main/preload IPC, 설정 optimization UI 및 layout mount만 소유. 지도 수정 보존.
+- 두 프리셋·사용시점·상태색·백업복원, 사양 읽기·추천 및 수동 요청 때만 자원 측정 구현. 실제 FPS/프레임타임 수집 지원은 아직 확인 전이며 수집 못한 값을 추정 성공으로 표시하지 않는다. 서버 시뮬레이션/메모리 강제정리/프로세스 우선순위·자동게임조작 없음.
