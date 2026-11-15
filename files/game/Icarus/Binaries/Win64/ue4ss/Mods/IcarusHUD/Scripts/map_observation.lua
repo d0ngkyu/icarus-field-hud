@@ -69,7 +69,16 @@ function M.context(world, players)
             end)
         end
     end
-    return scope, '['..table.concat(out,',')..']'
+    local clock=nil
+    -- Read-only game accessor; unsupported return types omit the timer entirely.
+    pcall(function()
+        if gs.bIsOpenWorldProspect~=true then return end
+        local seconds=gs:GetReplicatedProspectGameTime()
+        if type(seconds)=='number' and seconds==seconds and seconds>=0 and seconds<1e10 then
+            clock=string.format('{"seconds":%.1f,"open":true}',seconds)
+        end
+    end)
+    return scope, '['..table.concat(out,',')..']',clock
 end
 -- Potential spawn markers never claim a resource is present. No spawn/harvest calls.
 function M.redMarks(world)

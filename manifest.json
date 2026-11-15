@@ -1,10 +1,10 @@
 {
- "version": "2026.11.16.9",
+ "version": "2026.11.16.10",
  "channel": "stable",
- "source": "b1615d429e609d2ae4083ff4f9e6c97a33f13a2c",
- "notes": "지도 레드 엑조틱 전용 레이어: 나무·식물 위치와 관측 상태, 방문·파밍 체크",
+ "source": "cc46c7758f6a1f50fc36bda58b1eab515773aa21",
+ "notes": "전체 지도 자료 2624곳: 심층 광맥·엑조틱·레드 식물·간헐천·동굴 보완, 서버 시간 기반 생성 추첨 타이머, 지도 경량화 및 널 섹터 안내",
  "config": {},
- "filesPath": "releases/stable/2026.11.16.9/files",
+ "filesPath": "releases/stable/2026.11.16.10/files",
  "files": [
   {
    "p": "game/Icarus/Binaries/Win64/dwmapi.dll",
@@ -55,8 +55,8 @@
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/Scripts/main.lua",
-   "n": 48005,
-   "h": "58851bc1e1ae74e0658b55e8a387d478c3a04cd3"
+   "n": 48094,
+   "h": "e65213e2ef1b81f875f0c58a2718eeb3b0dd1cdd"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/Scripts/animals.lua",
@@ -70,8 +70,8 @@
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/index.html",
-   "n": 968231,
-   "h": "26da475a480765d254edee3a701c63b1b80b0e7e"
+   "n": 970385,
+   "h": "7763c4eda61a9cb547179c09e9c152a47123aaa4"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/animals.js",
@@ -230,8 +230,8 @@
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/Scripts/map_observation.lua",
-   "n": 4905,
-   "h": "45581a5a4774c770ccc3d0bd319715fe3525fe28"
+   "n": 5334,
+   "h": "3104470e464912023b2a7eead14a7b86a7d3baf1"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/map-status.js",
@@ -252,6 +252,11 @@
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/maps/Terrain_021.webp",
    "n": 959694,
    "h": "eabd45281749c7e49ccd9fc4a72ac9f4d5a88e64"
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/map-spawns.js",
+   "n": 114752,
+   "h": "b93fbe2b4ffe091c61851190f3f1bec247846dae"
   }
  ]
 }
