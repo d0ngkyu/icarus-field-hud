@@ -892,3 +892,7 @@ A/B/C 모두 종료 프로토콜, 업데이트 실패 표시, 개인 월드 격�
 - 숨은네비재작성 및 위치전용패킷 동굴계산 생략/동물수집분산. 상세창자동등록·서버구분·삭제·소유자/혈통/외형 표시. UI합성검증 완료, 새native getter 실게임/재접속 소유권/게임FPS 미검증. 상세 PERFORMANCE-ANIMALS-REVIEW.md. 전체 안정성/FPS 보장 아님.
 - 로컬FF 병합은 추가 배포소유기록 때문에 TASKS 충돌예방 차단됨. 동일소스 검증된 feature로 먼저FF 후main FF하여 손실없이 해결. Actions checkout/setup-node v4 런타임폐기 경고는후속정비대상, 이번test/publish 성공.
 - 다음순서 GAME-NEWS-043 공식소식+번역API. 사용자API선택 확정, 계정/키/과금 미연결. 공유캐시/한도/키보관 설계부터 진행, 자동 결제승인 아님.
+
+
+## GAME-NEWS-043 · 진행 중 (Codex)
+- codex/game-news 소유: 신규 source/app/news.js, hud/news.js, main/preload 뉴스 IPC, layout/personalize/tab-keys 소식 탭 연결 및 관련검사. 사용자 번역 API 방식 승인, 기존동물 .16.11 완료 후 착수. 공식Steam 뉴스만 조회, Google Translation Basic 키는 PC암호화 보관/배포금지, 누를때만번역·본문해시캐시·로컬45만자 제한(계정과금보장 아님). 계정/키 연결은 아직 없음. 배포잠금없음.
