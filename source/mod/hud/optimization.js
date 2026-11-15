@@ -3,9 +3,9 @@
  root.HudOptimization={mount({nav,grid,settings}){
   const section=document.createElement('section');section.hidden=true;section.innerHTML=`<details class="settings-group" open><summary class="category-heading">게임 최적화</summary>
   <p class="hint">게임 종료 → 바탕화면에서 HUD만 실행 → 최적화 적용 → 게임 실행 순서입니다. 로비에 있어도 게임 실행 중입니다. 변경 전 설정은 자동 백업합니다.</p>
-  <div class="opt-cards"><article><h3>서버장용</h3><p>내 PC에서 월드를 열 때. 그림자·표시 거리·효과를 더 낮추고 최대 60 FPS로 화면 처리 여유를 확보합니다.</p><button data-mode="host">서버장 최적화 적용</button><span data-status="host" class="opt-state" role="status">● 미적용</span></article>
-  <article><h3>개인용</h3><p>친구 서버에 접속할 때. 그림자 부담을 줄이고 나머지는 최대 높음 수준, 최대 90 FPS로 조절합니다.</p><button data-mode="personal">개인 최적화 적용</button><span data-status="personal" class="opt-state" role="status">● 미적용</span></article></div>
-  <p class="hint">이미 낮춘 품질·FPS 제한은 올리지 않습니다. 두 모드는 이 PC의 그래픽 설정입니다. 동물 AI·서버 틱·월드 저장은 바꾸지 않으며 CPU 병목이나 잔끊김이 모두 사라진다고 보장하지 않습니다.</p>
+  <div class="opt-cards"><article><h3>서버장용</h3><p>내 PC에서 월드를 열 때. 그림자는 최대 낮음, 후처리·효과는 최대 보통, 최대 60 FPS로 화면 처리 부담을 줄입니다.</p><button data-mode="host">서버장 최적화 적용</button><span data-status="host" class="opt-state" role="status">● 미적용</span></article>
+  <article><h3>개인용</h3><p>친구 서버에 접속할 때. 그림자는 최대 보통, 후처리·효과는 최대 높음, 최대 90 FPS로 조절합니다.</p><button data-mode="personal">개인 최적화 적용</button><span data-status="personal" class="opt-state" role="status">● 미적용</span></article></div>
+  <p class="hint">지형·테셀레이션·표시 거리·수풀 품질은 바꾸지 않습니다. 두 모드는 첫 적용 전 설정을 기준으로 계산하며, 모드를 바꾸면 이전 모드 값이 섞이지 않습니다. 원래 설정보다 품질·FPS 제한을 높이지 않습니다. 동물 AI·서버 틱·월드 저장은 바꾸지 않으며 CPU 병목이나 잔끊김이 모두 사라진다고 보장하지 않습니다.</p>
   <div class="bt"><button data-action="hardware">내 사양으로 추천</button><button data-action="status">적용 상태 확인</button><button data-action="restore">변경 전으로 복원</button></div>
   <p data-hardware class="hint"></p><p data-result role="status" class="opt-state">● 설정 확인 중</p><p data-backup class="hint"></p>
   <p class="hint">🟢 저장된 설정 일치 · 🟡 미적용/변경/게임 종료 필요 · 🔴 읽기·저장 실패. 초록은 FPS 개선 판정이 아닙니다.</p>
