@@ -1,0 +1,158 @@
+{
+  "Forest": {
+    "key": "Conifer-DisplayName",
+    "ko": "숲"
+  },
+  "River Lands": {
+    "key": "RiverLands-DisplayName",
+    "ko": "강 지대"
+  },
+  "Arctic": {
+    "key": "Arctic-DisplayName",
+    "ko": "극지"
+  },
+  "Desert": {
+    "key": "Desert-DisplayName",
+    "ko": "사막"
+  },
+  "Desert Canyons": {
+    "key": "DesertCanyons-DisplayName",
+    "ko": "사막 협곡"
+  },
+  "Southern Glacier": {
+    "key": "SouthernGlacier-DisplayName",
+    "ko": "남부 빙하"
+  },
+  "The Great River": {
+    "key": "Styx_TheGreatRiver-DisplayName",
+    "ko": "큰 강"
+  },
+  "Dry Ridge": {
+    "key": "Styx_DryRidge-DisplayName",
+    "ko": "드라이 릿지"
+  },
+  "Enclosed Wood": {
+    "key": "Styx_EnclosedWood-DisplayName",
+    "ko": "막힌 숲"
+  },
+  "Oasis": {
+    "key": "Styx_Oasis-DisplayName",
+    "ko": "오아시스"
+  },
+  "The Wall": {
+    "key": "Styx_TheWall-DisplayName",
+    "ko": "장벽"
+  },
+  "Alpine Valley": {
+    "key": "Styx_AlpineValley-DisplayName",
+    "ko": "고산 계곡"
+  },
+  "Frozen Traverse": {
+    "key": "Styx_FrozenTraverse-DisplayName",
+    "ko": "얼어붙은 횡단 지역"
+  },
+  "Grove": {
+    "key": "Styx_Grove-DisplayName",
+    "ko": "수풀"
+  },
+  "Ice Flats": {
+    "key": "Styx_IceFlats-DisplayName",
+    "ko": "얼음 평원"
+  },
+  "Ring Lake": {
+    "key": "Styx_RingLake-DisplayName",
+    "ko": "링 호수"
+  },
+  "Snowy Plateau": {
+    "key": "Styx_SnowyPlateau-DisplayName",
+    "ko": "눈 덮인 고원"
+  },
+  "Verdant Terraces": {
+    "key": "Styx_VerdantTerraces-DisplayName",
+    "ko": "신록 테라스"
+  },
+  "Dusty Barrens": {
+    "key": "Styx_DustyBarrens-DisplayName",
+    "ko": "먼지투성이 불모지"
+  },
+  "Alpine Steppe": {
+    "key": "Pro_AlpineSteppe-DisplayName",
+    "ko": "알파인 스텝"
+  },
+  "Ashlands": {
+    "key": "Pro_Ashlands-DisplayName",
+    "ko": "애쉬랜드"
+  },
+  "Ice Sheet": {
+    "key": "Pro_IceSheet-DisplayName",
+    "ko": "빙상"
+  },
+  "Marshlands": {
+    "key": "Pro_Marshlands-DisplayName",
+    "ko": "습지대"
+  },
+  "Basalt Expansion": {
+    "key": "Pro_BasaltExpansion-DisplayName",
+    "ko": "현무암 확장"
+  },
+  "Basalt Valley": {
+    "key": "Pro_BasaltValley-DisplayName",
+    "ko": "현무암 계곡"
+  },
+  "Frigid Lowlands": {
+    "key": "Pro_FrigidLowlands-DisplayName",
+    "ko": "냉랭 저지대"
+  },
+  "Glacial Cascade": {
+    "key": "Pro_GlacialCascade-DisplayName",
+    "ko": "빙하 폭포"
+  },
+  "Grassy Plains": {
+    "key": "Pro_GrassyPlains-DisplayName",
+    "ko": "잔디 평원"
+  },
+  "Lava Flows": {
+    "key": "Pro_LavaFlows-DisplayName",
+    "ko": "라바 플로우"
+  },
+  "Lava Pool": {
+    "key": "Pro_LavaPool-DisplayName",
+    "ko": "용암 웅덩이"
+  },
+  "Middle Ice Sheet": {
+    "key": "Pro_IceSheet_2-DisplayName",
+    "ko": "중간 빙상"
+  },
+  "Rolling Tundra": {
+    "key": "Pro_Tundra-DisplayName",
+    "ko": "롤링 툰드라"
+  },
+  "Shallow Mire": {
+    "key": "Pro_ShallowMire-DisplayName",
+    "ko": "얕은 진창"
+  },
+  "Still Water": {
+    "key": "Pro_StillWater-DisplayName",
+    "ko": "고여있는 물"
+  },
+  "Sylvan Range": {
+    "key": "Pro_ConiferSmallA-DisplayName",
+    "ko": "울창한 목장"
+  },
+  "The Pillars": {
+    "key": "Pro_ThePillars-DisplayName",
+    "ko": "기둥"
+  },
+  "Upper Ice Sheet": {
+    "key": "Pro_IceSheet_3-DisplayName",
+    "ko": "상위 빙상"
+  },
+  "Wetlands": {
+    "key": "Pro_Wetlands-DisplayName",
+    "ko": "습지"
+  },
+  "Wildwoods": {
+    "key": "Pro_ConiferSmallB-DisplayName",
+    "ko": "와일드우드"
+  }
+}
