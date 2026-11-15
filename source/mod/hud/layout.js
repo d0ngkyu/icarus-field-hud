@@ -96,7 +96,7 @@ setInterval(()=>{if(!document.hidden&&S.tab2==='achievements')window.hudApp?.inf
 
 const tabOrder=[['character','캐릭터'],['map','지도'],['animals','동물'],['nav','네비'],['craft','제작'],['coach','코치'],['help','설정'],['history','기록'],['achievements','업적']];
 for(const [i,[k,name]]of tabOrder.entries()){let b=$('tabbar').querySelector('[data-tab="'+k+'"]');if(!b){b=el('button','tab');b.dataset.tab=k;}const badge=b.querySelector('.bd');b.innerHTML=name+'<span class="k">'+(i+1)+'</span>';if(badge)b.append(badge);$('tabbar').insertBefore(b,$('tabbar').querySelector('.sp'));}
-const priorTab=window.__setTab;window.__setTab=k=>{history.classList.remove('on');character.classList.remove('on');achievements.classList.remove('on');if(['history','character','achievements'].includes(k)){priorTab('coach');document.querySelectorAll('.pane.on').forEach(n=>n.classList.remove('on'));$("pane-"+k).classList.add('on');$('tabbar').querySelectorAll('.tab').forEach(b=>b.classList.toggle('on',b.dataset.tab===k));S.tab2=k;save()}else priorTab(k);S.companionTab=k;save();refreshContext();if(k==='character')renderCharacter();if(k==='achievements'){drawAchievements();window.hudApp?.info?.().then(i=>drawAchievements(i.usage)).catch(()=>{$('achievement-summary').textContent='HUD 업데이트 후 다시 열어 주세요.'})}};
+const priorTab=window.__setTab;window.__setTab=k=>{history.classList.remove('on');character.classList.remove('on');achievements.classList.remove('on');if(['history','character','achievements'].includes(k)){priorTab('coach');document.querySelectorAll('.pane.on').forEach(n=>n.classList.remove('on'));$("pane-"+k).classList.add('on');$('tabbar').querySelectorAll('.tab').forEach(b=>b.classList.toggle('on',b.dataset.tab===k));S.tab2=k;save()}else priorTab(k);S.companionTab=k;save();if(k==='nav')drawNav();refreshContext();if(k==='character')renderCharacter();if(k==='achievements'){drawAchievements();window.hudApp?.info?.().then(i=>drawAchievements(i.usage)).catch(()=>{$('achievement-summary').textContent='HUD 업데이트 후 다시 열어 주세요.'})}};
 document.addEventListener('click',e=>{const b=e.target.closest('[data-tab],[data-go]');if(b){e.stopImmediatePropagation();window.__setTab(b.dataset.tab||b.dataset.go)}},true);
 document.addEventListener('keydown',e=>{const i=window.HudTabKeys?.index(e)??-1;if(i>=0){e.preventDefault();e.stopImmediatePropagation();window.__setTab(tabOrder[i][0])}else if(e.ctrlKey&&/^[1-9]$/.test(e.key)){e.stopImmediatePropagation()}},true);
 $('game-controls').innerHTML='<div class="game-buttons"><button data-game="start">게임 시작</button><button data-game="save">월드 수동 저장</button><button data-game="exit">저장 후 게임 종료</button></div><p class="hint">현재 PC가 호스트인 월드에서 사용합니다. 종료는 게임의 Esc 메뉴를 열어 둔 상태에서 요청하세요.</p><p id="game-action-status" role="status"></p>';
@@ -113,7 +113,7 @@ function renderHistory(){const query=$('history-search').value.trim().toLowerCas
 $('history-search').oninput=renderHistory;
 
 const oldDraw=draw;draw=function(){oldDraw();$('invinfo').textContent='레시피 기준 전체 수량 · 보관함·가방 보유분은 섞지 않습니다.';explorer();showCraft(craftView);refreshContext()};
-const oldNav=drawNav;drawNav=function(){oldNav();$('nav').querySelectorAll('.nvh').forEach(n=>n.textContent=n.textContent.replace(' (종류별 가장 가까운 곳)',' · 가까운 위치').replace('부족한 재료','제작 계획 재료'))};
+const oldNav=drawNav;drawNav=function(){if(document.hidden||S.tab2!=='nav')return;oldNav();$('nav').querySelectorAll('.nvh').forEach(n=>n.textContent=n.textContent.replace(' (종류별 가장 가까운 곳)',' · 가까운 위치').replace('부족한 재료','제작 계획 재료'))};
 const oldLive=window.__icarusLive;window.__icarusLive=m=>{oldLive(m);refreshContext();renderCharacter()};
 // IPC errors are visible and the entire titlebar button is clickable.
 if(window.hudApp){$('tbtop').onclick=async()=>{const b=$('tbtop');b.disabled=true;try{const s=await hudApp.toggleTop();b.classList.toggle('on',!!s.top);b.setAttribute('aria-pressed',String(!!s.top));b.querySelector('.lbl').textContent=s.top?' 고정 켜짐':' 항상 위';window.__toast?.(s.top?'항상 위 표시 켜짐':'항상 위 표시 꺼짐',true)}catch{window.__toast?.('창 고정 변경 실패 · HUD를 다시 실행해 주세요.')}finally{b.disabled=false}};}
@@ -126,3 +126,5 @@ window.HudOptimization?.mount({nav,grid,settings});
 draw();window.__setTab(S.companionTab||'character');
 })();
 
+
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&S.tab2==='nav')drawNav()});
