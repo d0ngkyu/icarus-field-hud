@@ -1,10 +1,10 @@
 {
- "version": "2026.11.16.11",
+ "version": "2026.11.16.12",
  "channel": "stable",
- "source": "e14e7bb7bfd2ce56308568ffd8d6e07d852fa59b",
- "notes": "숨은 네비·동굴 계산 경량화, 동물 상세창 자동 등록·삭제, 소유자 및 혈통·외형 정보 표시",
+ "source": "945f378c41b3255e2e859116958face5a6989f9b",
+ "notes": "공식 게임 소식 탭: 업데이트 사진·원문, API 키 연결형 한국어 번역·캐시·사용량 제한, 소식 단축키 0",
  "config": {},
- "filesPath": "releases/stable/2026.11.16.11/files",
+ "filesPath": "releases/stable/2026.11.16.12/files",
  "files": [
   {
    "p": "game/Icarus/Binaries/Win64/dwmapi.dll",
@@ -70,8 +70,8 @@
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/index.html",
-   "n": 970499,
-   "h": "0b7ea4e0a4db99f6b961404c5fb4ea2b1c94f004"
+   "n": 970530,
+   "h": "00bcbe6b6576f8f01226ba8b292e921820c05752"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/animals.js",
@@ -125,8 +125,8 @@
   },
   {
    "p": "app/main.js",
-   "n": 26253,
-   "h": "824b799933ad045e01cc5361923874f767dc48e3"
+   "n": 26884,
+   "h": "c01e77110ab4ecee717d9a49300a4a441e12d18c"
   },
   {
    "p": "app/updater.js",
@@ -135,8 +135,8 @@
   },
   {
    "p": "app/preload.js",
-   "n": 1984,
-   "h": "6a4c64ddf4a93e2be8d1791c4a776e354a8faa21"
+   "n": 2051,
+   "h": "27b3c4be1134c311f86fc73d1c534cac7dcaf057"
   },
   {
    "p": "app/extract.js",
@@ -170,8 +170,8 @@
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/layout.js",
-   "n": 33635,
-   "h": "f1ccf0218de05318c8f5c0cec7946e7bae06537c"
+   "n": 33860,
+   "h": "60b226c63fd380d2805f4f3315ac0d7a0f1f0ddb"
   },
   {
    "p": "app/game-control.js",
@@ -200,13 +200,13 @@
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/tab-keys.js",
-   "n": 667,
-   "h": "428e1502ba37a5daf3e7a2a3852de293a13e68e9"
+   "n": 695,
+   "h": "849f6bb23854dee9803222afbc86cc1619636c8d"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/personalize.js",
-   "n": 9330,
-   "h": "35eb45de7d2595c3692f1ea5892b0f168c72da86"
+   "n": 9337,
+   "h": "9948f2e48b4d27971f225ce3b2b7feffa1ccc04f"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/regions.js",
@@ -257,6 +257,16 @@
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/map-spawns.js",
    "n": 114752,
    "h": "b93fbe2b4ffe091c61851190f3f1bec247846dae"
+  },
+  {
+   "p": "app/news.js",
+   "n": 7820,
+   "h": "dcc695de910987fcc20b56e8e6da6ba5122f6170"
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/news.js",
+   "n": 7895,
+   "h": "d410c6a770c93e82f1c78fabca0923381696d03c"
   }
  ]
 }
