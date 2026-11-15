@@ -666,3 +666,10 @@ A/B/C 모두 종료 프로토콜, 업데이트 실패 표시, 개인 월드 격�
 - 지역명 39개: Olympus6/Styx13/Prometheus20. 한국어 HUD 번역·확대 영문명, layer 저장, 라벨 중복 억제, 방문 미확인 앵커 14% 밝기. 게임 Data.pak 영문명 및 Field Guide 지도 앵커를 대조. MAP-REGIONS.md 참조. 게임 메모리·Lua·저장종료·동굴 데이터 변경 없음.
 - Node/Fengari108 통과/실패0/스킵0, 원격4파일 바이트 일치. UI 1280x800: 스틱스 배치/줌 영문/레이어 OFF 새로고침 유지/fog 어두움/프로메테우스 분리 확인, JS오류0. 초기 테스트 DOM 모형 미지원·preview CSS MIME 오류는 각각 코드 템플릿/preview MIME 수정으로 해결. 소스 줄바꿈 정규화 후 재검증.
 - PC에 게임 Icarus-Win64-Shipping 실행 중 확인. 강제 종료/설치파일 교체하지 않고 정상 updater에 맡긴다. PC 적용 완료 아님. 정식 Actions 발행·원격 manifest hash 확인 후 결과 추가 예정.
+
+
+## MAP-REGION-LABELS-029 · 정식 배포 완료 / PC 적용 대기 (2026-11-16)
+- PR22 source f71154cde60434caecb3ed37d89dbd70ba045bb1, stable2026.11.16.1 배포12cea377639f02cb761f3dc8396f4ca3789775a1. Actions https://github.com/d0ngkyu/icarus-field-hud/actions/runs/43737631174 성공26초(test11s/publish9s). 원격40파일 root/불변 크기·SHA1 전부 일치. .35 대비5,101bytes 증가.
+- Olympus6/Styx13/Prometheus20 지역명, 기본ON/설정유지/줌 영문/겹침억제/미탐험 앵커 어둡게. 정적 HUD 렌더만 추가.108검사 및 브라우저 화면 검증 완료. 한국어는 HUD 번역, 좌표 출처와 제한은 MAP-REGIONS.md. 프로메테우스는 기존 지형이미지 미설치 상태에서도 라벨/격자 표시 확인. 실게임 FPS 측정 없음.
+- PC version.txt는2026.11.14.35, 게임 실행 중 재확인. 게임 종료/설치파일 교체/세이브 변경 없음. 설치 완료로 기록하지 않는다. 기존 updater는 게임 종료 시 확인·적용 후 HUD 종료를 수행한다. 다음 확인: 게임 정상종료 후 .16.1 설치 및 지도 지역명 확인.
+- 소스·stable 발행 소유 해제, 적용대기. 후속 담당은 main/TASKS/manifest에서 이어간다. Claude 읽음/동의 미확인. 로컬 commit은 identity 미설정으로 실패했으나 GitHub connector PR22로 원격 반영·검증했고 work/icarus-map-regions는 remote main으로 fast-forward하여 clean. 전체 게임 종료충돌 해결과 무관.
