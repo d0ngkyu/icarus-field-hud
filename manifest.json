@@ -1,10 +1,10 @@
 {
- "version": "2026.11.14.35",
+ "version": "2026.11.16.1",
  "channel": "stable",
- "source": "d244fff064785d84883b73e8235ee9fe8c9635e7",
- "notes": "동물 상세·꾸미기·79개 업적 업데이트 포함. 집계 프로그램 파일 잠금으로 업데이트가 롤백되는 문제 수정",
+ "source": "f71154cde60434caecb3ed37d89dbd70ba045bb1",
+ "notes": "지도 지역 이름 추가: 올림푸스·스틱스·프로메테우스 39곳. 레이어 켜기/끄기, 확대 영문명, 미탐험 이름 어둡게 표시",
  "config": {},
- "filesPath": "releases/stable/2026.11.14.35/files",
+ "filesPath": "releases/stable/2026.11.16.1/files",
  "files": [
   {
    "p": "game/Icarus/Binaries/Win64/dwmapi.dll",
@@ -70,8 +70,8 @@
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/index.html",
-   "n": 959945,
-   "h": "9d8e8e34b6b13cf68180ee2d64f9c00bb6280713"
+   "n": 960653,
+   "h": "6cab1c083b74d102233573f432905933ba2b6d5b"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/animals.js",
@@ -207,6 +207,11 @@
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/personalize.js",
    "n": 9330,
    "h": "35eb45de7d2595c3692f1ea5892b0f168c72da86"
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/regions.js",
+   "n": 4393,
+   "h": "f6b7768622e0171dd903b5ba00b0633157ff5932"
   }
  ]
 }
