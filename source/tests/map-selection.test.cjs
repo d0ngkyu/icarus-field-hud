@@ -7,10 +7,10 @@ function harness(){
  const ctx=new Proxy({createRadialGradient:()=>({addColorStop:noop}),measureText:()=>({width:10})},{get:(o,k)=>o[k]||noop,set:(o,k,v)=>(o[k]=v,true)});
  const node=id=>{if(!nodes.has(id))nodes.set(id,{value:'',style:{},dataset:{},classList:{toggle:noop,add:noop,remove:noop,contains:()=>true},events:{},setAttribute(k,v){this[k]=v},addEventListener(k,f){this.events[k]=f},getContext:()=>ctx,getBoundingClientRect:()=>({width:800,height:600}),setPointerCapture:noop});return nodes.get(id)};
  let now=1000;const clock=class extends Date{static now(){return now}};
- const c=vm.createContext({S:{},I:{},D:{},Date:clock,console,save:noop,draw:noop,allBoxes:()=>[],addLog:noop,nm:x=>x,en:x=>x,esc:x=>x,document:{body:node("body"),getElementById:node,createElement:node,querySelector:()=>node('query'),addEventListener:noop},window:{addEventListener:noop,HudMapParty:require('../mod/hud/map-party.js'),HudMapStatus:require('../mod/hud/map-status.js'),HudRegions:require('../mod/hud/regions.js')},Image:class{},setInterval:noop,setTimeout:noop,clearTimeout:noop,requestAnimationFrame:noop});
+ const c=vm.createContext({S:{},I:{},D:{},Date:clock,console,save:noop,draw:noop,allBoxes:()=>[],addLog:noop,nm:x=>x,en:x=>x,esc:x=>x,document:{body:node("body"),getElementById:node,createElement:node,querySelector:()=>node('query'),addEventListener:noop},window:{addEventListener:noop,HudMapSpawns:require('../mod/hud/map-spawns.js'),HudMapParty:require('../mod/hud/map-party.js'),HudMapStatus:require('../mod/hud/map-status.js'),HudRegions:require('../mod/hud/regions.js')},Image:class{},setInterval:noop,setTimeout:noop,clearTimeout:noop,requestAnimationFrame:noop});
  let code=html.slice(html.indexOf('(()=>{\n// ===== interactive map:'),html.indexOf('</script>',html.indexOf('// ===== interactive map:')));
  assert.ok(code.length>1000);
- code=code.replace(/\}\)\(\);\s*$/, 'window.test={session,M,selectMap,wpButton,dedupCaves,resize,drawMap,V,fitMap,addRoutePoint,finishPath,pathDistance,markSeen,drawVisitedFog,getHits:()=>hits};})();');
+ code=code.replace(/\}\)\(\);\s*$/, 'window.test={session,M,selectMap,wpButton,dedupCaves,resize,drawMap,V,fitMap,addRoutePoint,finishPath,pathDistance,markSeen,drawVisitedFog,getHits:()=>hits,getClock:()=>spawnClock};})();');
  vm.runInContext(code,c);return {c,t:c.window.test,node,tick:n=>{now=n},ingest:m=>c.window.__mapIngest(m)};
 }
 test('offline browsing and independent per-world pins, paths and views',()=>{
@@ -75,3 +75,7 @@ test('boss heartbeat updates both death and return without terrain marker change
  t.V.x=0;t.V.y=0;t.V.L.dep=0;t.V.L.exo=0;t.drawMap();assert.equal(t.getHits().filter(x=>x.kind==='redexo').length,2);
  t.V.L.redexo=0;t.V.L.dep=1;t.drawMap();assert.equal(t.getHits().filter(x=>x.kind==='redexo'||x.ref?.[0]==='d:Exotic_Red_Raw').length,0);
  });
+
+test("offline map renders all Prometheus exotic candidates and independent layer switches",()=>{const h=harness(),{t}=h;t.selectMap("Terrain_019");t.resize();t.fitMap();t.drawMap();assert.equal(t.getHits().filter(h=>h.kind==="redexo").length,54);assert.equal(t.getHits().filter(h=>h.kind==="exo").length,153);t.V.L.redexo=0;t.drawMap();assert.equal(t.getHits().filter(h=>h.kind==="redexo").length,0);assert.equal(t.getHits().filter(h=>h.kind==="exo").length,153);});
+
+test("prospect clocks are reset on server/world switch and replaced by new server time",()=>{const h=harness();h.ingest({t:1,w:"Terrain_019",scope:"A"});h.tick(2000);h.ingest({t:2,w:"Terrain_019",scope:"A",prospectClock:{seconds:10000,open:true}});assert.equal(h.t.getClock().seconds,10000);h.tick(3000);h.ingest({t:3,w:"Terrain_019",scope:"B"});assert.equal(h.t.getClock(),null);h.tick(4000);h.ingest({t:4,w:"Terrain_019",scope:"B",prospectClock:{seconds:300,open:true}});assert.equal(h.t.getClock().seconds,300);h.tick(5000);h.ingest({t:5,w:"Terrain_021",scope:"C"});assert.equal(h.t.getClock(),null);});

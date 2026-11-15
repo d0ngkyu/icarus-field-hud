@@ -21,6 +21,10 @@ test('Lua map context: no account collection, current world/cave guards, missing
  FindAllOf=originalFind
  local id,points=m.context(w,true);assert(id=='prospectA' and points=='[[1,2,3,1]]')
  id,points=m.context(w,false);assert(points=='[]')
+ w.GameState.bIsOpenWorldProspect=true;w.GameState.GetReplicatedProspectGameTime=function() return 10700 end
+ local _,_,clock=m.context(w,false);assert(clock=='{"seconds":10700.0,"open":true}')
+ w.GameState.GetReplicatedProspectGameTime=function() error('unsupported') end;_,_,clock=m.context(w,false);assert(clock==nil)
+ w.GameState.GetReplicatedProspectGameTime=function() return 0/0 end;_,_,clock=m.context(w,false);assert(clock==nil)
  scope='';assert(m.context(w,true)==nil);scope='invalid"id';assert(m.context(w,true)==nil)
  scope='prospectB';list={};for i=1,100 do list[i]=player(w,true) end;id,points=m.context(w,true);local _,n=points:gsub('%[1,2,3,1%]','');assert(n==64)
  assert(m.context(nil,true)==nil)
