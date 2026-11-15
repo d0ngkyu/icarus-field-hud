@@ -9,6 +9,7 @@ ipcRenderer.on('diag', (_e, n) => { if (onDiag) onDiag(n); else pendingDiag.push
 contextBridge.exposeInMainWorld('hudApp', {
   onGameProgress: fn => { onGameProgress=fn; },
   gameControl: action => ipcRenderer.invoke('gameControl', action),
+  optimization: action => ipcRenderer.invoke('optimization', action),
   state: () => ipcRenderer.invoke('state'),
   toggleTop: () => ipcRenderer.invoke('toggleTop'),
   toggleCompact: () => ipcRenderer.invoke('toggleCompact'),
