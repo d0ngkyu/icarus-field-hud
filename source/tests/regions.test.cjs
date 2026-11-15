@@ -1,6 +1,13 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const r=require('../mod/hud/regions.js');
 const measure=(s,n)=>s.length*n;
+test('all mapped Korean names match the installed ko-KR D_Biomes extraction',()=>{
+ const fixture=require('./fixtures/regions-ko.json');
+ for(const rows of Object.values(r.data))for(const row of rows)assert.equal(row[1],fixture[row[0]].ko,row[0]);
+ assert.equal(Object.keys(fixture).length,39);
+ assert.equal(r.data.Terrain_017.find(row=>row[0]==='Grove')[1],'수풀');
+ assert.equal(r.data.Terrain_017.find(row=>row[0]==='Verdant Terraces')[1],'신록 테라스');
+});
 test('atlas anchors belong to their map; unsupported maps never inherit labels',()=>{
  assert.equal(r.data.Terrain_016.length,6);assert.equal(r.data.Terrain_017.length,13);assert.equal(r.data.Terrain_019.length,20);
  for(const rows of Object.values(r.data))for(const row of rows){assert.ok(row[2]>0&&row[2]<100&&row[3]>0&&row[3]<100);assert.ok(r.world(row).every(Number.isFinite))}

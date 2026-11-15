@@ -7,7 +7,7 @@ function harness(){
  const ctx=new Proxy({createRadialGradient:()=>({addColorStop:noop}),measureText:()=>({width:10})},{get:(o,k)=>o[k]||noop,set:(o,k,v)=>(o[k]=v,true)});
  const node=id=>{if(!nodes.has(id))nodes.set(id,{value:'',style:{},dataset:{},classList:{toggle:noop,add:noop,remove:noop,contains:()=>true},events:{},setAttribute(k,v){this[k]=v},addEventListener(k,f){this.events[k]=f},getContext:()=>ctx,getBoundingClientRect:()=>({width:800,height:600}),setPointerCapture:noop});return nodes.get(id)};
  let now=1000;const clock=class extends Date{static now(){return now}};
- const c=vm.createContext({S:{},I:{},D:{},Date:clock,console,save:noop,draw:noop,allBoxes:()=>[],addLog:noop,nm:x=>x,en:x=>x,esc:x=>x,document:{body:node("body"),getElementById:node,createElement:node,querySelector:()=>node('query'),addEventListener:noop},window:{addEventListener:noop},Image:class{},setInterval:noop,setTimeout:noop,clearTimeout:noop,requestAnimationFrame:noop});
+ const c=vm.createContext({S:{},I:{},D:{},Date:clock,console,save:noop,draw:noop,allBoxes:()=>[],addLog:noop,nm:x=>x,en:x=>x,esc:x=>x,document:{body:node("body"),getElementById:node,createElement:node,querySelector:()=>node('query'),addEventListener:noop},window:{addEventListener:noop,HudRegions:require('../mod/hud/regions.js')},Image:class{},setInterval:noop,setTimeout:noop,clearTimeout:noop,requestAnimationFrame:noop});
  let code=html.slice(html.indexOf('(()=>{\n// ===== interactive map:'),html.indexOf('</script>',html.indexOf('// ===== interactive map:')));
  assert.ok(code.length>1000);
  code=code.replace(/\}\)\(\);\s*$/, 'window.test={session,M,selectMap,wpButton,dedupCaves,resize,drawMap,V,fitMap,addRoutePoint,finishPath,pathDistance,markSeen,drawVisitedFog};})();');
@@ -42,4 +42,13 @@ test('visited cells change fog revision once, not on repeated stationary telemet
 });
 test('establishing a connection on the viewed map preserves an unfinished route',()=>{
  const h=harness();h.node('mtpath').onclick();h.t.addRoutePoint(0,0);h.ingest({w:'Terrain_016',t:1});h.tick(2000);h.ingest({w:'Terrain_016',t:2});h.t.addRoutePoint(100,100);h.t.finishPath();assert.equal(h.t.M().paths.length,1);assert.equal(h.t.M().paths[0].pts.length,2);
+});
+
+test('region finder centers small regions and resets when switching maps',()=>{
+ const h=harness(),{t}=h;t.selectMap('Terrain_017');
+ assert.ok(h.node('mapregion').innerHTML.includes('수풀'));
+ const rows=h.c.window.HudRegions.data.Terrain_017,i=rows.findIndex(r=>r[1]==='수풀');
+ t.V.follow=true;t.V.L.regions=0;h.node('mapregion').onchange({target:{value:String(i)}});
+ const xy=h.c.window.HudRegions.world(rows[i]);assert.equal(t.V.x,xy[0]);assert.equal(t.V.y,xy[1]);assert.ok(t.V.s>=.22);assert.equal(t.V.follow,false);assert.equal(t.V.L.regions,1);
+ t.selectMap('Outpost_002');assert.equal(h.node('mapregion').disabled,true);assert.ok(!h.node('mapregion').innerHTML.includes('수풀'));
 });
