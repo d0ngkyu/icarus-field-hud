@@ -71,4 +71,34 @@ function M.context(world, players)
     end
     return scope, '['..table.concat(out,',')..']'
 end
+-- Potential spawn markers never claim a resource is present. No spawn/harvest calls.
+function M.redMarks(world)
+    if not valid(world) then return {} end
+    local out,wn={},world:GetFullName()
+    local function collect(class,kind,valueFn)
+        local list=FindAllOf(class) or {}
+        for i,a in ipairs(list) do
+            if i>512 then break end
+            pcall(function()
+                if not valid(a) or a:GetFullName():find('Default__',1,true) then return end
+                local aw=a:GetWorld()
+                if not valid(aw) or aw:GetFullName()~=wn then return end
+                local n=valueFn(a)
+                if n==nil then return end
+                local p=a:K2_GetActorLocation()
+                for _,v in ipairs({p.X,p.Y,p.Z}) do if type(v)~='number' or v~=v or math.abs(v)>10000000 then return end end
+                table.insert(out,string.format('["r:%s",%.0f,%.0f,%.0f,%d]',kind,p.X,p.Y,p.Z,n))
+            end)
+        end
+    end
+    collect('BP_IcarusMetaSpawn_C','Tree',function(a)
+        if a['Meta Node Handle'].RowName:ToString()=='MetaDeposit_Volcanic' then return -1 end
+    end)
+    collect('BP_ExoticPlantSpawn_C','Plant',function() return -1 end)
+    collect('BP_Exotic_Plant_C','Plant',function(a)
+        local n=a.ResourceCount
+        return type(n)=='number' and n>=0 and n<=100000 and math.floor(n) or -1
+    end)
+    return out
+end
 return M

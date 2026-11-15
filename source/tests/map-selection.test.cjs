@@ -10,7 +10,7 @@ function harness(){
  const c=vm.createContext({S:{},I:{},D:{},Date:clock,console,save:noop,draw:noop,allBoxes:()=>[],addLog:noop,nm:x=>x,en:x=>x,esc:x=>x,document:{body:node("body"),getElementById:node,createElement:node,querySelector:()=>node('query'),addEventListener:noop},window:{addEventListener:noop,HudMapParty:require('../mod/hud/map-party.js'),HudMapStatus:require('../mod/hud/map-status.js'),HudRegions:require('../mod/hud/regions.js')},Image:class{},setInterval:noop,setTimeout:noop,clearTimeout:noop,requestAnimationFrame:noop});
  let code=html.slice(html.indexOf('(()=>{\n// ===== interactive map:'),html.indexOf('</script>',html.indexOf('// ===== interactive map:')));
  assert.ok(code.length>1000);
- code=code.replace(/\}\)\(\);\s*$/, 'window.test={session,M,selectMap,wpButton,dedupCaves,resize,drawMap,V,fitMap,addRoutePoint,finishPath,pathDistance,markSeen,drawVisitedFog};})();');
+ code=code.replace(/\}\)\(\);\s*$/, 'window.test={session,M,selectMap,wpButton,dedupCaves,resize,drawMap,V,fitMap,addRoutePoint,finishPath,pathDistance,markSeen,drawVisitedFog,getHits:()=>hits};})();');
  vm.runInContext(code,c);return {c,t:c.window.test,node,tick:n=>{now=n},ingest:m=>c.window.__mapIngest(m)};
 }
 test('offline browsing and independent per-world pins, paths and views',()=>{
@@ -69,3 +69,9 @@ test('boss heartbeat updates both death and return without terrain marker change
  h.tick(3000);h.ingest({w:'Terrain_016',scope:'p',t:3,lm:[['b:Wolf#1',100,200,0,0]]});assert.equal(life.entry(mp,'b:Wolf#1').state,'reset');
  h.tick(4000);h.ingest({w:'Terrain_016',scope:'p',t:3,lm:[['b:Wolf#1',100,200,0,1]]});assert.equal(life.entry(mp,'b:Wolf#1').state,'reset');
 });
+
+ test('red exotics have independent layer and no duplicate tree spawn over actual deposit',()=>{
+ const h=harness(),{t}=h;t.resize();h.ingest({w:'Terrain_016',t:1});h.tick(2000);h.ingest({w:'Terrain_016',scope:'p',t:2,lm:[['r:Tree',0,0,0,-1],['d:Exotic_Red_Raw',10,10,0,20],['r:Plant',1000,1000,0,3]]});
+ t.V.x=0;t.V.y=0;t.V.L.dep=0;t.V.L.exo=0;t.drawMap();assert.equal(t.getHits().filter(x=>x.kind==='redexo').length,2);
+ t.V.L.redexo=0;t.V.L.dep=1;t.drawMap();assert.equal(t.getHits().filter(x=>x.kind==='redexo'||x.ref?.[0]==='d:Exotic_Red_Raw').length,0);
+ });

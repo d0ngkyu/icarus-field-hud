@@ -321,6 +321,7 @@ local function worldName()
 end
 
 -- the whole map's caves, deep ore veins and exotic spots are listed in the world settings (also far away / unexplored)
+local mapReader
 local wsCache, wsWorld, wsNote = nil, nil, false
 local function softName(p)
     local n = nil
@@ -460,6 +461,10 @@ local function scanLandmarks()
     each("BP_OilGeyser_C", "g", function(a) return "Oil", type(a.bHasPumpJack)=="boolean" and (a.bHasPumpJack and 1 or 0) or -1 end)
     each("BP_EnzymeGeyser_C", "g", function(a) return "Enzyme", a.Completions end)
     step("landmarks")
+    if mapReader and mapReader.redMarks then
+        local ok, marks = pcall(mapReader.redMarks, UEHelpers.GetWorld())
+        if ok then for _, mark in ipairs(marks) do table.insert(out, mark) end end
+    end
     local sig = table.concat(out, ",")
     lastLm = sig
     return "[" .. table.concat(out, ",") .. "]"
@@ -711,7 +716,7 @@ if okAnimal then animalReader = loadedAnimal else log("animal reader unavailable
 WORLD_READY = false
 local sessionId, sessionTicks = nil, 0
 local gameControl = nil
-local mapReader, mapScope = nil, nil
+local mapScope = nil
 pcall(function() mapReader = dofile(MODDIR .. "/Scripts/map_observation.lua") end)
 local function resetSession()
     if gameControl then gameControl.reset() end

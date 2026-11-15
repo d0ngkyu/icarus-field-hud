@@ -10,7 +10,16 @@ test('Lua map context: no account collection, current world/cave guards, missing
  local foreign={IsValid=function() return true end,GetFullName=function() return 'worldB' end}
  local list={player(w,false),player(foreign,true),player(w,true),{IsValid=function() error('unloaded') end}}
  FindAllOf=function(c) assert(c=='IcarusPlayerCharacterSurvival');return list end
- local m=assert(load(SOURCE))();local id,points=m.context(w,true);assert(id=='prospectA' and points=='[[1,2,3,1]]')
+ local m=assert(load(SOURCE))();
+ local spawn=player(w,false);spawn['Meta Node Handle']={RowName={ToString=function() return 'MetaDeposit_Volcanic' end}}
+ local wrong=player(foreign,false);wrong['Meta Node Handle']=spawn['Meta Node Handle']
+ local plant=player(w,false);plant.ResourceCount=0
+ local originalFind=FindAllOf
+ FindAllOf=function(c) if c=='BP_IcarusMetaSpawn_C' then return {spawn,wrong} elseif c=='BP_ExoticPlantSpawn_C' then return {player(w,false)} else return {plant} end end
+ local marks=m.redMarks(w);assert(#marks==3 and marks[1]:find('r:Tree',1,true) and marks[3]:find(',0]',1,true))
+ plant.ResourceCount=4;assert(m.redMarks(w)[3]:find(',4]',1,true));assert(#m.redMarks(nil)==0)
+ FindAllOf=originalFind
+ local id,points=m.context(w,true);assert(id=='prospectA' and points=='[[1,2,3,1]]')
  id,points=m.context(w,false);assert(points=='[]')
  scope='';assert(m.context(w,true)==nil);scope='invalid"id';assert(m.context(w,true)==nil)
  scope='prospectB';list={};for i=1,100 do list[i]=player(w,true) end;id,points=m.context(w,true);local _,n=points:gsub('%[1,2,3,1%]','');assert(n==64)
