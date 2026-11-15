@@ -368,7 +368,7 @@ if(window.hudApp){document.body.classList.add('app');
  tb('tbmin').onclick=()=>hudApp.minimize();
  tb('tbx').onclick=()=>hudApp.hide()}
 window.__icarusLive=m=>{lastSeen=Date.now();if(window.__mapIngest)try{window.__mapIngest(m)}catch(e){console.error(e)}if(m.t===lastT)return;if(lastT===null){lastT=m.t;m={t:m.t,auto:true,inv:m.inv,p:m.p,prog:m.prog};if(!m.inv&&!m.p&&!m.prog)return}lastT=m.t;
- const el=document.getElementById('live');if(m.inv){S.inv={bag:fixInv(m.inv.bag),near:m.inv.near?fixInv(m.inv.near):((S.inv&&S.inv.near)||{})};if(m.inv.cls)S.cls=m.inv.cls;if(m.inv.box){S.box=m.inv.box.map(b=>({c:b.c,p:b.p,i:fixInv(b.i)}));rememberBoxes(S.box,m.p||S.pose)}if(m.inv.ore)S.ore=m.inv.ore}
+ const el=document.getElementById('live');if(m.inv){S.inv={bag:fixInv(m.inv.bag),near:m.inv.near?fixInv(m.inv.near):((S.inv&&S.inv.near)||{})};if(m.inv.cls)S.cls=m.inv.cls;if(m.inv.box){S.box=m.inv.box.map(b=>({c:b.c,p:b.p,i:fixInv(b.i)}));rememberBoxes(S.box,m.p||S.pose)}if(m.inv.ore)S.ore=m.inv.ore.filter(a=>!(a[0]&&a[0][0]==='v'&&a[4]===1))}
  if('wp' in m){if(m.wp)addLog('나침반에 목표 표시됨');S.wp=m.wp||null;if(m.wp)S.wpSel=null;const e2=document.getElementById('live');e2.textContent=m.wp?'게임 나침반에 웨이포인트를 표시했습니다':'웨이포인트를 지웠습니다';e2.style.color='var(--ok)'}
  if(m.msg){addLog(m.msg);if(/필요량|광맥은 끝/.test(m.msg))beep([660,880],.18);const l=document.getElementById('live');l.textContent=m.msg;l.style.color='var(--ac)';if(!m.inv&&!m.p&&!m.prog){draw();return}}
  if(m.prog){S.prog=m.prog;if(!m.inv&&!m.r&&!m.i){draw();if(!m.p)return}}
@@ -457,6 +457,7 @@ body.app.mapmode #mapview{height:calc(100vh - 176px)}
  </section>
 </div>
 <script src="regions.js"></script>
+<script src="map-status.js"></script>
 <script>
 (()=>{
 // ===== interactive map: everything is recorded from the game while you play =====
@@ -534,8 +535,17 @@ function hazText(mp,key){if(key&&key.startsWith('g:')){const r=mapCaves()[+key.s
  return(dl?dl+'\n':'')+'내가 본 것: '+(parts.length?parts.join(', '):'없음')+' · '+(ago<60?ago+'분 전':ago<1440?Math.round(ago/60)+'시간 전':new Date(h.at).toLocaleDateString())}
 
 // ---------- recording ----------
+const life=window.HudMapStatus;
+function lifeCaves(mp,w=session.view){const rows=(CAVEMAP[w]||[]).map((r,i)=>({key:'g:'+i,x:r[0],y:r[1]}));
+ for(const[k,o]of Object.entries(mp.lm))if(['c','w'].includes(o[0][0])&&!rows.some(c=>Math.hypot(c.x-o[1],c.y-o[2])<6000))rows.push({key:k,x:o[1],y:o[2],z:o[3]});return rows;}
+function statusBadge(mp,h){if(!life||!life.supported.has(h.kind))return;const e=life.entry(mp,h.key);if(!e)return;
+ ctx.save();ctx.font='bold 12px sans-serif';ctx.fillStyle=life.colors[e.state]||'#98a6b3';ctx.strokeStyle='#101820';ctx.lineWidth=3;const text=['depleted','killed'].includes(e.state)?'×':e.state==='reset'?'↻':e.state==='unknown'?'?':'✓';ctx.strokeText(text,h.x+7,h.y-7);ctx.fillText(text,h.x+7,h.y-7);ctx.restore();}
+let mapToken=null;
+
 window.__mapIngest=m=>{
  const now=Date.now(),previous=session.view;
+ if(m.t!=null&&mapToken===m.t)return;mapToken=m.t;
+ if(!m.w&&session.active(now))m={...m,w:session.world};
  const auto=session.ingest(m,now);
  if(auto){const target=session.view;if(target!==previous){session.select(previous);selectMap(target,true)}else if(!tool){V.follow=true;followBtn()}}
  if(m.w&&m.w!=='?'&&m.w!==S.world){
@@ -546,18 +556,20 @@ window.__mapIngest=m=>{
  }
  if(!S.world||!m.w||m.w==='?')return;
  const mp=M(S.world);
+ if(typeof m.scope==='string')mp.activeScope=session.active(now)?m.scope||null:null;
  const put=(store,a)=>{const t=a[0];if(!t)return;const k=t[0];if(k==='a')return;
   const dst=(k==='v')?mp.ore:mp.lm;const key=k==='b'?t:(k==='d'||k==='c')?keyOf(k,a[1],a[2]):keyOf(t,a[1],a[2]);const was=dst[key];
   if(k==='c'&&t==='c:Cave'&&was&&was[0]!=='c:Cave')return;
-  dst[key]=[t,Math.round(a[1]),Math.round(a[2]),Math.round(a[3]||0),now,a[4]||0]};
+  dst[key]=[t,Math.round(a[1]),Math.round(a[2]),Math.round(a[3]||0),now,a[4]];if(life)life.observe(mp,a,now)};
  if(m.lm)for(const a of m.lm)put(mp.lm,a);
- if(m.inv&&m.inv.ore){const p=m.p||S.pose;
-  if(p){for(const k in mp.ore){const o=mp.ore[k];if(Math.hypot(o[1]-p[0],o[2]-p[1])<12000&&!m.inv.ore.some(a=>keyOf(a[0],a[1],a[2])===k))delete mp.ore[k]}}
-  for(const a of m.inv.ore)put(null,a)}
+ for(const list of [m.ore,m.inv&&m.inv.ore])if(Array.isArray(list))for(const a of list)put(null,a);
+ if(life){const caves=lifeCaves(mp,S.world);life.visits(mp,m.players,caves,now);if(m.ore||m.lm)life.aggregate(mp,caves,now);}
  for(const list of [m.ore,m.inv&&m.inv.ore])if(Array.isArray(list))noteHazards(mp,list,now);
  if(m.p)markSeen(mp,m.p[0],m.p[1]);
  if(m.fog&&m.fog.r&&m.fog.r.length){mp.gfog=m.fog;delete FOGM[S.world]}
  if(m.p){const tr=mp.track,last=tr[tr.length-1];if(!last||Math.hypot(last[0]-m.p[0],last[1]-m.p[1])>2500){tr.push([Math.round(m.p[0]),Math.round(m.p[1])]);if(tr.length>8000)tr.splice(0,tr.length-8000)}}
+ if(life&&selKey&&session.view===S.world){const n=$('mlstate'),e=life.entry(mp,selKey);if(n){n.textContent=life.describe(e)+(e?' · '+ago(e.at):'');n.style.color=life.colors[e&&e.state]||'#98a6b3'}}
+ if(m.lm||m.ore||m.players||m.inv&&m.inv.ore)save();
  if(mapOn())requestDraw();
 };
 
@@ -704,7 +716,7 @@ function drawMap(){if(!W)return;const mp=M();hits=[];
    if(ci.lv&&!mp.notes[k]&&V.s>.35){ctx.font='bold 11px sans-serif';ctx.fillStyle=ci.size===4?'#ffb3a1':'#ffe39a';ctx.shadowColor='#000';ctx.shadowBlur=3;ctx.fillText(ci.size===4?'':ci.lv.replace('Lv.',''),a+r+15,b+4);ctx.shadowBlur=0}
    noteLabel(mp.notes[k],a,b-r*.3,'#bfefe9');hits.push({x:a,y:b,r:r+4,kind:'cave',ref:o,key:k,ci})}
   else if(t==='e'&&L.dep){ctx.strokeStyle='#e0a050';ctx.fillStyle='rgba(224,160,80,.25)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(a,b-7);ctx.lineTo(a+7,b);ctx.lineTo(a,b+7);ctx.lineTo(a-7,b);ctx.closePath();ctx.fill();ctx.stroke();noteLabel(mp.notes[k],a,b);hits.push({x:a,y:b,r:9,kind:'deep',ref:o,key:k})}
-  else if(t==='b'&&L.boss){const dead=!!o[5];ctx.save();ctx.translate(a,b);ctx.fillStyle=dead?'#5b5f63':'#e8433a';ctx.strokeStyle='#170404';ctx.lineWidth=2;
+  else if(t==='b'&&L.boss){const dead=life?['killed'].includes((life.entry(mp,k)||{}).state):o[5]===1;ctx.save();ctx.translate(a,b);ctx.fillStyle=dead?'#5b5f63':'#e8433a';ctx.strokeStyle='#170404';ctx.lineWidth=2;
    ctx.beginPath();ctx.moveTo(0,-12);ctx.lineTo(11,0);ctx.lineTo(0,12);ctx.lineTo(-11,0);ctx.closePath();ctx.fill();ctx.stroke();
    ctx.fillStyle=dead?'#c9ccd0':'#fff3d6';ctx.font='bold 12px sans-serif';ctx.textAlign='center';ctx.fillText(dead?'✕':'☠',0,4);ctx.restore();
    ctx.font='600 12px "Noto Sans KR"';ctx.fillStyle=dead?'#aab0b5':'#ffb3a8';ctx.shadowColor='#000';ctx.shadowBlur=3;ctx.fillText(bossName(o[0])+(dead?' (처치됨)':''),a+14,b+4);ctx.shadowBlur=0;
@@ -718,6 +730,7 @@ function drawMap(){if(!W)return;const mp=M();hits=[];
   if(has.length){ctx.strokeStyle='#ffc56b';ctx.lineWidth=2;ctx.beginPath();ctx.arc(a,c,14,0,7);ctx.stroke();ctx.font='12px "Noto Sans KR"';ctx.fillText(has.map(k=>nm(k)+' '+b.i[k]).join(', '),a+10,c-8)}
   noteLabel(mp.notes[boxKey(b)],a,c);hits.push({x:a,y:c,r:8,kind:'box',ref:b,key:boxKey(b)})}
  if(currentMap()&&L.home&&S.home){const[a,b]=toS(S.home[0],S.home[1]);ctx.font='20px sans-serif';ctx.textAlign='center';ctx.fillText('🏠',a,b+7);ctx.textAlign='left';noteLabel(mp.notes.home,a,b);hits.push({x:a,y:b,r:12,kind:'home',key:'home'})}
+ for(const h of hits)statusBadge(mp,h);
  // Labels remain legible above POIs; unknown anchors dim with the visited fog.
  if(L.regions&&window.HudRegions)window.HudRegions.draw(ctx,session.view,toS,W,H,V.s,(x,y)=>{
   if(!L.fog)return true;const i=Math.floor(x/SEEN),j=Math.floor(y/SEEN);
@@ -729,7 +742,7 @@ function drawMap(){if(!W)return;const mp=M();hits=[];
  if(currentMap()&&L.me&&S.pose){const[a,b]=toS(S.pose[0],S.pose[1]);const yaw=(S.pose[3]||0)*Math.PI/180;const[dx,dy]=rotv(Math.sin(yaw),-Math.cos(yaw));
   ctx.save();ctx.translate(a,b);ctx.rotate(Math.atan2(dy,dx)+Math.PI/2);ctx.fillStyle='#4fd18b';ctx.shadowColor='#4fd18b';ctx.shadowBlur=12;ctx.beginPath();ctx.moveTo(0,-11);ctx.lineTo(8,9);ctx.lineTo(0,4);ctx.lineTo(-8,9);ctx.closePath();ctx.fill();ctx.restore()}
  const lmn=Object.keys(mp.lm).length,on=Object.keys(mp.ore).length;
- $('mapstat').textContent=`동굴·광맥·간헐천 ${lmn}곳 · 광석 노드 ${on}개 · 핀 ${mp.pins.length}개`;
+ $('mapstat').textContent=`동굴·광맥·간헐천 ${lmn}곳 · 광석 노드 ${on}개 · 핀 ${mp.pins.length}개 · ${mp.activeScope?'서버 관측 기록':'서버 식별/수집 대기'}`;
  const active=session.active(Date.now()),w=session.view;
  $('mapworld').textContent='열람: '+(WORLDN[w]||w)+(active?' · 접속: '+(WORLDN[session.world]||session.world):' · 미접속 / 연결 대기')+(IMG[w]&&IMG[w].bad?' · 지형 이미지 미설치 (격자·저장 기록 표시)':'');
  for(const id of ['mtme','mtfollow','mtwpclr'])$(id).disabled=!currentMap();
@@ -812,7 +825,7 @@ function showInfo(h){const box=$('mapinfo'),mp=M();let t='',body='';selKey=h.key
  if(h.kind==='cave'){const ci=h.ci||{label:'동굴'};t=ci.label+(ci.bio?' ('+ci.bio+')':'');body=`<div class="bench">${cell([h.ref[1],h.ref[2]])}${ci.ent?' · 입구형':''}</div><div class="bench">${hazText(M(),h.key).replace(/\n/g,"<br>")}</div>${wpButton(h.ref[1],h.ref[2],h.ref[3],h.ref[0])}`}
  else if(h.kind==='wp'){t='나침반 목표';body=`<div class="bench">${cell([h.ref[0],h.ref[1]])}</div><div class="bt"><button class="mini" id="mwpclr">✕ 이 표시 지우기</button></div><div class="bench" style="margin-top:4px">게임 나침반의 표시까지 지우려면 게임에서 F7을 누르세요.</div>`}
  else if(h.kind==='deep'){t='심층 광맥 자리';body=`<div class="bench">${cell([h.ref[1],h.ref[2]])} · 가까이 가면 광석 종류가 표시됩니다</div>${wpButton(h.ref[1],h.ref[2],h.ref[3],h.ref[0])}`}
- else if(h.kind==='boss'){t='월드 보스: '+bossName(h.ref[0]);body=`<div class="bench">${cell([h.ref[1],h.ref[2]])}${h.ref[5]?' · 처치됨 (다시 나타날 때까지 대기)':' · 살아 있음'}</div>${wpButton(h.ref[1],h.ref[2],h.ref[3])}`}
+ else if(h.kind==='boss'){t='월드 보스: '+bossName(h.ref[0]);body=`<div class="bench">${cell([h.ref[1],h.ref[2]])} · 마지막 게임 관측 기록</div>${wpButton(h.ref[1],h.ref[2],h.ref[3])}`}
  else if(h.kind==='exo'){t='엑조틱 지점';body=`<div class="bench">${cell([h.ref[1],h.ref[2]])}</div>${wpButton(h.ref[1],h.ref[2],h.ref[3],h.ref[0])}`}
  else if(h.kind==='dep'){const old=Date.now()-(h.ref[4]||0)>6*3600e3;t='심층 광맥: '+rowItem(h.ref[0])+(old?' (예전 기록)':'');body=`<div class="bench">${fmtD([h.ref[1],h.ref[2]])} · 채굴기(드릴)를 설치하는 곳 · 마지막 확인 ${ago(h.ref[4])}</div><div class="bench">광맥 종류는 탐사(서버)마다 바뀔 수 있습니다. 근처에 가면 지금 종류로 다시 바뀝니다.</div>${wpButton(h.ref[1],h.ref[2],h.ref[3],h.ref[0])}`}
  else if(h.kind==='gey'){t=h.ref[0].indexOf('Oil')>=0?'석유 간헐천':'효소 간헐천';body=`<div class="bench">${fmtD([h.ref[1],h.ref[2]])} · 추출기 설치 지점</div>${wpButton(h.ref[1],h.ref[2],h.ref[3],h.ref[0])}`}
@@ -821,10 +834,12 @@ function showInfo(h){const box=$('mapinfo'),mp=M();let t='',body='';selKey=h.key
  else if(h.kind==='home'){t='🏠 기지';body=`<div class="bench">${fmtD(S.home)}</div>${wpButton(S.home[0],S.home[1],S.home[2],'home')}`}
  else if(h.kind==='pin'){const p=h.ref;t='핀';body=`<input id="mipn" value="${esc(p.n||'')}" placeholder="이름"><textarea id="mipt" rows="2" placeholder="메모를 바로 입력하세요 (자동 저장)">${esc(p.t||'')}</textarea><div class="bench">색: <input type="color" id="mipc" value="${p.c||'#ff6a55'}" style="width:48px;height:24px;padding:0;vertical-align:middle"> · ${fmtD([p.x,p.y])}</div><div class="bt">${wpButton(p.x,p.y,p.z)}<button class="mini" id="mipdel">핀 삭제</button></div>`}
  else if(h.kind==='path'){const p=h.ref;t='경로';body=`<input id="mipn" value="${esc(p.n||'')}" placeholder="이름"><div class="bench">색: <input type="color" id="mipc" value="${p.c||'#58b7e8'}" style="width:48px;height:24px;padding:0;vertical-align:middle"> · ${distanceText(pathDistance(p.pts))} · 점 ${p.pts.length}개</div><div class="bt"><button class="mini" id="mipdel">경로 삭제</button></div>`}
+ if(life&&life.supported.has(h.kind)&&h.key){const e=life.entry(mp,h.key);body='<div id="mlstate" class="bench" style="margin:8px 0;color:'+(life.colors[e&&e.state]||'#98a6b3')+'">'+life.describe(e)+(e?' · '+ago(e.at):'')+'</div>'+body+'<div class="bt"><button class="mini" id="mlvisit">방문 체크</button><button class="mini" id="mlfarm">파밍 체크</button><button class="mini" id="mlreset">체크 해제</button></div><div class="bench">서버에서 관측된 상태만 반영합니다. 미로딩·검색 누락으로는 소진 처리하지 않습니다. 동굴 표시는 관측한 광석 기준입니다.</div>';}
  // one memo box for every kind of mark: it is already focused, and every key you type is saved at once
  const memo=h.kind==='pin'?null:(h.key?`<textarea id="minote" rows="2" maxlength="200" placeholder="메모를 바로 입력하세요 (자동 저장)">${esc(mp.notes[h.key]||'')}</textarea><div class="bench" id="minok" style="text-align:right;min-height:14px"></div>`:'');
  box.innerHTML=`<button class="x" id="mix">✕</button><div class="t">${t}</div>${memo||''}${body}`;box.style.display='block';
  $('mix').onclick=closeInfo;
+ for(const[id,state]of [['mlvisit','visited'],['mlfarm','farmed'],['mlreset','unknown']]){const b=$(id);if(b){b.disabled=!mp.activeScope;b.onclick=()=>{life.manual(mp,h.key,state,Date.now());save();showInfo(h)}}}
  const note=$('minote');if(note){let tm=null;note.oninput=()=>{const v=note.value.trim();v?mp.notes[h.key]=v:delete mp.notes[h.key];save();requestDraw();const ok=$('minok');if(ok){ok.textContent='✓ 저장됨';clearTimeout(tm);tm=setTimeout(()=>{ok.textContent=''},1200)}};
   note.onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();closeInfo()}else if(e.key==='Escape'){closeInfo()}};
   setTimeout(()=>{note.focus();note.setSelectionRange(note.value.length,note.value.length)},0)}
@@ -845,7 +860,7 @@ $('mapinfo').addEventListener('pointerdown',e=>{const d=e.target.dataset;if(!cur
 let drag=null,moved=false;
 const hitAt=(x,y)=>{let best=null,bd=1e9;for(const h of hits){const d=Math.hypot(h.x-x,h.y-y);if(d<=h.r&&d<bd){best=h;bd=d}}return best};
 cv.addEventListener('pointerdown',e=>{if(e.button!==0)return;drag={x:e.offsetX,y:e.offsetY,vx:V.x,vy:V.y};moved=false;cv.setPointerCapture(e.pointerId)});
-const hitName=h=>{const mp=M(),n=h.key&&mp.notes[h.key];let t=h.kind==='cave'?(h.ci?h.ci.label+(h.ci.bio?' ('+h.ci.bio+')':''):'동굴'):h.kind==='deep'?'심층 광맥 자리':h.kind==='exo'?'엑조틱 지점':h.kind==='boss'?'월드 보스: '+bossName(h.ref[0])+(h.ref[5]?' (처치됨)':''):
+const hitName=h=>{const mp=M(),n=h.key&&mp.notes[h.key];let t=h.kind==='cave'?(h.ci?h.ci.label+(h.ci.bio?' ('+h.ci.bio+')':''):'동굴'):h.kind==='deep'?'심층 광맥 자리':h.kind==='exo'?'엑조틱 지점':h.kind==='boss'?'월드 보스: '+bossName(h.ref[0])+(life?' · '+life.describe(life.entry(mp,h.key)):(h.ref[5]===1?' (처치됨)':'')):
  h.kind==='dep'?'심층 광맥: '+rowItem(h.ref[0])+(Date.now()-(h.ref[4]||0)>6*3600e3?' (예전 기록 · 다시 확인 필요)':''):h.kind==='gey'?(h.ref[0].indexOf('Oil')>=0?'석유 간헐천':'효소 간헐천'):h.kind==='ore'?'광석: '+rowItem(h.ref[0]):h.kind==='box'?'보관함':h.kind==='home'?'기지':h.kind==='pin'?(h.ref.n||'핀'):h.kind==='path'?(h.ref.n||'경로'):h.kind==='wp'?'나침반 목표 (눌러서 지우기)':'';
  return t+(n?' — '+n:'')+' · 눌러서 메모'+(h.kind==='cave'?'\n'+hazText(mp,h.key):'')};
 cv.addEventListener('pointerleave',()=>window.__hoverTip&&window.__hoverTip(null));
@@ -1032,7 +1047,7 @@ document.addEventListener('click',e=>{const c=e.target.dataset&&e.target.dataset
  if(c==='map'&&S.maps&&window.__mapViewWorld)delete S.maps[window.__mapViewWorld()];if(c==='map'&&window.__mapRecordsChanged)window.__mapRecordsChanged();
  e.target.textContent='지움 ✓';setTimeout(()=>e.target.textContent='지우기',1500);save();draw()});
 // update notices and the helper switch
-const HUD_VERSION='2026.11.16.5';
+const HUD_VERSION='2026.11.16.6';
 {const st=document.createElement('style');st.textContent='#tb .tbv{-webkit-app-region:no-drag;background:transparent;border:1px solid rgba(243,155,43,.45);color:#f3c27a;font:600 11px Oxanium,sans-serif;padding:2px 8px;margin-right:8px;cursor:pointer}#tb .tbv:hover{background:rgba(243,155,43,.15)}#tb .tbv.new{border-color:#4fd18b;color:#4fd18b}#tb .tbo{font:600 11px Oxanium,sans-serif;color:#4fd18b;margin-right:10px;letter-spacing:.06em;white-space:nowrap}#tb .tbo:empty{display:none}#tb .tbo::before{content:"●";margin-right:5px;font-size:9px;vertical-align:1px}';document.head.appendChild(st)}
 setTimeout(()=>{const A=window.hudApp;const vb=$('tbver');const pv=HUD_VERSION.startsWith('__')?'개발판':HUD_VERSION;
  const edition='ICARUS HUD';let updateMood='idle';

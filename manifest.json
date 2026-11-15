@@ -1,10 +1,10 @@
 {
- "version": "2026.11.16.5",
+ "version": "2026.11.16.6",
  "channel": "stable",
- "source": "0e595b98cbfd57b193477bb245af632cd1d57129",
- "notes": "최적화 보완: 지형·테셀레이션·표시거리·수풀 보존. 원래 설정 기준으로 서버장·개인 모드 전환, 백업 복원 유지",
+ "source": "1942b0a0e813116c96bba43a9ca64a4a770d52fb",
+ "notes": "지도: 보스 상태 갱신, 소진 마커 보존, 서버별 방문·파밍·자원 관측 기록. 미확인 상태 구분",
  "config": {},
- "filesPath": "releases/stable/2026.11.16.5/files",
+ "filesPath": "releases/stable/2026.11.16.6/files",
  "files": [
   {
    "p": "game/Icarus/Binaries/Win64/dwmapi.dll",
@@ -55,8 +55,8 @@
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/Scripts/main.lua",
-   "n": 46115,
-   "h": "fbae1fcb7c2dbaea3c0b2e3ca0ea1b1b466637d9"
+   "n": 47489,
+   "h": "04870d0573bf27388efc4e7769fc802b17cb281a"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/Scripts/animals.lua",
@@ -70,8 +70,8 @@
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/index.html",
-   "n": 961676,
-   "h": "c3f6ccb3f0d3f867e7eefbeb36cf7706948cec24"
+   "n": 964003,
+   "h": "9f2ac5567b92156220f74c43a0ab8b4daef91229"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/animals.js",
@@ -227,6 +227,16 @@
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/optimization.js",
    "n": 8175,
    "h": "f7c90ee0b1cfff3986aa3f807762cc1f7667c279"
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/Scripts/map_observation.lua",
+   "n": 1416,
+   "h": "f4e26611830145f143e4f8efe4d0a71d0dec45f2"
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/map-status.js",
+   "n": 4794,
+   "h": "1c19e04a23796d107724036385320551202d6f8d"
   }
  ]
 }
