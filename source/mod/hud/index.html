@@ -421,6 +421,7 @@ body.app.mapmode #mapview{height:calc(100vh - 176px)}
   <div class="bt"><button class="mini" id="mtcurrent">현재 맵으로</button><button class="mini" id="mtfit">전체 지도 보기</button></div>
   <div class="bench" id="mapworld">맵 정보 없음 — 게임에 들어가면 자동으로 기록됩니다</div>
   <div class="bench" id="mapstat" style="margin-top:4px"></div>
+  <div class="bench" id="mapnotice" style="margin-top:6px;color:#d8bf83"></div>
   <h2>레이어</h2>
   <div id="maplayers"></div>
   <h2>서버원</h2><div id="mapparty" class="bench" style="max-height:230px;overflow:auto"></div>
@@ -778,6 +779,7 @@ function drawMap(){if(!W)return;const mp=M();hits=[];
  for(const id of ['mtme','mtfollow','mtwpclr'])$(id).disabled=!currentMap();
  $('mtcurrent').disabled=!active;
  $('mapselect').value=w;
+ $('mapnotice').textContent=w==='Terrain_019'?'널 섹터 — 남쪽의 검은 영역도 실제 탐험 가능한 지역입니다. 게임 설정상 지형이 표시되지 않으며, 지도에는 알려진 자원·동굴 후보지를 표시합니다.':'';
  // Search highlights are static; live data and user actions already invalidate the canvas.
 }
 const WORLDN={Terrain_016:'올림푸스',Terrain_017:'스틱스',Terrain_019:'프로메테우스',Terrain_021:'엘리시움'};
