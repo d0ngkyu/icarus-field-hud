@@ -294,15 +294,18 @@ local function scanOres(keep)
         local kept = 0
         for _, o in ipairs(list) do
             if kept >= (keep or ORE_KEEP) then break end
-            local mined = false
+            local mined, value = false, -1
             if t:sub(1, 2) == "v:" and o.a:IsValid() then
-                pcall(function() mined = (o.a:GetVoxelFullyMined() == true) end)
+                pcall(function()
+                    local v = o.a:GetVoxelFullyMined()
+                    if type(v)=="boolean" then mined=v value=v and 1 or 0 end
+                end)
+            elseif t:sub(1, 2) == "d:" and o.a:IsValid() then
+                pcall(function() local v=o.a.ResourceRemaining if type(v)=="number" then value=v end end)
             end
-            if not mined then
-                table.insert(LAST_ORES, { t = t, x = o.x, y = o.y, z = o.z })
-                table.insert(out, string.format('["%s",%.0f,%.0f,%.0f]', (t:gsub('[^%w_:%-%.]', '')), o.x, o.y, o.z))
-                kept = kept + 1
-            end
+            if not mined then table.insert(LAST_ORES, { t = t, x = o.x, y = o.y, z = o.z }) end
+            table.insert(out, string.format('["%s",%.0f,%.0f,%.0f,%d]', (t:gsub('[^%w_:%-%.]', '')), o.x, o.y, o.z, value))
+            kept = kept + 1
         end
     end
     return out, string.format("ores total=%d types=%d errors=%d", total, types, errs)
@@ -396,6 +399,27 @@ local function worldSettingsMarks()
     return out
 end
 
+local function scanBosses()
+    if not WORLD_READY or not on("bosses") then return nil end
+    local out = {}
+    -- world bosses: the game shares their spawn points with everyone (same as the in-game map)
+    step("bosses")
+    for _, sp in ipairs(WORLD_READY and on("bosses") and FindAllOf("WorldBossSpawner") or {}) do
+        pcall(function()
+            if not sp:IsValid() or string.find(sp:GetFullName(), "Default__", 1, true) then return end
+            local l = sp:K2_GetActorLocation()
+            if l.X == 0 and l.Y == 0 then return end
+            local row = sp.WorldBoss.RowName:ToString()
+            if not row or row == "" or row == "None" then return end
+            local killed = sp.bHasBossBeenKilled
+            if type(killed) ~= "boolean" then return end
+            local dead = killed and 1 or 0
+            table.insert(out, string.format('["b:%s#%d",%.0f,%.0f,%.0f,%d]', row:gsub('[^%w_]', ''), sp.BossID or 0, l.X, l.Y, l.Z, dead))
+        end)
+    end
+    return "[" .. table.concat(out, ",") .. "]"
+end
+
 local function scanLandmarks()
     if not WORLD_READY or not on("landmarks") then return nil end
     local out, sum = {}, 0
@@ -412,9 +436,9 @@ local function scanLandmarks()
                 if not a:IsValid() or string.find(a:GetFullName(), "Default__", 1, true) then return end
                 local l = a:K2_GetActorLocation()
                 if l.X == 0 and l.Y == 0 then return end
-                local n = nameFn(a)
+                local n, value = nameFn(a)
                 if not n or n == "" or n == "None" then return end
-                table.insert(out, string.format('["%s:%s",%.0f,%.0f,%.0f]', kind, (n:gsub('[^%w_%-%.]', '')), l.X, l.Y, l.Z))
+                table.insert(out, string.format('["%s:%s",%.0f,%.0f,%.0f,%d]', kind, (n:gsub('[^%w_%-%.]', '')), l.X, l.Y, l.Z, type(value) == 'number' and value or -1))
                 sum = sum + math.floor(l.X / 100) + math.floor(l.Y / 100)
             end)
         end
@@ -432,26 +456,11 @@ local function scanLandmarks()
         end
         return id or "Cave"
     end)
-    each("ResourceDeposit", "d", function(a) return a.Type.RowName:ToString() end)
-    each("BP_OilGeyser_C", "g", function() return "Oil" end)
-    each("BP_EnzymeGeyser_C", "g", function() return "Enzyme" end)
-    -- world bosses: the game shares their spawn points with everyone (same as the in-game map)
-    step("bosses")
-    for _, sp in ipairs(WORLD_READY and on("bosses") and FindAllOf("WorldBossSpawner") or {}) do
-        pcall(function()
-            if not sp:IsValid() or string.find(sp:GetFullName(), "Default__", 1, true) then return end
-            local l = sp:K2_GetActorLocation()
-            if l.X == 0 and l.Y == 0 then return end
-            local row = sp.WorldBoss.RowName:ToString()
-            if not row or row == "" or row == "None" then return end
-            local dead = sp.bHasBossBeenKilled and 1 or 0
-            table.insert(out, string.format('["b:%s#%d",%.0f,%.0f,%.0f,%d]', row:gsub('[^%w_]', ''), sp.BossID or 0, l.X, l.Y, l.Z, dead))
-            sum = sum + math.floor(l.X / 1000) + dead * 7
-        end)
-    end
+    each("ResourceDeposit", "d", function(a) return a.Type.RowName:ToString(), a.ResourceRemaining end)
+    each("BP_OilGeyser_C", "g", function(a) return "Oil", type(a.bHasPumpJack)=="boolean" and (a.bHasPumpJack and 1 or 0) or -1 end)
+    each("BP_EnzymeGeyser_C", "g", function(a) return "Enzyme", a.Completions end)
     step("landmarks")
-    local sig = #out .. ":" .. sum
-    if sig == lastLm then return nil end
+    local sig = table.concat(out, ",")
     lastLm = sig
     return "[" .. table.concat(out, ",") .. "]"
 end
@@ -702,10 +711,13 @@ if okAnimal then animalReader = loadedAnimal else log("animal reader unavailable
 WORLD_READY = false
 local sessionId, sessionTicks = nil, 0
 local gameControl = nil
+local mapReader, mapScope = nil, nil
+pcall(function() mapReader = dofile(MODDIR .. "/Scripts/map_observation.lua") end)
 local function resetSession()
     if gameControl then gameControl.reset() end
     WORLD_READY = false
     sessionTicks = 0
+    mapScope = nil
     bagInvs, lastBag, lastBagJson, lastPose = nil, "", "{}", nil
     wsCache, wsWorld, wsNote, lastLm = nil, nil, false, ""
     lastQuick, lastProg, lastProgJson = "", "", nil
@@ -740,7 +752,20 @@ local function autoTick()
     local dt = (os.clock() - t0) * 1000
     if dt > autoMax + 5 then autoMax = dt log(string.format("tick took %.0f ms", dt)) end
     local withInv = bagChanged or (tick % 20 == 0)
-    local lmJ = nil
+    local lmJ, playersJ = nil, nil
+    if mapReader and on("landmarks") and (sessionTicks == 61 or tick % 40 == 5) then
+        step("landmarks")
+        local okM, scope, party = pcall(mapReader.context, world, true)
+        if okM then mapScope, playersJ = scope, party end
+        step("idle")
+    end
+    -- Small shared boss list at six-second intervals, not the full world scan.
+    if tick % 8 == 3 and on("bosses") then
+        step("bosses")
+        local okB, bosses = pcall(scanBosses)
+        if okB then lmJ = bosses end
+        step("idle")
+    end
     if tick % 40 == 7 then
         step("landmarks")
         local okL, lj = true, nil
@@ -789,12 +814,12 @@ local function autoTick()
         -- observations after 12 seconds. This does not reread the native array.
         elseif value or lastAnimal then animalJ = value or "null" lastAnimal = value end
     end
-    if not poseChanged and not withInv and not progJ and not lmJ and not oreJ and not fogJ and not animalJ then return end
+    if not poseChanged and not withInv and not progJ and not lmJ and not oreJ and not fogJ and not animalJ and not playersJ then return end
     if pose then lastPose = pose end
     seq = seq + 1
     local f = openOut()
     if not f then return end
-    f:write(string.format('window.__icarusLive&&window.__icarusLive({"t":%d,"auto":true,"w":"%s"%s%s%s%s%s%s%s});\n', seq, worldName(), oreJ and (',"ore":' .. oreJ) or "",
+    f:write(string.format('window.__icarusLive&&window.__icarusLive({"t":%d,"auto":true,"w":"%s"%s%s%s%s%s%s%s});\n', seq, worldName(), ',"scope":"' .. (mapScope or '') .. '"' .. (playersJ and (',"players":' .. playersJ) or "") .. (oreJ and (',"ore":' .. oreJ) or ""),
         pose and (',"p":' .. pose) or "", withInv and (',"inv":{"bag":' .. lastBagJson .. '}') or "",
         progJ and (',"prog":' .. progJ) or "", lmJ and (',"lm":' .. lmJ) or "", fogJ and (',"fog":' .. fogJ) or "", animalJ and (',"animal":' .. animalJ) or ""))
     f:close()
