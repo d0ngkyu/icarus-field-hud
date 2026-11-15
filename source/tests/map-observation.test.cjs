@@ -15,5 +15,11 @@ test('Lua map context: no account collection, current world/cave guards, missing
  scope='';assert(m.context(w,true)==nil);scope='invalid"id';assert(m.context(w,true)==nil)
  scope='prospectB';list={};for i=1,100 do list[i]=player(w,true) end;id,points=m.context(w,true);local _,n=points:gsub('%[1,2,3,1%]','');assert(n==64)
  assert(m.context(nil,true)==nil)
+ local ps={IsValid=function() return true end,PlayerID=7,GetFullName=function() return 'PS7' end,PlayerNamePrivate={ToString=function() return 'Friend' end},PawnPrivate=player(w,true)}
+ w.GameState.PlayerArray={GetArrayNum=function() return 1 end,ForEach=function(_,f) f(1,{get=function() return ps end}) end}
+ local roster=m.party(w,{IsValid=function() return true end,PlayerState=ps});assert(roster:find('"n":"Friend"',1,true) and roster:find('"self":true',1,true) and roster:find('"p":[1,2,3]',1,true))
+ ps.PawnPrivate=nil;roster=m.party(w,nil);assert(roster:find('"p":null',1,true))
+ w.GameState.PlayerArray.GetArrayNum=function() return 65 end;assert(m.party(w,nil)==nil)
+
  `));assert.equal(rc,lua.LUA_OK,rc?to_jsstring(lua.lua_tostring(L,-1)):'');lua.lua_close(L);
 });

@@ -752,11 +752,17 @@ local function autoTick()
     local dt = (os.clock() - t0) * 1000
     if dt > autoMax + 5 then autoMax = dt log(string.format("tick took %.0f ms", dt)) end
     local withInv = bagChanged or (tick % 20 == 0)
-    local lmJ, playersJ = nil, nil
+    local lmJ, playersJ, partyJ = nil, nil, nil
     if mapReader and on("landmarks") and (sessionTicks == 61 or tick % 40 == 5) then
         step("landmarks")
         local okM, scope, party = pcall(mapReader.context, world, true)
         if okM then mapScope, playersJ = scope, party end
+        step("idle")
+    end
+    if mapReader and mapScope and on("landmarks") and tick % 4 == 1 then
+        step("landmarks")
+        local okP, roster = pcall(mapReader.party, world, pawn)
+        if okP then partyJ = roster end
         step("idle")
     end
     -- Small shared boss list at six-second intervals, not the full world scan.
@@ -814,12 +820,12 @@ local function autoTick()
         -- observations after 12 seconds. This does not reread the native array.
         elseif value or lastAnimal then animalJ = value or "null" lastAnimal = value end
     end
-    if not poseChanged and not withInv and not progJ and not lmJ and not oreJ and not fogJ and not animalJ and not playersJ then return end
+    if not poseChanged and not withInv and not progJ and not lmJ and not oreJ and not fogJ and not animalJ and not playersJ and not partyJ then return end
     if pose then lastPose = pose end
     seq = seq + 1
     local f = openOut()
     if not f then return end
-    f:write(string.format('window.__icarusLive&&window.__icarusLive({"t":%d,"auto":true,"w":"%s"%s%s%s%s%s%s%s});\n', seq, worldName(), ',"scope":"' .. (mapScope or '') .. '"' .. (playersJ and (',"players":' .. playersJ) or "") .. (oreJ and (',"ore":' .. oreJ) or ""),
+    f:write(string.format('window.__icarusLive&&window.__icarusLive({"t":%d,"auto":true,"w":"%s"%s%s%s%s%s%s%s});\n', seq, worldName(), ',"scope":"' .. (mapScope or '') .. '"' .. (playersJ and (',"players":' .. playersJ) or "") .. (partyJ and (',"party":' .. partyJ) or "") .. (oreJ and (',"ore":' .. oreJ) or ""),
         pose and (',"p":' .. pose) or "", withInv and (',"inv":{"bag":' .. lastBagJson .. '}') or "",
         progJ and (',"prog":' .. progJ) or "", lmJ and (',"lm":' .. lmJ) or "", fogJ and (',"fog":' .. fogJ) or "", animalJ and (',"animal":' .. animalJ) or ""))
     f:close()
