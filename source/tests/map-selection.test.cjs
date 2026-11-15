@@ -7,7 +7,7 @@ function harness(){
  const ctx=new Proxy({createRadialGradient:()=>({addColorStop:noop}),measureText:()=>({width:10})},{get:(o,k)=>o[k]||noop,set:(o,k,v)=>(o[k]=v,true)});
  const node=id=>{if(!nodes.has(id))nodes.set(id,{value:'',style:{},dataset:{},classList:{toggle:noop,add:noop,remove:noop,contains:()=>true},events:{},setAttribute(k,v){this[k]=v},addEventListener(k,f){this.events[k]=f},getContext:()=>ctx,getBoundingClientRect:()=>({width:800,height:600}),setPointerCapture:noop});return nodes.get(id)};
  let now=1000;const clock=class extends Date{static now(){return now}};
- const c=vm.createContext({S:{},I:{},D:{},Date:clock,console,save:noop,draw:noop,allBoxes:()=>[],addLog:noop,nm:x=>x,en:x=>x,esc:x=>x,document:{body:node("body"),getElementById:node,createElement:node,querySelector:()=>node('query'),addEventListener:noop},window:{addEventListener:noop,HudRegions:require('../mod/hud/regions.js')},Image:class{},setInterval:noop,setTimeout:noop,clearTimeout:noop,requestAnimationFrame:noop});
+ const c=vm.createContext({S:{},I:{},D:{},Date:clock,console,save:noop,draw:noop,allBoxes:()=>[],addLog:noop,nm:x=>x,en:x=>x,esc:x=>x,document:{body:node("body"),getElementById:node,createElement:node,querySelector:()=>node('query'),addEventListener:noop},window:{addEventListener:noop,HudMapStatus:require('../mod/hud/map-status.js'),HudRegions:require('../mod/hud/regions.js')},Image:class{},setInterval:noop,setTimeout:noop,clearTimeout:noop,requestAnimationFrame:noop});
  let code=html.slice(html.indexOf('(()=>{\n// ===== interactive map:'),html.indexOf('</script>',html.indexOf('// ===== interactive map:')));
  assert.ok(code.length>1000);
  code=code.replace(/\}\)\(\);\s*$/, 'window.test={session,M,selectMap,wpButton,dedupCaves,resize,drawMap,V,fitMap,addRoutePoint,finishPath,pathDistance,markSeen,drawVisitedFog};})();');
@@ -51,4 +51,21 @@ test('region finder centers small regions and resets when switching maps',()=>{
  t.V.follow=true;t.V.L.regions=0;h.node('mapregion').onchange({target:{value:String(i)}});
  const xy=h.c.window.HudRegions.world(rows[i]);assert.equal(t.V.x,xy[0]);assert.equal(t.V.y,xy[1]);assert.ok(t.V.s>=.22);assert.equal(t.V.follow,false);assert.equal(t.V.L.regions,1);
  t.selectMap('Outpost_002');assert.equal(h.node('mapregion').disabled,true);assert.ok(!h.node('mapregion').innerHTML.includes('수풀'));
+});
+
+test('automatic ore telemetry updates retained markers and missing scans do not delete them',()=>{
+ const h=harness();h.ingest({w:'Terrain_016',t:0});h.tick(1500);h.ingest({w:'Terrain_016',scope:'prospectA',t:1,ore:[['v:Iron',1000,2000,0,0]]});
+ const mp=h.t.M('Terrain_016'),k='v:Iron@2,4',life=h.c.window.HudMapStatus;
+ assert.ok(mp.ore[k]);assert.equal(life.entry(mp,k).state,'active');
+ h.tick(2000);h.ingest({w:'Terrain_016',scope:'prospectA',t:2,inv:{ore:[]},p:[1000,2000,0]});assert.ok(mp.ore[k]);
+ h.tick(3000);h.ingest({w:'Terrain_016',scope:'prospectA',t:3,ore:[['v:Iron',1000,2000,0,1]]});assert.equal(life.entry(mp,k).state,'depleted');
+ h.tick(4000);h.ingest({w:'Terrain_016',scope:'prospectB',t:4});assert.equal(life.entry(mp,k),null);
+});
+
+test('boss heartbeat updates both death and return without terrain marker changes',()=>{
+ const h=harness(),life=h.c.window.HudMapStatus;
+ h.ingest({w:'Terrain_016',scope:'p',t:1,lm:[['b:Wolf#1',100,200,0,0]]});const mp=h.t.M('Terrain_016');
+ h.tick(2000);h.ingest({w:'Terrain_016',scope:'p',t:2,lm:[['b:Wolf#1',100,200,0,1]]});assert.equal(life.entry(mp,'b:Wolf#1').state,'killed');
+ h.tick(3000);h.ingest({w:'Terrain_016',scope:'p',t:3,lm:[['b:Wolf#1',100,200,0,0]]});assert.equal(life.entry(mp,'b:Wolf#1').state,'reset');
+ h.tick(4000);h.ingest({w:'Terrain_016',scope:'p',t:3,lm:[['b:Wolf#1',100,200,0,1]]});assert.equal(life.entry(mp,'b:Wolf#1').state,'reset');
 });
