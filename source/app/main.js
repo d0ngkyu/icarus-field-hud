@@ -180,6 +180,27 @@ function buildTray() {
 }
 
 let gameControlAction=null;
+let optimizer = null;
+ipcMain.handle('optimization', async (_e, action) => {
+  if (!['status','host','personal','restore','hardware','sample-before','sample-after'].includes(action)) throw Error('지원하지 않는 최적화 요청입니다.');
+  if (action === 'hardware') return require('./performance.js').hardware();
+  if (action.startsWith('sample-')) {
+    const result = await require('./performance.js').sample();
+    cfg.optimizationMeasurements = {...cfg.optimizationMeasurements, [action.slice(7)]:result};
+    fs.mkdirSync(path.dirname(cfgFile()), {recursive:true});
+    fs.writeFileSync(cfgFile(), JSON.stringify(cfg, null, 1));
+    return result;
+  }
+  if (!optimizer) {
+    if (!process.env.LOCALAPPDATA) throw Error('게임 설정 경로를 확인할 수 없습니다.');
+    optimizer = require('./optimizer.js').create({
+      configFile:path.join(process.env.LOCALAPPDATA,'Icarus','Saved','Config','WindowsNoEditor','GameUserSettings.ini'),
+      storeDir:path.join(app.getPath('userData'),'optimization'), gameUp
+    });
+  }
+  const result = action === 'status' ? await optimizer.status() : await optimizer.run(action);
+  return {...result, measurements:cfg.optimizationMeasurements || {}};
+});
 ipcMain.handle('gameControl',async (_e,action)=>{
  if(updateTask||restartPending)return {message:'HUD 업데이트가 끝난 뒤 다시 눌러 주세요.'};
  if(action==='exit'){const answer=await dialog.showMessageBox(win,{type:'warning',message:'호스트 게임을 종료할까요?',detail:'접속한 친구들도 연결이 끊깁니다. 게임에서 Esc 메뉴를 연 상태에서 저장 처리 확인 후 종료를 요청합니다.',buttons:['취소','저장 후 종료'],defaultId:0,cancelId:0});if(answer.response!==1)return {message:'종료 요청을 취소했습니다.'};}
