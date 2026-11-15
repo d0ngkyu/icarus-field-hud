@@ -1,10 +1,10 @@
 {
- "version": "2026.11.16.4",
+ "version": "2026.11.16.5",
  "channel": "stable",
- "source": "e71653fdbb54792db72f1175fb8922afe0ba21d1",
- "notes": "최적화 버튼 잠김 수정. 게임 실행 중 차단 이유 표시, 종료 후 재시도와 HUD만 실행하는 적용 순서 안내",
+ "source": "0e595b98cbfd57b193477bb245af632cd1d57129",
+ "notes": "최적화 보완: 지형·테셀레이션·표시거리·수풀 보존. 원래 설정 기준으로 서버장·개인 모드 전환, 백업 복원 유지",
  "config": {},
- "filesPath": "releases/stable/2026.11.16.4/files",
+ "filesPath": "releases/stable/2026.11.16.5/files",
  "files": [
   {
    "p": "game/Icarus/Binaries/Win64/dwmapi.dll",
@@ -71,7 +71,7 @@
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/index.html",
    "n": 961676,
-   "h": "25c3ad9faf05882fafdb1d5fd5840f8290db241d"
+   "h": "c3f6ccb3f0d3f867e7eefbeb36cf7706948cec24"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/animals.js",
@@ -215,8 +215,8 @@
   },
   {
    "p": "app/optimizer.js",
-   "n": 7284,
-   "h": "b96bd4eff8af9046a2a3b34ea70efbac153ce20e"
+   "n": 7953,
+   "h": "7283379ffa654b2e8722ba7cd8849af95ea6b221"
   },
   {
    "p": "app/performance.js",
@@ -225,8 +225,8 @@
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/optimization.js",
-   "n": 7998,
-   "h": "da89321497b03a18810adc27d48c08979928afa4"
+   "n": 8175,
+   "h": "f7c90ee0b1cfff3986aa3f807762cc1f7667c279"
   }
  ]
 }
