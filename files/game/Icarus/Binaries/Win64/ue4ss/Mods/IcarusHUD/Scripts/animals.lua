@@ -93,7 +93,10 @@ readOne = function(panel, actor)
                 if genes[key] == nil then return nil, "missing gene " .. key end
                 geneJson[#geneJson + 1] = quote(key) .. ':' .. genes[key]
             end
-            return '{"id":' .. quote(actor:GetFullName())
+            local extra=''
+            pcall(function() extra=extra..',"lineage":'..quote(genetics.CreatureLineage.RowName:ToString()) end)
+            pcall(function() local n=genetics.CreatureUniqueVariation if type(n)=='number' and n>=0 and n%1==0 then extra=extra..',"phenotype":'..tostring(n) end end)
+            return '{"id":' .. quote(actor:GetFullName()) .. extra
                 .. ',"species":' .. quote(species) .. ',"sex":' .. tostring(tonumber(genetics.CreatureSex) or 0)
                 .. ',"genes":{' .. table.concat(geneJson, ',') .. '}'
         end
@@ -142,6 +145,25 @@ liveDetails = function(panel, actor, base)
                     end
                 end
             end
-            return base .. ',"name":' .. quote(text(actor.MountName)) .. ',"stats":{' .. table.concat(stats, ',') .. '},"tooltips":{' .. table.concat(tips, ',') .. '},"details":[' .. table.concat(detail, ',') .. ']}'
+            local extra=''
+            pcall(function() extra=extra..',"ownerName":'..quote(text(actor.OwnerName)) end)
+            pcall(function()
+                local pc=panel:GetOwningPlayer()
+                if valid(pc) and valid(pc.PlayerState) then
+                    local mine=actor:IsMountOwner(pc.PlayerState)
+                    if type(mine)=='boolean' then extra=extra..',"ownerMine":'..tostring(mine) end
+                end
+            end)
+            pcall(function()
+                if valid(geneticsUI) and same(geneticsUI.LinkedActor,actor) then
+                    local l=geneticsUI.Umg_GeneticLineage
+                    if valid(l) then
+                        if valid(l.GeneticName) then extra=extra..',"lineageName":'..quote(text(l.GeneticName:GetText())) end
+                        extra=extra..',"lineageEffects":'..quote(text(l.Flat)..'\n'..text(l.Progressive))
+                    end
+                    if valid(geneticsUI.Phenotype) then extra=extra..',"phenotypeText":'..quote(text(geneticsUI.Phenotype:GetToolTipText())) end
+                end
+            end)
+            return base .. extra .. ',"name":' .. quote(text(actor.MountName)) .. ',"stats":{' .. table.concat(stats, ',') .. '},"tooltips":{' .. table.concat(tips, ',') .. '},"details":[' .. table.concat(detail, ',') .. ']}'
     end
 return M

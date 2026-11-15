@@ -17,7 +17,7 @@
     for (const k of Object.keys(statNames)) if (typeof a.stats?.[k] === 'string') stats[k] = plain(a.stats[k]);
     const tooltips=Object.fromEntries(keys.filter(k=>plain(a.tooltips?.[k])).map(k=>[k,plain(a.tooltips[k])]));
     const details=(Array.isArray(a.details)?a.details:[]).slice(0,96).filter(x=>x&&plain(x.label)&&plain(x.value)).map(x=>({group:plain(x.group)||'능력치',label:plain(x.label),value:plain(x.value)}));
-    return { id:clean(a.id), aliases:(Array.isArray(a.aliases)?a.aliases:[]).filter(x=>typeof x==='string').slice(-20), name:clean(a.name)||'이름 없는 동물', species:clean(a.species), sex:[1,2].includes(a.sex)?a.sex:0, genes, stats,tooltips,details };
+    return { id:clean(a.id), scope:clean(a.scope), ownerName:plain(a.ownerName), ownerMine:typeof a.ownerMine==='boolean'?a.ownerMine:null, lineage:clean(a.lineage),lineageName:plain(a.lineageName),lineageEffects:plain(a.lineageEffects),phenotype:Number.isInteger(a.phenotype)&&a.phenotype>=0?a.phenotype:null,phenotypeText:plain(a.phenotypeText), aliases:(Array.isArray(a.aliases)?a.aliases:[]).filter(x=>typeof x==='string').slice(-20), name:clean(a.name)||'이름 없는 동물', species:clean(a.species), sex:[1,2].includes(a.sex)?a.sex:0, genes, stats,tooltips,details };
   }
   function thresholds(t) {
     return t && Number.isInteger(t.low) && Number.isInteger(t.high) && t.low >= 0 && t.low < t.high && t.high <= 10 ? {low:t.low, high:t.high} : {low:3,high:8};
@@ -25,7 +25,7 @@
   const grade = (n,t) => { t=thresholds(t); return n<=t.low?'low':n>=t.high?'high':'normal'; };
   function compare(a,b,target) {
     a=normalize(a); b=normalize(b);
-    if (!a || !b || a.species!==b.species || !a.sex || !b.sex || a.sex===b.sex || (a.id && a.id===b.id)) return null;
+    if (!a || !b || (a.scope&&b.scope&&a.scope!==b.scope) || a.species!==b.species || !a.sex || !b.sex || a.sex===b.sex || (a.id && a.id===b.id)) return null;
     const means={};let weighted=0,weight=0;
     for(const k of keys){means[k]=(a.genes[k]+b.genes[k])/2;const w=k===target?3:1;weighted+=means[k]*w;weight+=w;}
     // Parent means are a transparent comparison heuristic, not a distribution
@@ -101,22 +101,33 @@
   }
   function reconnectionCandidates(records,current){
     current=normalize(current);if(!current)return [];
-    return records.map((a,i)=>({a:normalize(a),i})).filter(({a})=>a&&a.id!==current.id&&a.species===current.species&&a.sex===current.sex&&keys.every(k=>a.genes[k]===current.genes[k])).map(x=>x.i);
+    return records.map((a,i)=>({a:normalize(a),i})).filter(({a})=>a&&(!a.scope||!current.scope||a.scope===current.scope)&&(a.id!==current.id||a.scope!==current.scope)&&a.species===current.species&&a.sex===current.sex&&keys.every(k=>a.genes[k]===current.genes[k])).map(x=>x.i);
   }
-  const model={offspringSummary,reconnectionCandidates,labels,keys,normalize,thresholds,grade,compare,observation,observedRate,birthOrder,simulateGenes,birthEstimate,birthChance,exactStages};
+  const animalKey=a=>JSON.stringify([a.scope||'',a.id||'']);
+  function registration(records,current,ignored=[]){
+    const a=normalize(current);if(!a||!a.id||!a.scope)return {action:'wait'};
+    const index=records.findIndex(x=>x.scope===a.scope&&(x.id===a.id||(x.aliases||[]).includes(a.id)));
+    if(index>=0)return {action:'update',index};
+    if(ignored.includes(animalKey(a)))return {action:'ignored'};
+    if(reconnectionCandidates(records,a).length||records.some(x=>!x.scope&&x.id===a.id))return {action:'confirm'};
+    return records.length>=200?{action:'full'}:{action:'add',index:records.length};
+  }
+  const ownerLabel=a=>a.ownerMine===true?'내 동물':a.ownerName?(a.ownerMine===false?'다른 사람의 동물 · ':'소유자 · ')+a.ownerName:'소유자 미확인';
+  const lineageWeights={Wild:300,Brave:50,Careful:50,Timid:50,Bold:50,Hardy:50,Stout:50,Ambitious:50,Resolute:25,Fierce:25,Savage:25,Alpha:10};
+  const model={registration,animalKey,ownerLabel,lineageWeights,offspringSummary,reconnectionCandidates,labels,keys,normalize,thresholds,grade,compare,observation,observedRate,birthOrder,simulateGenes,birthEstimate,birthChance,exactStages};
   if(typeof module!=='undefined' && module.exports) module.exports=model;
   if(!root || !root.document) return;
   root.IcarusAnimals=model;
   root.mountAnimalPanel = host => {
     const doc=host.ownerDocument, storageKey='icarus.animals.v1';
-    let db={animals:[],limits:{},observations:[]}, current=null, observedAt=0, signature='', selected='', target='', active=false, filter='', pairTimer=null, rankKey='', rankGeneration=0, rankings=null;
+    let db={animals:[],limits:{},observations:[],ignored:[]}, current=null, observedAt=0, signature='', selected='', target='', active=false, filter='', pairTimer=null, rankKey='', rankGeneration=0, rankings=null;
     try { const raw=JSON.parse(localStorage.getItem(storageKey)); if(raw){db.limits=Object.fromEntries(keys.map(k=>[k,thresholds(raw.limits?.[k])]));db.animals=(Array.isArray(raw.animals)?raw.animals:[]).slice(0,200).map(normalize).filter(Boolean);} } catch(e){}
-    try {const raw=JSON.parse(localStorage.getItem(storageKey));db.context=clean(raw?.context)||'기본';db.mutation=Number.isFinite(raw?.mutation)?Math.max(0,Math.min(100,raw.mutation)):0;db.observations=(Array.isArray(raw?.observations)?raw.observations:[]).slice(0,2000).map(r=>r&&observation(r.mother,r.father,r.child,r.context)).filter(Boolean);}catch(e){}
-    try {const raw=JSON.parse(localStorage.getItem(storageKey));db.selectedId=clean(raw?.selectedId);const i=db.animals.findIndex(a=>a.id===db.selectedId);selected=db.animals.length?String(i>=0?i:0):'';}catch(e){}
+    try {const raw=JSON.parse(localStorage.getItem(storageKey));db.ignored=(Array.isArray(raw?.ignored)?raw.ignored:[]).filter(x=>typeof x==='string').slice(-400);db.context=clean(raw?.context)||'기본';db.mutation=Number.isFinite(raw?.mutation)?Math.max(0,Math.min(100,raw.mutation)):0;db.observations=(Array.isArray(raw?.observations)?raw.observations:[]).slice(0,2000).map(r=>r&&observation(r.mother,r.father,r.child,r.context)).filter(Boolean);}catch(e){}
+    try {const raw=JSON.parse(localStorage.getItem(storageKey));db.selectedId=clean(raw?.selectedId);db.selectedScope=clean(raw?.selectedScope);const i=db.animals.findIndex(a=>a.id===db.selectedId&&a.scope===db.selectedScope);selected=db.animals.length?String(i>=0?i:0):'';}catch(e){}
     const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
     const sex=a=>a.sex===1?'암컷':a.sex===2?'수컷':'성별 미확인';
     const names={low:'낮음',normal:'보통',high:'높음'};
-    const save=()=>{try{db.selectedId=selected!==''?db.animals[Number(selected)]?.id||'':'';localStorage.setItem(storageKey,JSON.stringify(db));return true;}catch(e){status('저장 공간이 부족해 저장하지 못했습니다.');return false;}};
+    const save=()=>{try{db.selectedId=selected!==''?db.animals[Number(selected)]?.id||'':'';db.selectedScope=selected!==''?db.animals[Number(selected)]?.scope||'':'';localStorage.setItem(storageKey,JSON.stringify(db));return true;}catch(e){status('저장 공간이 부족해 저장하지 못했습니다.');return false;}};
     const status=s=>{host.querySelector('[data-status]').textContent=s;};
     const style=doc.createElement('style');style.textContent=`
       #pane-animals{padding:18px;overflow:auto;max-width:1600px;margin:auto}
@@ -137,7 +148,7 @@
       #pane-animals .muted{color:#a5b2bd;font-size:12px;line-height:1.6}#pane-animals .animal-actions{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
       @media(max-width:850px){#pane-animals .animal-grid{grid-template-columns:1fr}}`;
     doc.head.appendChild(style);
-    host.innerHTML=`<div class="animal-head"><div><h1>동물 관리</h1><p class="muted">스탯을 확인하고 더 좋은 새끼를 얻을 교배 상대를 고르세요.</p></div><span data-count></span></div><div class="animal-grid"><section><h2>동물 스탯</h2><p class="muted">게임에서 동물 상세창을 열고 처음 한 번 등록하세요. 등록한 동물은 다음 실행 때도 바로 불러옵니다.</p><p data-status role="status"></p><div data-current></div><div class="animal-actions"><button data-save class="primary">처음 등록하기</button></div><details><summary>스탯별 목표 · 색상 기준</summary><p class="muted">각 수치 이하를 낮음, 이상을 높음으로 표시합니다. ‘높음 이상’이 새끼의 목표 수치입니다. 사이 값은 보통입니다. 내 비교 기준이며 게임 공식 등급이 아닙니다.</p><div data-limits></div></details></section>
+    host.innerHTML=`<div class="animal-head"><div><h1>동물 관리</h1><p class="muted">스탯을 확인하고 더 좋은 새끼를 얻을 교배 상대를 고르세요.</p></div><span data-count></span></div><div class="animal-grid"><section><h2>동물 스탯</h2><p class="muted">게임에서 동물 상세창을 열면 자동 등록됩니다. 저장한 동물은 다음 실행 때도 불러옵니다.</p><p data-status role="status"></p><div data-current></div><div class="animal-actions"><button data-save class="primary">처음 등록하기</button></div><details><summary>스탯별 목표 · 색상 기준</summary><p class="muted">각 수치 이하를 낮음, 이상을 높음으로 표시합니다. ‘높음 이상’이 새끼의 목표 수치입니다. 사이 값은 보통입니다. 내 비교 기준이며 게임 공식 등급이 아닙니다.</p><div data-limits></div></details></section>
       <section><h2>다음 세대 교배 계획</h2><p class="muted">약한 스탯을 보완하고 균형이 더 좋은 새끼를 얻을 확률로 비교합니다. <strong>공개 유전 분석 기반의 모델 추정</strong>이며 실제 출생을 보장하지 않습니다.</p><p data-rank-status class="muted" role="status"></p><label>저장 동물 찾기<input type="search" data-search placeholder="이름 또는 종류 검색" aria-label="저장 동물 찾기"></label>
       <label>기준 동물 <select data-base></select></label><div class="animal-actions"><label>중점 스탯 <select data-target><option value="">전체 균형</option>${keys.map(k=>`<option value="${k}">${labels[k]}</option>`).join('')}</select></label><button data-delete>선택 기록 삭제</button></div><div data-pairs></div><p class="muted">다음 세대: 좋은 새끼를 저장 → 같은 성별의 부모와 비교 → 새 기준 동물로 선택하세요. 기존 부모 기록은 자동 삭제하지 않습니다. 최대 200마리 보관.</p></section></div>`;
     host.querySelector('[data-limits]').innerHTML='<table><tr><th>유전 스탯</th><th>낮음 이하</th><th>높음 이상</th></tr>'+keys.map(k=>{const t=thresholds(db.limits[k]);return `<tr><td>${labels[k]}</td><td><input aria-label="${labels[k]} 낮음" data-limit="${k}" data-bound="low" type="number" min="0" max="9" value="${t.low}"></td><td><input aria-label="${labels[k]} 높음" data-limit="${k}" data-bound="high" type="number" min="1" max="10" value="${t.high}"></td></tr>`;}).join('')+'</table>';
@@ -146,12 +157,12 @@
     let focusStat=keys[0],pairChoice='';
     const pairSection=host.querySelector('[data-pairs]').closest('section');
     pairSection.querySelector('h2').nextElementSibling.textContent='상대를 골라 약점 보완과 수치별 출생 확률을 비교하세요.';
-    const management=doc.createElement('details');management.innerHTML='<summary>저장 동물 검색 · 관리</summary>';const searchLabel=host.querySelector('[data-search]').closest('label');management.append(searchLabel,host.querySelector('[data-delete]'));host.querySelector('[data-save]').parentElement.after(management);
+    const management=doc.createElement('details');management.innerHTML='<summary>저장 동물 검색 · 관리</summary>';const searchLabel=host.querySelector('[data-search]').closest('label');management.append(searchLabel);host.querySelector('[data-base]').parentElement.after(host.querySelector('[data-delete]'));host.querySelector('[data-delete]').textContent='선택한 저장 동물 삭제';host.querySelector('[data-save]').parentElement.after(management);
     const pickers=doc.createElement('div');pickers.className='pair-pickers';const baseLabel=host.querySelector('[data-base]').closest('label'),targetLabel=host.querySelector('[data-target]').closest('label');baseLabel.before(pickers);pickers.append(baseLabel,targetLabel);
     const overview=host.querySelector('.animal-grid');
     overview.classList.add('animal-overview');pairSection.classList.add('breeding-plan');overview.after(pairSection);
     const liveStats=doc.createElement('section');liveStats.className='animal-live-stats';liveStats.innerHTML='<h2>현재 능력치</h2><p data-stat-source class="muted"></p><div data-live-stats></div>';overview.append(liveStats);
-    const intro=overview.querySelector('section>p');intro.textContent='게임에서 동물 상세창을 열면 자동으로 표시됩니다. 등록은 교배 후보를 보관할 때만 필요합니다.';
+    const intro=overview.querySelector('section>p');intro.textContent='게임에서 동물 상세창을 열면 표시하고 자동 등록합니다. 서버와 유전 스탯을 확인할 수 있어야 저장됩니다.';
     const tip=doc.createElement('div');tip.className='gene-tooltip';tip.setAttribute('role','tooltip');tip.hidden=true;host.append(tip);
     function showTip(e){const item=e.target.closest('[data-stat]');if(!item)return;const a=current&&Date.now()-observedAt<12000?current:db.animals[Number(selected)];if(!a)return;tip.textContent=a.tooltips[item.dataset.stat]||labels[item.dataset.stat]+' ['+a.genes[item.dataset.stat]+']\n게임 상세창의 효과 설명을 아직 받지 못했습니다.';tip.hidden=false;const r=item.getBoundingClientRect();tip.style.left=Math.max(8,Math.min(r.left,innerWidth-292))+'px';tip.style.top=Math.max(8,Math.min(r.bottom+6,innerHeight-tip.offsetHeight-8))+'px';}
     host.addEventListener('pointerover',showTip);host.addEventListener('focusin',showTip);host.addEventListener('pointerout',e=>{if(e.target.closest('[data-stat]')&&!e.target.closest('[data-stat]').contains(e.relatedTarget))tip.hidden=true});host.addEventListener('focusout',()=>tip.hidden=true);host.addEventListener('scroll',()=>tip.hidden=true,true);
@@ -230,18 +241,20 @@
     }
     function renderCurrent(){
       const fresh=current && Date.now()-observedAt<12000;
-      const registered=!!(current&&db.animals.some(x=>x.id&&x.id===current.id));host.querySelector('[data-save]').disabled=!fresh||registered;host.querySelector('[data-save]').textContent=registered?'등록됨 · 자동 갱신':'처음 등록하기';
+      const registered=!!(current&&db.animals.some(x=>x.id&&animalKey(x)===animalKey(current)));host.querySelector('[data-save]').disabled=!fresh||registered;host.querySelector('[data-save]').textContent=registered?'등록됨 · 자동 갱신':'처음 등록하기';
       host.querySelector('[data-record]').disabled=!fresh;
+      host.querySelector('[data-delete]').textContent=selected!==''?'저장 동물 삭제 · '+(db.animals[Number(selected)]?.name||'선택 동물'):'저장 동물을 선택하면 삭제할 수 있습니다';
       host.querySelector('[data-count]').textContent='저장 '+db.animals.length+'마리 · 관측 '+db.observations.length+'건';
       const a=fresh?current:(selected!==''?db.animals[Number(selected)]:null);
       renderLiveStats(a,!!fresh);
-      if(!a){host.querySelector('[data-current]').innerHTML='<div class="animal-empty"><b>동물 등록 방법</b><p>1. 게임에서 동물 상세창을 엽니다.<br>2. 스탯이 나타나면 ‘처음 등록하기’를 누릅니다.<br>3. 다음부터는 저장된 동물을 골라 바로 확인합니다.</p></div>';return;}
-      host.querySelector('[data-current]').innerHTML=`<div class="animal-title"><h3>${esc(a.name)}</h3><span class="badge ${fresh?'':'saved'}">${fresh?'상세창 연결됨':'저장된 기록'}</span></div><p class="muted" style="overflow-wrap:anywhere">${sex(a)} · ${esc(a.species)} · 유전 합계 <strong>${keys.reduce((sum,k)=>sum+a.genes[k],0)} / 70</strong></p>${radar(a)}<div class="stat-picker">${keys.map(k=>`<button data-stat="${k}" class="${focusStat===k?'selected':''}">${labels[k].split(' ')[0]} <b>${a.genes[k]}</b></button>`).join('')}</div><div data-reconnect></div><div class="gene-key"><span style="--key:#d88474">낮음</span><span style="--key:#c6b87a">보통</span><span style="--key:#72cbb0">높음</span></div>`;
+      if(!a){host.querySelector('[data-current]').innerHTML='<div class="animal-empty"><b>동물 등록 방법</b><p>1. 게임에서 동물 상세창을 엽니다.<br>2. 서버와 스탯이 확인되면 자동 등록됩니다.<br>3. 다음부터는 저장된 동물을 골라 바로 확인합니다.</p></div>';return;}
+      host.querySelector('[data-current]').innerHTML=`<div class="animal-title"><h3>${esc(a.name)}</h3><span class="badge ${fresh?'':'saved'}">${fresh?'상세창 연결됨':'저장된 기록'}</span></div><p class="muted" style="overflow-wrap:anywhere">${sex(a)} · ${esc(a.species)} · 유전 합계 <strong>${keys.reduce((sum,k)=>sum+a.genes[k],0)} / 70</strong></p>${geneticCard(a)}${radar(a)}<div class="stat-picker">${keys.map(k=>`<button data-stat="${k}" class="${focusStat===k?'selected':''}">${labels[k].split(' ')[0]} <b>${a.genes[k]}</b></button>`).join('')}</div><div data-reconnect></div><div class="gene-key"><span style="--key:#d88474">낮음</span><span style="--key:#c6b87a">보통</span><span style="--key:#72cbb0">높음</span></div>`;
       renderReconnect();
     }
 
+    function geneticCard(a){const weight=lineageWeights[a.lineage],rarity=weight===10?'매우 낮은 생성 가중치':weight===25?'낮은 생성 가중치':weight===50?'보통 생성 가중치':weight===300?'가장 흔한 혈통':'희소도 미확인';return '<div class="animal-stat-group"><b>'+esc(ownerLabel(a))+'</b><p style="margin:6px 0">혈통 <b>'+esc(a.lineageName||a.lineage||'미수신')+'</b> · 외형 '+(a.phenotype===null?'미수신':'#'+a.phenotype)+'</p><details><summary>혈통·외형 효과 보기</summary><p>'+rarity+'</p>'+(a.phenotypeText?'<p>'+esc(a.phenotypeText)+'</p>':'')+(a.lineageEffects?'<p style="white-space:pre-line">'+esc(a.lineageEffects)+'</p>':'')+'<small>희소도는 게임 자료의 상대 생성 가중치입니다. 새끼 유전 확률이나 외형 희귀 등급과는 별개입니다.</small></details></div>';}
     function renderReconnect(){
-      const box=host.querySelector('[data-reconnect]');if(!box||!current||Date.now()-observedAt>=12000||db.animals.some(a=>a.id===current.id))return;
+      const box=host.querySelector('[data-reconnect]');if(!box||!current||Date.now()-observedAt>=12000||db.animals.some(a=>animalKey(a)===animalKey(current)))return;
       const candidates=reconnectionCandidates(db.animals,current);if(!candidates.length){box.textContent='재접속 시 이름을 고유하게 지어 두면 저장 기록을 구분하기 쉽습니다.';return;}
       box.innerHTML='<p class="muted">같은 종류·성별·유전 수치의 기록이 있습니다. 실제 같은 동물인지 확인한 뒤 연결하세요.</p><select data-reconnect-to>'+candidates.map(i=>'<option value="'+i+'">'+esc(db.animals[i].name)+'</option>').join('')+'</select><button data-reconnect-button>같은 동물로 연결</button>';
       box.querySelector('button').onclick=()=>{if(!current||Date.now()-observedAt>=12000)return;const i=Number(box.querySelector('select').value);if(!reconnectionCandidates(db.animals,current).includes(i))return;const old=db.animals[i];db.animals[i]={...normalize(current),aliases:[...(old.aliases||[]),old.id].slice(-20)};if(!save()){db.animals[i]=old;return;}selected=String(i);save();status('저장 동물에 새 접속 ID를 연결했습니다.');renderCurrent();renderPairs();};
@@ -293,16 +306,16 @@
     host.querySelector('[data-undo]').onclick=()=>{if(!db.observations.length||!confirmDelete('[data-undo]',String(db.observations.length)))return;const r=db.observations.pop();if(!save()){db.observations.push(r);return;}status('마지막 새끼 관측을 삭제했습니다.');renderPairs();};
     host.querySelector('[data-save]').onclick=()=>{
       if(!current || Date.now()-observedAt>=12000)return;
-      const old=db.animals.findIndex(a=>a.id===current.id && a.id);
+      const old=db.animals.findIndex(a=>animalKey(a)===animalKey(current) && a.id);
       if(old<0 && db.animals.length>=200){status('저장 한도 200마리입니다. 필요 없는 기록을 삭제해 주세요.');return;}
       const next=normalize(current), previous=db.animals.slice();
       if(old>=0)db.animals[old]=next;else db.animals.push(next);
       if(!save()){db.animals=previous;return;}
-      selected=String(old>=0?old:db.animals.length-1);save();status('등록했습니다. 다음 실행 때 자동으로 불러옵니다.');clearConfirmation();renderCurrent();renderPairs();
+      db.ignored=db.ignored.filter(k=>k!==animalKey(current));selected=String(old>=0?old:db.animals.length-1);save();status('등록했습니다. 다음 실행 때 자동으로 불러옵니다.');clearConfirmation();renderCurrent();renderPairs();
     };
     host.querySelector('[data-base]').onchange=e=>{selected=e.target.value;pairChoice='';save();clearConfirmation();renderCurrent();renderPairs();};
     host.querySelector('[data-target]').onchange=e=>{target=e.target.value;renderPairs();};
-    host.querySelector('[data-delete]').onclick=()=>{if(selected===''||!confirmDelete('[data-delete]',selected))return;const previous=db.animals.slice();db.animals.splice(Number(selected),1);if(!save()){db.animals=previous;return;}selected='';clearConfirmation();renderCurrent();renderPairs();};
+    host.querySelector('[data-delete]').onclick=()=>{if(selected===''||!confirmDelete('[data-delete]',selected))return;const previous=db.animals.slice(),oldIgnored=db.ignored.slice();db.ignored=[...db.ignored,animalKey(db.animals[Number(selected)])].slice(-400);db.animals.splice(Number(selected),1);if(!save()){db.animals=previous;db.ignored=oldIgnored;return;}selected='';status('HUD 저장 목록에서 삭제했습니다. 게임 속 동물은 그대로입니다. 같은 식별자의 자동 재등록을 막았습니다. 다시 등록하려면 등록 버튼을 누르세요.');clearConfirmation();renderCurrent();renderPairs();};
     host.querySelector('[data-limits]').onchange=e=>{
       const k=e.target.dataset.limit;if(!keys.includes(k))return;
       const inputs=[...host.querySelectorAll('[data-limit]')].filter(x=>x.dataset.limit===k);
@@ -310,14 +323,15 @@
       if(!Number.isInteger(t.low)||!Number.isInteger(t.high)||t.low<0||t.high>10||t.low>=t.high){status('낮음 기준은 높음보다 작아야 하며 0~10 정수여야 합니다.');return;}
       const prior=db.limits[k];db.limits[k]=t;if(!save()){db.limits[k]=prior;return;}status('색상 기준을 저장했습니다.');renderCurrent();renderPairs();
     };
-    let currentVisual='', liveSaveAt=0, liveDirty=false;
-    const pairIdentity=a=>JSON.stringify(a&&[a.id,a.genes,a.sex,a.species]);
+    let currentVisual='', liveSaveAt=0, liveDirty=false,liveScope='';
+    const pairIdentity=a=>JSON.stringify(a&&[a.scope,a.id,a.genes,a.sex,a.species]);
     root.addEventListener('beforeunload',()=>{if(liveDirty)save()});
     root.__animalIngest=m=>{
+      if(typeof m.scope==='string'&&clean(m.scope)!==liveScope){liveScope=clean(m.scope);current=null;signature='';currentVisual='';if(active&&!doc.hidden)renderCurrent();}
       if(!Object.prototype.hasOwnProperty.call(m,'animal'))return;
-      const next=normalize(m.animal), sig=JSON.stringify(next);if(sig!==signature)clearConfirmation();observedAt=Date.now();current=next;
-      if(next&&sig!==signature){const i=db.animals.findIndex(a=>a.id&&a.id===next.id);if(i>=0){const changed=pairIdentity(db.animals[i])!==pairIdentity(next);db.animals[i]={...next,aliases:db.animals[i].aliases||[]};liveDirty=true;if(changed||Date.now()-liveSaveAt>=30000){if(save())liveDirty=false;liveSaveAt=Date.now();}if(changed&&active&&!doc.hidden)renderPairs();}}
-      const visual=JSON.stringify(next&&[next.id,next.name,next.genes,next.sex,next.species,next.tooltips]);if(active&&!doc.hidden){if(visual!==currentVisual||!next)renderCurrent();else renderLiveStats(next,true);}currentVisual=visual;signature=sig;
+      const next=normalize(m.animal&&{...m.animal,scope:liveScope}), sig=JSON.stringify(next);if(sig!==signature)clearConfirmation();observedAt=Date.now();current=next;
+      if(next&&sig!==signature){const decision=registration(db.animals,next,db.ignored),i=decision.index;if(['add','update'].includes(decision.action)){const previous=db.animals[i],changed=pairIdentity(previous)!==pairIdentity(next);db.animals[i]={...next,aliases:previous?.aliases||[]};if(decision.action==='add'){if(selected==='')selected=String(i);status('상세창의 동물을 자동 등록했습니다.');}liveDirty=true;if(changed||Date.now()-liveSaveAt>=30000){if(save())liveDirty=false;liveSaveAt=Date.now();}if(changed&&active&&!doc.hidden)renderPairs();}else if(decision.action==='confirm')status('비슷한 저장 기록이 있어 중복 등록을 보류했습니다. 같은 동물인지 연결하거나 따로 등록하세요.');else if(decision.action==='full')status('저장 한도 200마리입니다. 사용하지 않는 기록을 삭제하세요.');}
+      const visual=JSON.stringify(next&&[next.scope,next.id,next.name,next.genes,next.sex,next.species,next.tooltips,next.ownerName,next.ownerMine,next.lineage,next.lineageName,next.lineageEffects,next.phenotype,next.phenotypeText]);if(active&&!doc.hidden){if(visual!==currentVisual||!next)renderCurrent();else renderLiveStats(next,true);}currentVisual=visual;signature=sig;
     };
     root.__animalsShown=()=>{if(active)return;active=true;renderCurrent();renderPairs();};
     const observer=new MutationObserver(()=>{const next=host.classList.contains('on');if(next&&!active)root.__animalsShown();else if(!next){active=false;rankGeneration++;rankKey='';}});observer.observe(host,{attributes:true,attributeFilter:['class']});

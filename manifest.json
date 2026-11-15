@@ -1,10 +1,10 @@
 {
- "version": "2026.11.16.10",
+ "version": "2026.11.16.11",
  "channel": "stable",
- "source": "cc46c7758f6a1f50fc36bda58b1eab515773aa21",
- "notes": "전체 지도 자료 2624곳: 심층 광맥·엑조틱·레드 식물·간헐천·동굴 보완, 서버 시간 기반 생성 추첨 타이머, 지도 경량화 및 널 섹터 안내",
+ "source": "e14e7bb7bfd2ce56308568ffd8d6e07d852fa59b",
+ "notes": "숨은 네비·동굴 계산 경량화, 동물 상세창 자동 등록·삭제, 소유자 및 혈통·외형 정보 표시",
  "config": {},
- "filesPath": "releases/stable/2026.11.16.10/files",
+ "filesPath": "releases/stable/2026.11.16.11/files",
  "files": [
   {
    "p": "game/Icarus/Binaries/Win64/dwmapi.dll",
@@ -56,12 +56,12 @@
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/Scripts/main.lua",
    "n": 48094,
-   "h": "e65213e2ef1b81f875f0c58a2718eeb3b0dd1cdd"
+   "h": "e035717c76c07bb4b028b8dd3c8f1dd52125e445"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/Scripts/animals.lua",
-   "n": 8354,
-   "h": "58b2451629911ca478da0e58d060ed1c1cc5bbb4"
+   "n": 9782,
+   "h": "f96b2589827981910fb4c3b9c5061dec6783df85"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/Scripts/bp_names.lua",
@@ -70,13 +70,13 @@
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/index.html",
-   "n": 970385,
-   "h": "7763c4eda61a9cb547179c09e9c152a47123aaa4"
+   "n": 970499,
+   "h": "0b7ea4e0a4db99f6b961404c5fb4ea2b1c94f004"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/animals.js",
-   "n": 47350,
-   "h": "f0fa225c6da5c6f880474783b872dc4f843fcdab"
+   "n": 51517,
+   "h": "a8430e6b5d25863c895a4c22417013922dda2d64"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/icons.webp",
@@ -170,8 +170,8 @@
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/layout.js",
-   "n": 33470,
-   "h": "b5e2de553da913e809f58253053009dcb923761e"
+   "n": 33635,
+   "h": "f1ccf0218de05318c8f5c0cec7946e7bae06537c"
   },
   {
    "p": "app/game-control.js",

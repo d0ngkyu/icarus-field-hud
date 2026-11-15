@@ -815,7 +815,7 @@ local function autoTick()
         if okP then progJ = pj else log("progress read failed: " .. tostring(pj)) end
     end
     local animalJ = nil
-    if tick % 4 == 0 and WORLD_READY and on("animals") and animalReader and not animalFailed then
+    if tick % 4 == 2 and WORLD_READY and on("animals") and animalReader and not animalFailed then
         step("animals")
         local okA, value = pcall(animalReader.read)
         step("idle")
