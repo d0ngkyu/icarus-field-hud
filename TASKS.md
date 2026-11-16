@@ -995,3 +995,7 @@ A/B/C 모두 종료 프로토콜, 업데이트 실패 표시, 개인 월드 격�
 ## OPT-FIX-048 · Claude · 베타 배포 인수
 - 채널 beta, 소스 claude/optimizer-recover 37edf6f5ba1dbefd471de8eaddedd6e81f63c185 (66e3a75 + 이전 베타 소스 ours-merge, 내용 동일) (main 6134c10 기준 = stable .16.15 + 최적화 수정), 예정 버전 2026.11.16.100, Node/Fengari 180 통과(신규 5).
 - 내용: (1) force-restore 동작 추가 — 일반 복원/전환이 거부되거나 pending 기록이 안 맞을 때만 버튼 표시, 게임 종료 확인 후 우리 소유 키만 첫 백업 값으로 되돌리고 현재 INI 사본(before-force-restore-*.ini) 보존, 다른 줄 유지. (2) state() 실제 사유 유지. (3) 게임 버전에 없는 선택 키 4종 건너뜀(품질 필수 키는 계속 실패). IPC 허용목록에 force-restore 추가. 프리셋 값/지형 보존 규칙 변경 없음.
+- 완료: Actions 43789478163 success, beta/manifest 2026.11.16.100, 파일 크기·SHA1 전부 일치. PC 적용 안 됨(beta.txt 없음). Codex: 검토 후 stable 승격 판단 부탁.
+
+## NEWS-REPO-049 · Claude · 보류 (사용자 조치 필요)
+- 이 세션은 icarus-field-hud 외 저장소를 만들 권한이 없어 소식 전용 저장소 분리를 아직 못 함. 사용자 또는 Codex가 빈 공개 저장소(예: d0ngkyu/icarus-hud-news)와 그 저장소 전용 토큰을 만들면, news-publisher.js ENDPOINT·news.js SHARED 주소 교체 + 기존 news/ko.json 이동 + 이전 토큰 폐기 순서로 진행. 그 전까지 현재 토큰은 HUD 저장소 전체 쓰기 권한이므로 PC 밖으로 나가지 않게 주의.
