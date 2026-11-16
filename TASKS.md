@@ -1107,3 +1107,9 @@ A/B/C 모두 종료 프로토콜, 업데이트 실패 표시, 개인 월드 격�
 
 ## 진행 중 · SOLO-IMAGES-063 (2026-11-17)
 - Codex / codex/solo-items / 독립0.3.6: 아이템 목록 썸네일·선택 미리보기, 기존 HUD 아이콘/정확한 static ID 매핑 재사용 검토. 소유 source/solo-items 및 standalone. 추가 기능은 제안만, HUD060/Claude/Gemini 작업과 게임 실행중 설치파일 보존. 모의 UI검증 후 독립 업데이트 발행.
+
+
+## SOLO-IMAGES-063 · 독립 채널 배포 인수
+- Codex / codex/solo-items / 0.3.6 / source6d3dbbf9ed32df8ff5891957b5a045449d9083da. 기존 HUD atlas와 static ID 정확 매핑2155개,834개 미리보기없음 명시. embedded PNG1,529,921bytes, 공유 bitmap1개/네트워크요청0. 목록 썸네일+선택 미리보기, 기존9파일 updater호환.
+- image/self/layout/connection 검사통과,2155정확매핑 대조. 실제 Windows 미리보기에서 목록과 돌 선택이미지 확인; 이후 사용자입력/창종료로 추가UI조작 중단. 이미지없는 항목/4크기×8탭은 코드실행 검사. 게임지급/FPS 검사아님.
+- 원격 ZIP SHA256 a2459b52b162f6d8e7a6456d17c10d9b344015690cf81138730ce56218bf3f1f 및 내부9파일 일치. PC0.3.5/게임 실행중, 기존설치·게임모드 쓰기 없음. HUD060 소유/채널은 변경 안 함. 다음 독립manifest게시, 게임OFF 후 표준updater 적용.
