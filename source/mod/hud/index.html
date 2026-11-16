@@ -592,6 +592,11 @@ function ingestSave(r,now){if(!r||!r.world||!Number.isFinite(r.savedAt)||!MAPB[r
  mp.spawnRev=(mp.spawnRev||0)+1;return true}
 window.__mapSave=r=>{const ok=ingestSave(r,Date.now());if(ok){save();if(mapOn())requestDraw()}return ok};
 (()=>{const A=window.hudApp;if(!A||!A.prospectSave)return;const poll=()=>{if(!session.active(Date.now()))return;A.prospectSave().then(r=>{try{window.__mapSave(r)}catch(e){console.error(e)}}).catch(()=>{})};setInterval(poll,90000);setTimeout(poll,20000)})();
+// Map records arrive every few seconds; writing the whole HUD state each time is wasted work.
+// Save at most every 10 s, and always when the window hides or closes.
+let saveTimer=null;const saveSoon=()=>{if(!saveTimer)saveTimer=setTimeout(()=>{saveTimer=null;save()},10000)};
+const saveNow=()=>{if(saveTimer){clearTimeout(saveTimer);saveTimer=null;save()}};
+window.addEventListener('beforeunload',saveNow);document.addEventListener('visibilitychange',()=>{if(document.hidden)saveNow()});
 window.__mapIngest=m=>{
  const now=Date.now(),previous=session.view;
  if(m.t!=null&&mapToken===m.t)return;mapToken=m.t;
@@ -622,7 +627,7 @@ window.__mapIngest=m=>{
  if(m.fog&&m.fog.r&&m.fog.r.length){mp.gfog=m.fog;delete FOGM[S.world]}
  if(m.p){const tr=mp.track,last=tr[tr.length-1];if(!last||Math.hypot(last[0]-m.p[0],last[1]-m.p[1])>2500){tr.push([Math.round(m.p[0]),Math.round(m.p[1])]);if(tr.length>8000)tr.splice(0,tr.length-8000)}}
  if(life&&selKey&&session.view===S.world){const n=$('mlstate'),e=life.entry(mp,selKey);if(n){n.textContent=life.describe(e)+(e?' · '+ago(e.at):'');n.style.color=life.colors[e&&e.state]||'#98a6b3'}}
- if(m.lm||m.ore||m.players||m.party||m.inv&&m.inv.ore)save();
+ if(m.lm||m.ore||m.players||m.party||m.inv&&m.inv.ore)saveSoon();
  if(mapOn())requestDraw();
 };
 
@@ -807,7 +812,7 @@ function drawMap(){if(!W)return;const mp=M();hits=[];
  if(currentMap()&&L.me&&S.pose){const[a,b]=toS(S.pose[0],S.pose[1]);const yaw=(S.pose[3]||0)*Math.PI/180;const[dx,dy]=rotv(Math.sin(yaw),-Math.cos(yaw));
   ctx.save();ctx.translate(a,b);ctx.rotate(Math.atan2(dy,dx)+Math.PI/2);ctx.fillStyle='#4fd18b';ctx.shadowColor='#4fd18b';ctx.shadowBlur=12;ctx.beginPath();ctx.moveTo(0,-11);ctx.lineTo(8,9);ctx.lineTo(0,4);ctx.lineTo(-8,9);ctx.closePath();ctx.fill();ctx.restore()}
  const lmn=Object.keys(mp.lm).length,on=Object.keys(mp.ore).length;
- $('mapstat').textContent=`자료 지점 ${(spawns&&spawns.maps[session.view]||[]).length}곳 · 관측 지점 ${lmn}곳 · 광석 노드 ${on}개 · 핀 ${mp.pins.length}개 · ${mp.activeScope?'서버 관측 기록':'서버 식별/수집 대기'}${plantRangeText(mp)}`;
+ $('mapstat').textContent=`자료 지점 ${(spawns&&spawns.maps[session.view]||[]).length}곳 · 관측 지점 ${lmn}곳 · 광석 노드 ${on}개 · 핀 ${mp.pins.length}개 · ${mp.activeScope?'서버 관측 기록':'서버 식별/수집 대기'}`;
  const active=session.active(Date.now()),w=session.view;
  $('mapworld').textContent='열람: '+(WORLDN[w]||w)+(active?' · 접속: '+(WORLDN[session.world]||session.world):' · 미접속 / 연결 대기')+(IMG[w]&&IMG[w].bad?' · 지형 이미지 미설치 (격자·저장 기록 표시)':'');
  for(const id of ['mtme','mtfollow','mtwpclr'])$(id).disabled=!currentMap();
@@ -894,7 +899,7 @@ function showInfo(h){const box=$('mapinfo'),mp=M();let t='',body='';selKey=h.key
  else if(h.kind==='boss'){t='월드 보스: '+bossName(h.ref[0]);body=`<div class="bench">${cell([h.ref[1],h.ref[2]])} · 마지막 게임 관측 기록</div>${wpButton(h.ref[1],h.ref[2],h.ref[3])}`}
  else if(h.kind==='exo'){t='엑조틱 지점';body=`<div class="bench">${cell([h.ref[1],h.ref[2]])}</div>${wpButton(h.ref[1],h.ref[2],h.ref[3],h.ref[0])}`}
  else if(h.kind==='redexo'){t=redName(h.ref[0]);const bt=h.bloom?({live:'🌺 지금 꽃 핌 · 채집 가능',seen:'🌺 꽃 핀 상태로 마지막 확인 '+ago(h.bloom.at)+(h.ref[6]==='save'?' (세이브 파일)':'')+' · 그 뒤 누가 채집했을 수 있음',none:'꽃 없음 (마지막 확인 '+ago(h.bloom.at)+')',unknown:'아직 근처에 가 보지 않음'})[h.bloom.state]:'';
-  body=`${bt?`<div class="bench" style="color:${h.bloom.state==='live'?'#66d99d':'#c9ccd0'}">${bt}</div>`:''}<div class="bench">${cell([h.ref[1],h.ref[2]])} · ${h.ref[4]?'마지막 확인 '+ago(h.ref[4]):'생성 후보지'}</div><div class="bench">R = 나무 · P = 식물. 생성 후보지는 미탐험 상태에도 표시하며, 현재 자원 유무는 게임에서 관측한 범위만 확인됩니다.</div>${wpButton(h.ref[1],h.ref[2],h.ref[3],h.ref[0])}`}
+  const rt=h.ref[0]==='r:Plant'?plantRangeText(M()).replace(/^ · /,''):'';body=`${bt?`<div class="bench" style="color:${h.bloom.state==='live'?'#66d99d':'#c9ccd0'}">${bt}</div>`:''}${rt?`<div class="bench">${rt}</div>`:''}<div class="bench">${cell([h.ref[1],h.ref[2]])} · ${h.ref[4]?'마지막 확인 '+ago(h.ref[4]):'생성 후보지'}</div><div class="bench">R = 나무 · P = 식물. 생성 후보지는 미탐험 상태에도 표시하며, 현재 자원 유무는 게임에서 관측한 범위만 확인됩니다.</div>${wpButton(h.ref[1],h.ref[2],h.ref[3],h.ref[0])}`}
  else if(h.kind==='dep'){const old=h.ref[4]&&Date.now()-h.ref[4]>6*3600e3;t='심층 광맥: '+rowItem(h.ref[0])+(old?' (예전 기록)':'');body=`<div class="bench">${fmtD([h.ref[1],h.ref[2]])} · 채굴기(드릴)를 설치하는 곳 · 마지막 확인 ${ago(h.ref[4])}</div><div class="bench">광맥 종류는 탐사(서버)마다 바뀔 수 있습니다. 근처에 가면 지금 종류로 다시 바뀝니다.</div>${wpButton(h.ref[1],h.ref[2],h.ref[3],h.ref[0])}`}
  else if(h.kind==='gey'){t=h.ref[0].indexOf('Oil')>=0?'석유 간헐천':'효소 간헐천';body=`<div class="bench">${fmtD([h.ref[1],h.ref[2]])} · 추출기 설치 지점</div>${wpButton(h.ref[1],h.ref[2],h.ref[3],h.ref[0])}`}
  else if(h.kind==='ore'){t='광석: '+rowItem(h.ref[0]);body=`<div class="bench">${fmtD([h.ref[1],h.ref[2]])} · 기록 ${ago(h.ref[4])}</div>${wpButton(h.ref[1],h.ref[2],h.ref[3],h.ref[0])}`}

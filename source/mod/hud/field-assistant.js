@@ -329,6 +329,7 @@ root.HudFieldAssistant=api;
 if(root.HudHoverHelp?.rules){
  Object.assign(root.HudHoverHelp.rules,{
   '[data-briefing-cave-map]':'지도 탭으로 이동해 이 동굴 위치를 바로 가운데에 보여 줍니다.',
+  '[data-briefing-course]':'지도 탭으로 가서 같은 기준의 동굴 코스를 경로로 그립니다.',
   '[data-briefing-cave-wp]':'이 동굴을 나침반 목표(F7)로 준비합니다.',
   '[data-check-toggle]':'원정 출발 전 이 준비물을 챙겼다고 체크합니다.',
   '[data-check-craft]':'이 준비물을 제작 탭 만들 목록에 바로 담습니다.',
@@ -414,6 +415,7 @@ function mountCharacterBriefing(){
   sec.id='character-briefing';
   pane.appendChild(sec);
   sec.addEventListener('click',e=>{
+   if(e.target.closest('[data-briefing-course]')){root.__setTab?.('map');document.getElementById('caveroute-build')?.click();return;}
    const mapBtn=e.target.closest('[data-briefing-cave-map]');
    if(mapBtn){
     const x=Number(mapBtn.dataset.x),y=Number(mapBtn.dataset.y);
@@ -508,7 +510,7 @@ function renderCharacterBriefing(){
   </div>
   <div class="briefing-grid">
    <div class="briefing-card">
-    <h3>🧭 주변 미방문 알짜 동굴 TOP 3</h3>
+    <h3 style="display:flex;justify-content:space-between;align-items:center;gap:8px">🧭 주변 미방문 알짜 동굴 TOP 3<button type="button" class="mini" data-briefing-course="1">지도에 코스 그리기</button></h3>
     <p class="briefing-sub">가까우면서 광석·심층 광맥이 풍부한 미방문 동굴입니다.</p>
     <div class="briefing-cave-list">
      ${info.topCaves.length?info.topCaves.map(c=>`

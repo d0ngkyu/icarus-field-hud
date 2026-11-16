@@ -150,9 +150,14 @@ function createWindow(hud) {
   liveWindow.on('closed', () => { clearTimeout(t); if(win===liveWindow)win=null; });
   win.on('move', remember); win.on('resize', remember);
   win.on('close', e => { if (!quitting) { e.preventDefault(); win.hide(); } });
-  win.webContents.setWindowOpenHandler(({ url }) => { shell.openExternal(url); return { action: 'deny' }; });
+  // Links open in the browser only for https; the HUD window itself never leaves the local HUD page,
+  // so remote content can never reach the hudApp bridge (game control, optimizer, news key).
+  win.webContents.setWindowOpenHandler(({ url }) => { if (safeExternal(url)) shell.openExternal(url); return { action: 'deny' }; });
+  win.webContents.on('will-navigate', (e, url) => { if (!sameHud(url)) { e.preventDefault(); if (safeExternal(url)) shell.openExternal(url); } });
 }
 
+function safeExternal(url) { try { return new URL(url).protocol === 'https:'; } catch { return false; } }
+function sameHud(url) { try { const u = new URL(url), h = hudFile(); return u.protocol === 'file:' && !!h && path.normalize(decodeURIComponent(u.pathname).replace(/^\/([A-Za-z]:)/, '$1')).toLowerCase() === path.normalize(h).toLowerCase(); } catch { return false; } }
 function toggleTop() {
   if (!win || win.isDestroyed()) throw new Error('HUD 창이 없습니다.');
   const want = !state().top;
@@ -227,7 +232,7 @@ ipcMain.handle('toggleCompact', () => toggleCompact());
 ipcMain.handle('minimize', () => win.minimize());
 ipcMain.handle('hide', () => win.hide());
 ipcMain.handle('info', () => ({ usage: usageInfo(), version: installedVersion(), app: app.getVersion(), game: gameDir, last: lastUpd && { at: lastUpd.at, changed: lastUpd.changed.length }, compat: (() => { try { return require('./compat.js').report(gameDir); } catch (e) { return null; } })() }));
-ipcMain.handle('prospectSave', () => { try { return require('./prospect-save.js').latest(process.env.LOCALAPPDATA); } catch (e) { return null; } });
+ipcMain.handle('prospectSave', async () => { try { return await require('./prospect-save.js').latest(process.env.LOCALAPPDATA); } catch (e) { return null; } });
 // ---------- problem check ----------
 ipcMain.handle('diagStatus', () => (doctor ? doctor.status() : null));
 ipcMain.handle('setSafe', (_e, on) => { if (doctor) doctor.setSafeMode(!!on); return doctor ? doctor.status() : null; });

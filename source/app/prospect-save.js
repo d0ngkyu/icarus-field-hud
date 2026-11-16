@@ -8,7 +8,7 @@ const fs = require('fs');
 const path = require('path');
 const zlib = require('zlib');
 
-const LIMIT = 200 * 1024 * 1024;
+const LIMIT = 120 * 1024 * 1024;
 const MAP_MAX = 403200 * 1.05;
 const WORLDS = ['Terrain_016', 'Terrain_017', 'Terrain_019', 'Terrain_021'];
 
@@ -18,11 +18,21 @@ function decodeText(buf) {
   return buf.toString('utf8');
 }
 
-function blobOf(text) {
+function rawBlob(text) {
   const m = /"BinaryBlob"\s*:\s*"([^"]*)"/.exec(text);
-  if (!m) return null;
-  const raw = Buffer.from(m[1].replace(/\\[rnt]|\s/g, ''), 'base64');
+  return m ? Buffer.from(m[1].replace(/\\[rnt]|\s/g, ''), 'base64') : null;
+}
+function blobOf(text) {
+  const raw = rawBlob(text); if (!raw) return null;
   for (const f of [zlib.inflateSync, zlib.unzipSync, zlib.inflateRawSync]) { try { return f(raw); } catch {} }
+  return null;
+}
+// off the main thread: zlib runs in libuv's pool, so the HUD window never freezes on a big save
+const { promisify } = require('util');
+const ASYNC = [promisify(zlib.inflate), promisify(zlib.unzip), promisify(zlib.inflateRaw)];
+async function blobOfAsync(text) {
+  const raw = rawBlob(text); if (!raw) return null;
+  for (const f of ASYNC) { try { return await f(raw); } catch {} }
   return null;
 }
 
@@ -60,13 +70,13 @@ function plantsOf(d) {
   return out;
 }
 
-function parse(buf) {
-  const data = blobOf(decodeText(buf));
-  if (!data) return null;
+function scan(data) {
   let world = null, at = Infinity;
   for (const w of WORLDS) { const i = data.indexOf(B(w)); if (i >= 0 && i < at) { at = i; world = w; } }
   return { world, veins: veinsOf(data), plants: plantsOf(data) };
 }
+function parse(buf) { const data = blobOf(decodeText(buf)); return data ? scan(data) : null; }
+async function parseAsync(buf) { const data = await blobOfAsync(decodeText(buf)); return data ? scan(data) : null; }
 
 function prospectFiles(localAppData) {
   const root = path.join(localAppData || '', 'Icarus', 'Saved', 'PlayerData'), out = [];
@@ -79,16 +89,20 @@ function prospectFiles(localAppData) {
   return out.sort((a, b) => b.mtime - a.mtime);
 }
 
-// Latest saved prospect, parsed once per file version.
-let cache = null;
-function latest(localAppData, now = Date.now(), maxAgeMs = 45 * 60 * 1000) {
+// Latest saved prospect, parsed once per file version; one read at a time.
+let cache = null, flight = null;
+async function latest(localAppData, now = Date.now(), maxAgeMs = 45 * 60 * 1000) {
   const f = prospectFiles(localAppData)[0];
   if (!f || now - f.mtime > maxAgeMs) return null;
   if (cache && cache.p === f.p && cache.mtime === f.mtime && cache.size === f.size) return cache.value;
-  let value = null;
-  try { const r = parse(fs.readFileSync(f.p)); if (r) value = { ...r, name: f.name, savedAt: f.mtime }; } catch {}
-  cache = { p: f.p, mtime: f.mtime, size: f.size, value };
-  return value;
+  if (flight) return flight;
+  flight = (async () => {
+    let value = null;
+    try { const r = await parseAsync(await fs.promises.readFile(f.p)); if (r) value = { ...r, name: f.name, savedAt: f.mtime }; } catch {}
+    cache = { p: f.p, mtime: f.mtime, size: f.size, value };
+    return value;
+  })().finally(() => { flight = null; });
+  return flight;
 }
 
-module.exports = { parse, prospectFiles, latest, decodeText };
+module.exports = { parse, parseAsync, prospectFiles, latest, decodeText };

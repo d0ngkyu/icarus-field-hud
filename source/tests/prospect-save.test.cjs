@@ -16,12 +16,13 @@ test('parses world, deep veins with ore type, and spawned red exotic plants (UTF
  assert.equal(ps.parse(Buffer.from('{"nothing":1}')),null);
  assert.equal(ps.parse(Buffer.from('{"BinaryBlob": "not-zlib"}')),null);
 });
-test('latest save only, read-only, cached per file version, stale saves ignored',()=>{
+test('latest save only, read-only, cached per file version, stale saves ignored',async()=>{
  const root=fs.mkdtempSync(path.join(os.tmpdir(),'ps-')),dir=path.join(root,'Icarus','Saved','PlayerData','123','Prospects');fs.mkdirSync(dir,{recursive:true});
  const a=path.join(dir,'Old.json'),b=path.join(dir,'Mine.json');fs.writeFileSync(a,'{}');fs.writeFileSync(b,saveFile(blob));
  const t=Date.now()/1000;fs.utimesSync(a,t-3600,t-3600);fs.utimesSync(b,t-60,t-60);const before=fs.readFileSync(b);
- const r=ps.latest(root,Date.now());assert.equal(r.name,'Mine');assert.equal(r.world,'Terrain_019');assert.equal(r.veins.length,2);assert.ok(Math.abs(r.savedAt-(t-60)*1000)<2000);
- assert.equal(ps.latest(root,Date.now()),r,'cached');assert.deepEqual(fs.readFileSync(b),before,'file untouched');
- assert.equal(ps.latest(root,Date.now()+2*3600e3),null,'too old: probably not the world being played');
- assert.equal(ps.latest(path.join(root,'none')),null);
+ const r=await ps.latest(root,Date.now());assert.equal(r.name,'Mine');assert.equal(r.world,'Terrain_019');assert.equal(r.veins.length,2);assert.ok(Math.abs(r.savedAt-(t-60)*1000)<2000);
+ assert.equal(await ps.latest(root,Date.now()),r,'cached');assert.deepEqual(fs.readFileSync(b),before,'file untouched');
+ assert.equal(await ps.latest(root,Date.now()+2*3600e3),null,'too old: probably not the world being played');
+ assert.equal(await ps.latest(path.join(root,'none')),null);
+ assert.deepEqual(await ps.parseAsync(saveFile(blob)),ps.parse(saveFile(blob)));
 });
