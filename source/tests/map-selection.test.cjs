@@ -81,3 +81,13 @@ test("offline map renders all Prometheus exotic candidates and independent layer
 test("prospect clocks are reset on server/world switch and replaced by new server time",()=>{const h=harness();h.ingest({t:1,w:"Terrain_019",scope:"A"});h.tick(2000);h.ingest({t:2,w:"Terrain_019",scope:"A",prospectClock:{seconds:10000,open:true}});assert.equal(h.t.getClock().seconds,10000);h.tick(3000);h.ingest({t:3,w:"Terrain_019",scope:"B"});assert.equal(h.t.getClock(),null);h.tick(4000);h.ingest({t:4,w:"Terrain_019",scope:"B",prospectClock:{seconds:300,open:true}});assert.equal(h.t.getClock().seconds,300);h.tick(5000);h.ingest({t:5,w:"Terrain_021",scope:"C"});assert.equal(h.t.getClock(),null);});
 
 test("pose-only packets skip cave matching; player observations still trigger it",()=>{const h=harness();let visits=0;h.c.window.HudMapStatus.visits=()=>visits++;for(let i=1;i<=80;i++){h.tick(i*750);h.ingest({t:i,w:"Terrain_019",scope:"A",p:[i,0,0]});}assert.equal(visits,0);h.ingest({t:81,w:"Terrain_019",scope:"A",players:[[1,0,0,1]]});assert.equal(visits,1);});
+
+test("bloomed red plant appears on the map and the read range is recorded per server",()=>{
+ const h=harness(),{t}=h;t.resize();h.ingest({w:'Terrain_019',t:1,scope:'S1'});h.tick(2000);
+ h.ingest({w:'Terrain_019',t:2,scope:'S1',p:[0,0,0],lm:[['r:Plant',50000,0,0,-1],['r:Plant',0,120000,0,4]]});
+ t.selectMap('Terrain_019');t.fitMap();t.drawMap();
+ const live=t.getHits().filter(x=>x.kind==='redexo'&&x.bloom&&x.bloom.state==='live');assert.equal(live.length,1);
+ const r=t.M('Terrain_019').plantRange;const k=Object.keys(r)[0];assert.equal(Math.round(r[k].plant),1200);assert.equal(Math.round(r[k].spot),500);
+ h.tick(3000);h.ingest({w:'Terrain_019',t:3,scope:'S1',p:[0,0,0],lm:[['r:Plant',0,120000,0,-1]]});t.drawMap();
+ assert.equal(t.getHits().filter(x=>x.kind==='redexo'&&x.ref[0]==='r:Plant').length,0);
+});

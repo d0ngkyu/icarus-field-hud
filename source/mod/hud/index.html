@@ -516,6 +516,16 @@ function tidyDeposits(mp){if(!mp||!mp.lm)return;mp.notes=mp.notes||{};
 // ---------- cave dangers: creatures seen near a cave are counted for that cave ----------
 const HAZ=[[/Friendly/i,null],[/CaveWorm|SulfurWorm|Caveworm/i,'동굴웜'],[/(^|_)Bee(_|$)/i,'벌'],[/Spider/i,'거미'],[/Bat/i,'박쥐'],[/LandShark/i,'땅상어']];
 const hazKind=c=>{for(const[re,n]of HAZ)if(re.test(c))return n;return undefined};
+// How far this server lets us read red exotic plants: the farthest plant actor (count>=0) and the
+// farthest spawn point (-1) seen in one scan, measured from my character. Kept per server, max only.
+function notePlantRange(mp,list,p,now){if(!Array.isArray(p)||!Number.isFinite(p[0])||!Number.isFinite(p[1]))return;
+ let plant=-1,spot=-1,np=0,ns=0;for(const a of list){if(!Array.isArray(a)||a[0]!=='r:Plant'||!Number.isFinite(a[1]))continue;const d=Math.hypot(a[1]-p[0],a[2]-p[1])/100;
+  if(Number.isFinite(a[4])&&a[4]>=0){np++;plant=Math.max(plant,d)}else{ns++;spot=Math.max(spot,d)}}
+ if(!np&&!ns)return;const k=mp.activeScope||'?';mp.plantRange=mp.plantRange||{};const o=mp.plantRange[k]||{plant:-1,spot:-1};
+ mp.plantRange[k]={plant:Math.max(o.plant,plant),spot:Math.max(o.spot,spot),plants:np,spots:ns,at:now}}
+function plantRangeText(mp){const r=mp.plantRange&&mp.plantRange[mp.activeScope||'?'];if(!r)return '';
+ const m=v=>v<0?'없음':v>=1000?(v/1000).toFixed(1)+'km':Math.round(v)+'m';
+ return ` · 레드 식물 읽힘: 핀 꽃 최대 ${m(r.plant)} · 자리 최대 ${m(r.spot)} (지금 꽃 ${r.plants}·자리 ${r.spots})`}
 function noteHazards(mp,list,now){mp.haz=mp.haz||{};const caves=[];for(const k in mp.lm){const t=mp.lm[k][0][0];if(t==='c'||t==='w')caves.push(k)}
  if(!caves.length)return;const got={};
  for(const a of list){if(!a||typeof a[0]!=='string'||a[0][0]!=='a')continue;const kind=hazKind(a[0].slice(2));if(!kind)continue;
@@ -585,7 +595,7 @@ window.__mapIngest=m=>{
   const dst=(k==='v')?mp.ore:mp.lm;const key=k==='b'?t:(k==='d'||k==='c')?keyOf(k,a[1],a[2]):keyOf(t,a[1],a[2]);const was=dst[key];
   if(k==='c'&&t==='c:Cave'&&was&&was[0]!=='c:Cave')return;
   dst[key]=[t,Math.round(a[1]),Math.round(a[2]),Math.round(a[3]||0),now,a[4]];if(life)life.observe(mp,a,now)};
- if(m.lm){for(const a of m.lm)put(mp.lm,a);mp.spawnRev=(mp.spawnRev||0)+1;}
+ if(m.lm){for(const a of m.lm)put(mp.lm,a);mp.spawnRev=(mp.spawnRev||0)+1;notePlantRange(mp,m.lm,m.p||S.pose,now);}
  for(const list of [m.ore,m.inv&&m.inv.ore])if(Array.isArray(list))for(const a of list)put(null,a);
  if(life&&(m.players||m.ore||m.lm||m.inv&&m.inv.ore)){const caves=lifeCaves(mp,S.world);life.visits(mp,m.players,caves,now);if(m.ore||m.lm||m.inv&&m.inv.ore)life.aggregate(mp,caves,now);}
  for(const list of [m.ore,m.inv&&m.inv.ore])if(Array.isArray(list))noteHazards(mp,list,now);
@@ -777,7 +787,7 @@ function drawMap(){if(!W)return;const mp=M();hits=[];
  if(currentMap()&&L.me&&S.pose){const[a,b]=toS(S.pose[0],S.pose[1]);const yaw=(S.pose[3]||0)*Math.PI/180;const[dx,dy]=rotv(Math.sin(yaw),-Math.cos(yaw));
   ctx.save();ctx.translate(a,b);ctx.rotate(Math.atan2(dy,dx)+Math.PI/2);ctx.fillStyle='#4fd18b';ctx.shadowColor='#4fd18b';ctx.shadowBlur=12;ctx.beginPath();ctx.moveTo(0,-11);ctx.lineTo(8,9);ctx.lineTo(0,4);ctx.lineTo(-8,9);ctx.closePath();ctx.fill();ctx.restore()}
  const lmn=Object.keys(mp.lm).length,on=Object.keys(mp.ore).length;
- $('mapstat').textContent=`자료 지점 ${(spawns&&spawns.maps[session.view]||[]).length}곳 · 관측 지점 ${lmn}곳 · 광석 노드 ${on}개 · 핀 ${mp.pins.length}개 · ${mp.activeScope?'서버 관측 기록':'서버 식별/수집 대기'}`;
+ $('mapstat').textContent=`자료 지점 ${(spawns&&spawns.maps[session.view]||[]).length}곳 · 관측 지점 ${lmn}곳 · 광석 노드 ${on}개 · 핀 ${mp.pins.length}개 · ${mp.activeScope?'서버 관측 기록':'서버 식별/수집 대기'}${plantRangeText(mp)}`;
  const active=session.active(Date.now()),w=session.view;
  $('mapworld').textContent='열람: '+(WORLDN[w]||w)+(active?' · 접속: '+(WORLDN[session.world]||session.world):' · 미접속 / 연결 대기')+(IMG[w]&&IMG[w].bad?' · 지형 이미지 미설치 (격자·저장 기록 표시)':'');
  for(const id of ['mtme','mtfollow','mtwpclr'])$(id).disabled=!currentMap();
