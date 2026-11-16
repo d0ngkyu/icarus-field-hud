@@ -1033,3 +1033,10 @@ A/B/C 모두 종료 프로토콜, 업데이트 실패 표시, 개인 월드 격�
 - claude/field-assistant 702a21d, 시험 193/193, Chrome 확인. 베타 2026.11.16.106 (Actions 43807948303 success).
 - 업데이트 시각: 뉴질랜드 목요일, 한국 금요일 새벽~오전(주마다 다름) + 수시 핫픽스.
 - 매주 점검 예약(사용자 승인): 'Icarus 주간 패치 호환 점검' 금요일 14:42 KST, 클라우드 실행(PC 접근 없음). 패치 노트 확인 → HUD 의존 요소와 대조 → TASKS 'PATCH-CHECK-<날짜>' 기록, 확실할 때만 베타 수정. 정식 배포는 하지 않음.
+
+## PROSPECT-SAVE-055 · Claude · 베타 (2026-11-16 14:30, 사용자 요청)
+- 참고: faysm/IcarusOreDeposit(라이선스 없음 → 코드 복사 없이 형식 정보만 참고). 탐사 세이브 JSON의 BinaryBlob(zlib)에서 ResourceDeposit 광석 종류·위치, 엑조틱 복셀, Prometheus 생성된 BP_Exotic_Plant_C 위치를 읽어 지도에 표시하는 웹 뷰어.
+- 우리 쪽: app/prospect-save.js(읽기 전용, 최신 세이브 1개, 45분 넘은 세이브 무시, 파일 버전별 캐시) + IPC prospectSave + HUD ingestSave(현재 플레이 중인 같은 지도만, 실시간 관측이 더 새로우면 유지, 새 세이브에 없는 식물은 사라짐 처리). 심층 광맥은 'd:<광석>' 행, 식물은 'r:Plant'(세이브 출처 표시). 탐험 모드 필터 그대로 적용.
+- 한계: 혼자/방장 월드만(남의 서버 세이브는 내 PC에 없음). 세이브 시점 기준. 실제 세이브로 오프셋 검증 필요 — 사용자 PC 연결 시 Prospects 파일로 확인할 것.
+- 사진(사용자 제공): 엘리시움 생물 스폰 구역 지도(구역별 레벨·생물 비율). 표 데이터는 D_AISpawnZones.json에 있음(ELY_/OLY_/PRO_/STYX_ 164행). 구역 경계 도형은 지도 레벨 파일에서 뽑아야 함 → 다음 후보.
+- claude/field-assistant 6915dce, 시험 196/196. 베타 2026.11.16.107 (Actions 43809077179 success).
