@@ -102,7 +102,8 @@ function writeSafe(dst, buf) {
 }
 
 // Installs or updates. Returns { changed:[...], skipped:[...], appChanged, version, notes }.
-async function update(gameDir, baseUrl, log, canInstall = async () => true) {
+async function update(gameDir, baseUrl, log, canInstall = async () => true, progress = null) {
+  const tell = p => { try { if (progress) progress(p); } catch (e) {} };
   const channel = exists(path.join(modDir(gameDir), 'beta.txt')) ? 'beta' : 'stable';
   baseUrl = baseUrl.replace(/\/$/, '');
   const site = baseUrl + (channel === 'beta' ? '/beta' : '');
@@ -128,7 +129,10 @@ async function update(gameDir, baseUrl, log, canInstall = async () => true) {
   // Within each channel, the highest successfully installed version remains a floor.
   const floor = state.versions[channel] || (state.channel === channel ? have : '');
   if (floor && verCmp(man.version, floor) < 0) { res.stale = floor; log && log('update skipped: site shows ' + man.version + ', installed ' + floor); return res; }
+  let seen = 0;
+  tell({ phase: 'check', done: 0, total: man.files.length });
   for (const f of man.files) {
+    tell({ phase: 'download', done: seen++, total: man.files.length });
     // one bad entry must not stop the rest of the update
     let dst = null;
     try { dst = target(gameDir, f.p); } catch (e) { res.skipped.push(String(f.p) + ' (' + e.message + ')'); continue; }
@@ -153,6 +157,7 @@ async function update(gameDir, baseUrl, log, canInstall = async () => true) {
   // download must not leave new Lua paired with an old companion module.
   if (res.skipped.length) return res;
   if (!(await canInstall())) { res.deferred = true; return res; }
+  tell({ phase: 'install', done: man.files.length, total: man.files.length });
   const applied=[];
   for (const item of staged) {
     const {f,dst,buf}=item;

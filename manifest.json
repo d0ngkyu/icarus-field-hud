@@ -1,10 +1,10 @@
 {
- "version": "2026.11.16.16",
+ "version": "2026.11.16.17",
  "channel": "stable",
- "source": "bb511aa35c2cb2688387a1baa9d266be55afef9e",
- "notes": "최적화 버튼 오류 수정(백업으로 강제 복원), 레드 엑조틱 핀 꽃만 표시, 원정 도우미(탐사 브리핑·동굴 코스·제작 세트), 설정 탐험 모드, 게임 업데이트 호환 점검, 내 세이브에서 지도 전체 심층 광맥·레드 식물 표시, 보안·경량화·화면 정리.",
+ "source": "470186ea26b86dcca197771badda0e3eebf2907a",
+ "notes": "Claude 최신 기능 통합 검토: 첫 설치 진행 창, 서버별 세이브 지도 격리, 강제 복원 안전 재확인, 호환 상태와 도움말 보완",
  "config": {},
- "filesPath": "releases/stable/2026.11.16.16/files",
+ "filesPath": "releases/stable/2026.11.16.17/files",
  "files": [
   {
    "p": "game/Icarus/Binaries/Win64/dwmapi.dll",
@@ -70,8 +70,8 @@
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/index.html",
-   "n": 977918,
-   "h": "f823758cd5c6560fc50abb5cb521abb4913cc21c"
+   "n": 978334,
+   "h": "1b5f374a3dafe76241c94cd5a2c29bf8400f4057"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/animals.js",
@@ -125,13 +125,13 @@
   },
   {
    "p": "app/main.js",
-   "n": 28040,
-   "h": "86ff6ab991e7b92548ec0f4a6e25a4b55b7f3def"
+   "n": 30760,
+   "h": "3478c5a83738c01dec5e7be129993bcf798c8f2b"
   },
   {
    "p": "app/updater.js",
-   "n": 10715,
-   "h": "ca397e00da7a205a0917ce438d7855d0e49ff090"
+   "n": 11034,
+   "h": "333a3785b25b8b29cf7f34d0d593e8cea293b7f3"
   },
   {
    "p": "app/preload.js",
@@ -215,8 +215,8 @@
   },
   {
    "p": "app/optimizer.js",
-   "n": 11539,
-   "h": "01a368cb16008e0f11362bc55633417ff9304291"
+   "n": 11666,
+   "h": "ed196327a799ad7f678c569359af41c6f31ad7f9"
   },
   {
    "p": "app/performance.js",
@@ -280,8 +280,8 @@
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/hover-help.js",
-   "n": 13640,
-   "h": "cd61a4b52ed48688da5989ea48ba7b62aceb5ffc"
+   "n": 13863,
+   "h": "1335b0d9d7ddc422ad1cb6744e403d6e280c46b3"
   },
   {
    "p": "app/compat.js",
@@ -290,13 +290,13 @@
   },
   {
    "p": "app/prospect-save.js",
-   "n": 5323,
-   "h": "09b1f2af8cfb6fe30af47e6ac3a406b26f28d3a9"
+   "n": 5697,
+   "h": "63b6250c031b61b9098c41f0c80b123d93c9789b"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/compat.js",
-   "n": 4842,
-   "h": "481f3a7941c3c11253ecca1d598c1c45de377110"
+   "n": 5038,
+   "h": "1ed56dba2b9c2f580e66bb660e2eb5ea19060b90"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/field-assistant.js",
