@@ -23,5 +23,5 @@ test('export whitelist excludes keys, usage, unrelated cache and invalid article
  db.translations[a.hash].text='AIza'+'x'.repeat(35);assert.equal(exportNews(db).entries.length,0);
 });
 test('published bundle is identical to public data and contains no account fields',()=>{
- const bundle=require('../app/news-ko.js'),publicData=require('../../news/ko.json');assert.deepEqual(bundle,publicData);assert(bundle.entries.length>0);assert.deepEqual(Object.keys(bundle).sort(),['entries','language','schema']);for(const e of bundle.entries)assert.deepEqual(Object.keys(e).sort(),['at','hash','id','text']);
+ const bundle=require('../app/news-ko.js'),publicData=require('../../news/ko.json');assert(publicData.entries.length>0);assert(bundle.entries.length>0);require('../app/news-publisher.js').entries(publicData);assert.deepEqual(Object.keys(bundle).sort(),['entries','language','schema']);for(const e of bundle.entries)assert.deepEqual(Object.keys(e).sort(),['at','hash','id','text']);
 });

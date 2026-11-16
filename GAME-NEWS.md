@@ -23,3 +23,13 @@ Node/Fengari162개 검사(기존158+뉴스4): 공식출처/이미지필터·스�
 - 현재 공개본은 Week258 1건. 다른 글/향후 글은 운영자가 번역하고 공개해야 한다. 무인 자동번역 서버/정기 발행은 구축하지 않았다. 공유 글만 추가할 때는 앱 재배포 불필요. 친구는 새 소식 확인을 누르면 받는다.
 - 발행 절차: 소유자 HUD에서 글을 번역한 뒤 `node source/tools/export-news.cjs <userData>/game-news.json news/ko.json source/app/news-ko.js`. 이 도구는 공식 글과 해시가 일치하는 번역만 내보내며 키·사용량·설정 전체파일은 절대 업로드하지 않는다. 변경 데이터를 검토·검사한 뒤 GitHub에 공개한다. 최신8건을 내보내므로 이전 번역 보존이 필요하면 기존 데이터와 ID/해시 기준 병합한다.
 - 166검사: 키 없는 친구의 공유 번역/Google 호출0/사용량0/오프라인/본문수정 거부/잘못된 응답/신규공유본 우선/내보내기 비밀정보 제외/번들 일치. 소유자 실제 Google번역 9,496자 성공은 선행작업에서 확인.
+
+
+## 번역 후 자동 업로드 · NEWS-AUTO-PUBLISH-045
+- 운영자 PC 소식 → 번역 자동 공유에서 GitHub fine-grained 토큰을 한 번 연결. 연결 시 기존 미공유 번역, 이후 번역 성공 때 새 번역을 자동 공개한다. 친구는 토큰/Google키 불필요. 공식 소식은 탭 열기/수동 확인 때 갱신하며 상시 푸시 수신은 아니다.
+- 권한: 소유자 d0ngkyu, Only select repositories → icarus-field-hud, Contents read/write만 추가(Metadata read는 GitHub 필수). 토큰은 저장소 전체 콘텐츠 권한이므로 파일별 보안 경계가 아니다. 앱의 URL·경로는 news/ko.json으로 고정, 설정으로 바꿀 수 없다. 토큰 유효기간 만료 시 재연결한다. 계정 token 생성은 사용자 확인 후 진행.
+- news-publisher.dat에 Electron safeStorage 암호화 보관. renderer에 반환하지 않고 저장 입력은 비움. 공유 payload는 공식글 ID·본문해시·번역·시각만. 키/사용량/개인정보 전체캐시 업로드 금지. 연결 해제는 로컬 인증만 제거하며 GitHub 토큰 자체 폐기는 GitHub 설정에서 한다.
+- 번역 저장 후 업로드. 실패해도 번역과 사용량 유지, 재시작/소식탭 확인 때 최소1분 간격 또는 공유 재시도 버튼으로 재전송. 숨은 탭 타이머 없음. 재전송에 Google 재요청 없음. GitHub 409/422 충돌 시 최신SHA 다시 읽고 최대3회 병합; 기존 같은 ID/해시 번역 유지, 다른 글 보존. 오래된64건/파일800KB 한도. 비정상 원격 파일은 덮어쓰지 않는다.
+- 공유 데이터 업데이트는 앱 배포와 별개이다. source/app/news-ko.js는 배포 시점 오프라인 보조본이므로 news/ko.json이 더 최신이어도 정상. 회귀검사는 양쪽 유효성을 확인하며 동일성은 요구하지 않는다. 자동 업로드와 Actions 발행 동시 main 변경은 GitHub push 충돌로 배포가 실패할 수 있으므로 기록 확인 후 기존 release workflow 재실행한다.
+- 171검사 통과. 동시수정 병합/중복업로드 방지/잘못된 원격 보호/토큰보관/전송중 연결변경 차단/업로드실패 뒤 재시작 재전송 및 Google호출1회 확인. 실제 계정 토큰연결·실업로드 결과는 TASKS 후속기록.
+- API 근거: https://docs.github.com/en/rest/repos/contents#create-or-update-file-contents · https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens
