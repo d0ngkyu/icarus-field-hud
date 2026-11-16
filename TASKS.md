@@ -1057,3 +1057,8 @@ A/B/C 모두 종료 프로토콜, 업데이트 실패 표시, 개인 월드 격�
 ## INSTALLER-058 · Claude (2026-11-16 14:45, 사용자 요청: 친구에게 버튼 하나로 설치)
 - .github/workflows/installer.yml + source/tools/installer/setup.nsi: 릴리스 zip으로 NSIS 한 파일 설치기(IcarusHUD-Setup.exe, 112MB) 생성·업로드. 사용자 폴더 설치(관리자 불필요), 바탕화면·시작 메뉴 바로가기, HKCU 제거 등록, 끝나면 HUD 실행. Actions 43811923555 success, v1.0 릴리스 자산 + sha256.
 - 안내 페이지(claude.ai 아티팩트, 사용자 소유·비공개)와 README 받기 링크를 설치기로 변경. 서명 없음 → SmartScreen 경고 안내 포함. 코드 서명은 유료 인증서 필요(사용자 결정 사항).
+
+## SETUP-SPLASH-059 · Claude (2026-11-16 15:05, 사용자 요청: 처음 설치 로딩 화면)
+- app/main.js 첫 설치 진행 창(380×150, 퍼센트 막대, 샌드박스 data: 페이지) + updater.update progress 콜백(실패해도 업데이트 계속). 설치기 '지금 실행'은 --from-setup으로 두 번째 '설치할까요?' 질문 생략. 시험 200/200.
+- 작업 중 발견: 이 진행 창 코드가 커밋 안 된 채 작업 폴더에 있었음(14:47~48, 출처 미상 — 같은 컨테이너의 다른 세션 추정). 검토·시험 후 이어서 완성.
+- installer.yml이 지정 커밋의 source/app 코드를 설치기에 넣도록 변경 → 첫 실행부터 진행 창. 소스 fec345d, 베타 2026.11.16.109 (Actions 43813640632), 설치기 재생성 (Actions 43813643618, 112MB).
