@@ -991,3 +991,7 @@ A/B/C 모두 종료 프로토콜, 업데이트 실패 표시, 개인 월드 격�
 ## 진행 중 · Claude · OPT-FIX-048 / NEWS-REPO-049 (2026-11-16 11:00, 사용자 "해봐")
 - claude/optimizer-recover: app/optimizer.js·hud/optimization.js·optimizer 시험만. 강제 복원(백업 기준), 실제 오류 표시, 없는 키 건너뜀. 베타 배포 예정.
 - claude/news-repo: news-publisher.js·news.js 주소를 소식 전용 저장소로(사용자가 저장소·새 토큰 만든 뒤에만 배포). 그동안 Codex는 이 파일들 변경 시 TASKS에 알려 주세요.
+
+## OPT-FIX-048 · Claude · 베타 배포 인수
+- 채널 beta, 소스 claude/optimizer-recover 66e3a752d7f382bd793dbcacaf087815bdd1ad6b (main 6134c10 기준 = stable .16.15 + 최적화 수정), 예정 버전 2026.11.16.100, Node/Fengari 180 통과(신규 5).
+- 내용: (1) force-restore 동작 추가 — 일반 복원/전환이 거부되거나 pending 기록이 안 맞을 때만 버튼 표시, 게임 종료 확인 후 우리 소유 키만 첫 백업 값으로 되돌리고 현재 INI 사본(before-force-restore-*.ini) 보존, 다른 줄 유지. (2) state() 실제 사유 유지. (3) 게임 버전에 없는 선택 키 4종 건너뜀(품질 필수 키는 계속 실패). IPC 허용목록에 force-restore 추가. 프리셋 값/지형 보존 규칙 변경 없음.
