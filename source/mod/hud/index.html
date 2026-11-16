@@ -931,6 +931,7 @@ cv.addEventListener('wheel',e=>{e.preventDefault();const[wx,wy]=toW(e.offsetX,e.
  if(!V.follow){const[nx,ny]=toW(e.offsetX,e.offsetY);V.x+=wx-nx;V.y+=wy-ny}save();requestDraw()},{passive:false});
 function addPin(x,y){const mp=M();const p={x:Math.round(x),y:Math.round(y),z:currentMap()&&S.pose?S.pose[2]:0,n:'핀 '+(mp.pins.length+1),c:'#ff6a55',t:''};mp.pins.push(p);addLog('지도에 핀 추가');save();requestDraw();showInfo({kind:'pin',ref:p})}
 
+window.__mapApi={CAVEMAP,gridName,gCaveInfo,gHaz,hazText,currentMap,focus(x,y,zoom){V.follow=false;followBtn();V.x=x;V.y=y;if(zoom)V.s=Math.max(V.s,zoom);save();requestDraw()},setPathsLayer(on){V.L.paths=on?1:0;const c=document.querySelector('[data-ml=paths]');if(c)c.checked=!!on;save();requestDraw()}};
 window.__mapRecordsChanged=()=>{fogCacheKey='';renderRoutes();requestDraw()};
 window.__mapShown=()=>{fillOre();renderRoutes();setTimeout(resize,30)};
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&mapOn())resize()});
@@ -1209,4 +1210,4 @@ const prevDraw=draw;draw=function(){prevDraw();refreshBars()};
 setTab(S.tab2||'coach');draw();
 })();
 </script>
-<link rel="stylesheet" href="layout.css"><script src="tab-keys.js"></script><script src="personalize.js"></script><script src="optimization.js"></script><script src="news.js"></script><script src="hover-help.js"></script><script src="layout.js"></script></body></html>
+<link rel="stylesheet" href="layout.css"><script src="tab-keys.js"></script><script src="personalize.js"></script><script src="optimization.js"></script><script src="news.js"></script><script src="hover-help.js"></script><script src="layout.js"></script><script src="field-assistant.js"></script></body></html>
