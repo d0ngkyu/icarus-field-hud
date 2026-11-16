@@ -60,9 +60,10 @@ writeStatus('-', 'READY', 0, 'F11')
 local function process()
     local f = io.open(request, 'r')
     if not f then busy = false; return end
-    local text = f:read(512); f:close()
+    local text = f:read(4097); f:close()
     if not os.rename(request, processing) then busy = false; return end
-    local id, timestamp, item, quantity = text:match('^([a-f0-9]+)|(%d+)|([A-Za-z0-9_]+)|(%d+)%s*$')
+    local id, timestamp, item, payload = text:match('^([a-f0-9]+)|(%d+)|([A-Za-z0-9_]+)|([^|]+)%s*$')
+    local quantity, entries, entryIndex, entrySent = 0, {}, 1, 0
     local sent, done = 0, false
     local started = os.time()
     local function finish(state, detail)
@@ -79,18 +80,39 @@ local function process()
         return value == id
     end
     local ok, err = pcall(function()
-        assert(id and #id == 32, 'Invalid request')
+        assert(#text <= 4096 and id and #id == 32, 'Invalid request')
         local age = os.time() - tonumber(timestamp)
         assert(age >= -5 and age <= 120, 'Request expired; prepare again')
-        quantity = tonumber(quantity)
-        assert(quantity >= 1 and quantity <= MAX_QUANTITY and allowed[item], 'Invalid item or quantity')
+        local seen, canonical = {}, {}
+        local function add(name, count)
+            count = tonumber(count)
+            assert(name and allowed[name] and count and count >= 1 and count <= MAX_QUANTITY and count % 1 == 0 and not seen[name], 'Invalid item or quantity')
+            seen[name] = true; quantity = quantity + count
+            assert(quantity <= MAX_QUANTITY and #entries < 20, 'Set limit exceeded')
+            entries[#entries+1] = {item=name, count=count}
+        end
+        if item == 'SET' then
+            for part in payload:gmatch('[^,]+') do
+                local name, count = part:match('^([A-Za-z0-9_]+):(%d+)$')
+                add(name, count); canonical[#canonical+1] = part
+            end
+            assert(#entries > 0 and table.concat(canonical, ',') == payload, 'Invalid set format')
+        else
+            assert(payload:match('^%d+%s*$'), 'Invalid quantity')
+            add(item, payload)
+        end
         assert(quantity <= BATCH_SIZE or type(ExecuteWithDelay) == 'function', 'Delayed processing unavailable')
         local pc, player = H.GetPlayerController(), H.GetPlayer()
         assert(pc and pc:IsValid() and player and player:IsValid(), 'Enter a single-player world first')
+        local initialMode = soloMode(pc, player)
+        assert(initialMode == 'SINGLE' or initialMode == 'HOST', 'Single-player host required')
         local controllerAddress, playerAddress = pc:GetAddress(), player:GetAddress()
         local controllerName, playerName = pc:GetFullName(), player:GetFullName()
+        local library = StaticFindObject('/Script/Icarus.Default__ItemTemplateLibrary')
+        assert(library and library:IsValid(), 'Template library unavailable')
+        for _, entry in ipairs(entries) do assert(library:IsValidName(FName(entry.item)) == true, 'Template not available in this game version') end
         -- Keep primitive identity only across delayed callbacks, not UObject wrappers.
-        pc, player = nil, nil
+        pc, player, library = nil, nil, nil
         local step
         step = function()
             if done then return end
@@ -103,11 +125,16 @@ local function process()
                 local mode = soloMode(currentPC, currentPlayer)
                 assert(mode == 'SINGLE' or mode == 'HOST', '혼자 플레이하는 호스트인지 확인하지 못했거나 다른 플레이어가 접속했습니다.')
                 local lib = StaticFindObject('/Script/Icarus.Default__ItemTemplateLibrary')
-                assert(lib and lib:IsValid() and lib:IsValidName(FName(item)) == true, 'Template not available in this game version')
+                assert(lib and lib:IsValid(), 'Template library unavailable')
+                local checkedItem
                 for i = 1, math.min(BATCH_SIZE, quantity - sent) do
+                    local entry = entries[entryIndex]
+                    if checkedItem ~= entry.item then assert(lib:IsValidName(FName(entry.item)) == true, 'Template not available in this game version'); checkedItem = entry.item end
                     assert(currentPC:IsValid() and currentPlayer:IsValid(), 'World changed')
-                    currentPC:AddItemToInventory({RowName=FName(item), DataTableName=FName('D_ItemTemplate')})
+                    currentPC:AddItemToInventory({RowName=FName(entry.item), DataTableName=FName('D_ItemTemplate')})
                     sent = sent + 1
+                    entrySent = entrySent + 1
+                    if entrySent >= entry.count then entryIndex = entryIndex + 1; entrySent = 0 end
                 end
                 if sent >= quantity then finish('SENT', item); return end
                 writeStatus(id, 'WORKING', sent, quantity)
@@ -134,4 +161,4 @@ RegisterKeyBind(Key.F11, function()
     end)
     if not ok then busy = false; writeStatus('-', 'ERROR', 0, err) end
 end)
-print('[IcarusSoloItems] Ready: up to 1000 items per request, 25 calls per batch.\n')
+print('[IcarusSoloItems] Ready: single items or sets (20 kinds / 1000 total), 25 calls per batch.\n')

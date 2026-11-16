@@ -16,11 +16,12 @@ function run(tail){
  os.rename=function(a,b) a=a:match('([^/]+)$');b=b:match('([^/]+)$'); if not files[a] then return nil end;files[b]=files[a];files[a]=nil;return true end
  os.time=function() return now end
  debug.getinfo=function() return {source='@mock/Scripts/main.lua'} end
- dofile=function() return {Fiber=true} end
+ allowedMock={Fiber=true,Stone=true}; received={}; rejectStone=false
+ dofile=function() return allowedMock end
  local pc={GetAddress=function() return identity end,GetFullName=function() return "Player"..identity end,IsValid=function() return valid end, IsLocalController=function() return true end, HasAuthority=function() return authority end,
- AddItemToInventory=function(self,item) assert(item.RowName=='Fiber');calls=calls+1 end}
+ AddItemToInventory=function(self,item) assert(allowedMock[item.RowName]);calls=calls+1;received[item.RowName]=(received[item.RowName] or 0)+1 end}
  package.preload.UEHelpers=function() return {GetPlayerController=function() return pc end,GetPlayer=function() return pc end} end
- StaticFindObject=function() nativeCalls=nativeCalls+1; return {IsValid=function() return true end,IsStandalone=function() return standalone end,GetGameMode=function() return {IsValid=function() return modeValid end,GetNumPlayers=function() return players end,GetNumSpectators=function() return spectators end} end,IsValidName=function() return true end} end
+ StaticFindObject=function() nativeCalls=nativeCalls+1; return {IsValid=function() return true end,IsStandalone=function() return standalone end,GetGameMode=function() return {IsValid=function() return modeValid end,GetNumPlayers=function() return players end,GetNumSpectators=function() return spectators end} end,IsValidName=function(self,name) return not (rejectStone and name=='Stone') end} end
  FName=function(x) return x end
  LoopAsync=function(ms,f) assert(ms==3000);heartbeatLoop=f end
  Key={F11=122}
@@ -36,6 +37,21 @@ function run(tail){
  lua.lua_close(L);
 }
 const id='a'.repeat(32);
+test('mixed set crosses item boundary within a batch and executes exactly 1000 calls',()=>run(`files['request.txt']='${id}|1000|SET|Fiber:610,Stone:390';key();assert(calls==25);while #queue>0 do local before=calls;pump();assert(calls-before<=25) end;assert(received.Fiber==610 and received.Stone==390);assert(files['status.txt']:find('|SENT|1000|SET',1,true));key();assert(calls==1000)`));
+test('set cancellation stops remaining kinds after a partial batch',()=>run(`files['request.txt']='${id}|1000|SET|Fiber:10,Stone:90';key();assert(received.Fiber==10 and received.Stone==15);files['cancel.txt']='${id}';drain();assert(calls==25 and files['status.txt']:find('|CANCELLED|25|',1,true))`));
+test('every set entry and native template is validated before any delivery',()=>{
+ for(const payload of ['Fiber:1,Unknown:1','Fiber:1,Fiber:1','Fiber:0','Fiber:1,Stone:1000','Fiber:1,','Fiber:1,,Stone:1',',Fiber:1','Fiber:1.5','Fiber:-1','Fiber:1|Stone:1',''])
+ run(`files['request.txt']='${id}|1000|SET|${payload}';key();drain();assert(calls==0 and not files['processing.txt'])`);
+ run(`rejectStone=true;files['request.txt']='${id}|1000|SET|Fiber:1,Stone:1';key();assert(calls==0 and files['status.txt']:find('|ERROR|0|',1,true))`);
+});
+test('set format rejects too many kinds and oversized payloads',()=>{
+ run(`local parts={};for i=1,21 do allowedMock['Item'..i]=true;parts[i]='Item'..i..':1' end;files['request.txt']='${id}|1000|SET|'..table.concat(parts,',');key();assert(calls==0)`);
+ run(`files['request.txt']='${id}|1000|SET|Fiber:'..string.rep('0',4096)..'1';key();assert(calls==0)`);
+ run(`local parts={};for i=1,20 do allowedMock['Item'..i]=true;parts[i]='Item'..i..':1' end;files['request.txt']='${id}|1000|SET|'..table.concat(parts,',');key();assert(calls==20)`);
+});
+test('set world change or multiplayer transition stops later batches',()=>{
+ for(const change of ['identity=2','players=2'])run(`standalone=false;authority=true;files['request.txt']='${id}|1000|SET|Fiber:25,Stone:25';key();${change};drain();assert(calls==25 and not received.Stone)`);
+});
 test('1000 is accepted and runs as forty bounded batches; repeated F11 cannot duplicate it',()=>run(`files['request.txt']='${id}|1000|Fiber|1000';key();assert(calls==25 and #queue==1);key();assert(calls==25);local batches=1;while #queue>0 do local before=calls;pump();assert(calls-before<=25);batches=batches+1 end;assert(calls==1000 and batches==40);assert(not files['processing.txt']);assert(files['status.txt']:find('|SENT|1000|',1,true));key();assert(calls==1000)`));
 test('cancel matches request id and stops remaining batches without rolling back prior calls',()=>run(`files['request.txt']='${id}|1000|Fiber|1000';key();files['cancel.txt']='not-this-request';pump();assert(calls==50);files['cancel.txt']='${id}';drain();assert(calls==50);assert(files['status.txt']:find('|CANCELLED|50|',1,true));assert(not files['processing.txt'])`));
 test('changed player, unavailable player, joining player and deadline stop pending calls',()=>{

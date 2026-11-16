@@ -50,13 +50,14 @@ public partial class ItemTool {
     string previewItem;
     void InitializeItemImages(){
         Disposed+=(o,e)=>itemImages.Dispose();
+        InitializeDetails();
         itemPreview=new Panel{BackColor=Color.FromArgb(29,39,49),AccessibleName="선택한 아이템 이미지"};
         Add(itemPreview,702,210,286,72);
         itemPreview.Paint+=(o,e)=>{
             int side=Math.Min(64,Math.Min(itemPreview.Width-12,itemPreview.Height-8));
             if(previewItem==null){TextRenderer.DrawText(e.Graphics,"아이템 미리보기",itemPreview.Font,itemPreview.ClientRectangle,muted,TextFormatFlags.HorizontalCenter|TextFormatFlags.VerticalCenter);return;}
             itemImages.Draw(e.Graphics,previewItem,new Rectangle(10,(itemPreview.Height-side)/2,side,side));
-            TextRenderer.DrawText(e.Graphics,itemImages.Has(previewItem)?"아이템 이미지":"이미지 준비 중",itemPreview.Font,new Rectangle(side+22,0,itemPreview.Width-side-28,itemPreview.Height),muted,TextFormatFlags.VerticalCenter|TextFormatFlags.EndEllipsis);
+            TextRenderer.DrawText(e.Graphics,DetailSummary(previewItem),itemPreview.Font,new Rectangle(side+22,4,itemPreview.Width-side-28,itemPreview.Height-8),muted,TextFormatFlags.VerticalCenter|TextFormatFlags.WordBreak|TextFormatFlags.EndEllipsis);
         };
     }
     static void ImageTest(){

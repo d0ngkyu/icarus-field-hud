@@ -116,7 +116,7 @@ public partial class ItemTool : Form {
         TextLabel("검색",48,225,44,28).ForeColor=gold;
         search.BorderStyle=BorderStyle.FixedSingle;search.BackColor=Color.FromArgb(32,42,53);search.ForeColor=ForeColor;
         search.AccessibleName="아이템 검색";Add(search,98,222,538,29);search.TextChanged+=(o,e)=>FilterItems();
-        TextLabel("한글 · 영어 이름으로 검색",48,264,560,22).ForeColor=muted;
+        InitializeLibrary();
         list.View=View.Details;list.FullRowSelect=true;list.MultiSelect=false;list.HideSelection=false;
         list.BorderStyle=BorderStyle.None;list.BackColor=panel;list.ForeColor=ForeColor;list.HeaderStyle=ColumnHeaderStyle.None;list.OwnerDraw=true;
         list.Columns.Add("아이템",300);list.Columns.Add("영어 이름",270);rowHeight.ImageSize=new Size(1,43);list.SmallImageList=rowHeight;
@@ -136,6 +136,7 @@ public partial class ItemTool : Form {
             selectedName.Text=chosen?list.SelectedItems[0].Text:"아이템을 선택하세요";
             selectedEnglish.Text=chosen?list.SelectedItems[0].SubItems[1].Text:"왼쪽 목록에서 필요한 아이템을 골라 주세요.";
             previewItem=chosen?(string)list.SelectedItems[0].Tag:null;
+            if(detailsButton!=null)detailsButton.Enabled=chosen;
             if(itemPreview!=null)itemPreview.Invalidate();
             if(prepare!=null)prepare.Enabled=chosen;
         };
@@ -149,13 +150,7 @@ public partial class ItemTool : Form {
         int bx=702;foreach(int n in new[]{1,100,500,1000}){int value=n;var b=ActionButton(n.ToString(),bx,464,64,()=>amount.Value=value);b.Height=30;bx+=74;}
         prepare=ActionButton("생성 요청 준비   →",702,516,286,()=>{
             if(list.SelectedItems.Count!=1) throw new Exception("목록에서 아이템을 선택하세요.");
-            string target=ModPath(game.Text);
-            if(!File.Exists(Path.Combine(target,"enabled.txt"))) throw new Exception("게임 종료 후 먼저 모드를 설치하세요.");
-            string p=Path.Combine(target,"request.txt");
-            if(File.Exists(p)||File.Exists(Path.Combine(target,"processing.txt"))) throw new Exception("대기 중인 요청이 있습니다. F11로 실행하거나 요청을 취소하세요.");
-            string request=Request((string)list.SelectedItems[0].Tag,(int)amount.Value);
-            File.WriteAllText(p+".tmp",request,Utf8);File.Move(p+".tmp",p);
-            lastId=request.Split('|')[0];message.Text="요청 준비 완료. 2분 이내 게임으로 돌아가 F11을 누르세요.";
+            QueueRequest(Request((string)list.SelectedItems[0].Tag,(int)amount.Value));
         });
         prepare.Height=46;prepare.BackColor=gold;prepare.ForeColor=Color.FromArgb(25,29,32);prepare.Font=new Font("맑은 고딕",12,FontStyle.Bold);prepare.FlatAppearance.MouseOverBackColor=Color.FromArgb(239,206,157);prepare.Enabled=false;
         var hint=TextLabel("게임으로 돌아가  F11  을 누르세요.",702,575,286,24);hint.ForeColor=muted;hint.TextAlign=ContentAlignment.MiddleCenter;
@@ -177,7 +172,9 @@ public partial class ItemTool : Form {
     }
     void FilterItems() {
         string q=search.Text.Trim();list.BeginUpdate();list.Items.Clear();previewItem=null;if(itemPreview!=null)itemPreview.Invalidate();
-        var matches=catalog.Where(i=>(i.name+" "+i.english+" "+i.id).IndexOf(q,StringComparison.OrdinalIgnoreCase)>=0).ToArray();
+        selectedName.Text="아이템을 선택하세요";selectedEnglish.Text="왼쪽 목록에서 필요한 아이템을 골라 주세요.";if(prepare!=null)prepare.Enabled=false;
+        if(detailsButton!=null)detailsButton.Enabled=false;
+        var matches=FilteredItems(q,categoryFilter==null?"전체":(string)categoryFilter.SelectedItem).ToArray();
         resultCount.Text=matches.Length.ToString("N0")+" ITEMS"+(matches.Length>200?"   /   200 표시":"");
         foreach(var i in matches.Take(200)) {
             var row=new ListViewItem(new[]{i.name,i.english,i.id});row.Tag=i.id;list.Items.Add(row);
@@ -210,6 +207,8 @@ public partial class ItemTool : Form {
             if(args.Contains("--connection-test")){ConnectionTest();return 0;}
             if(args.Contains("--layout-test")){LayoutTest();return 0;}
             if(args.Contains("--image-test")){ImageTest();return 0;}
+            if(args.Contains("--library-test")){LibraryTest();return 0;}
+            if(args.Contains("--details-test")){DetailsTest();return 0;}
             if(args.Contains("--self-test")){SelfTest();return 0;}
             if(args.Contains("--suite-test")){SuiteTests.Run(Base);return 0;}
             Application.EnableVisualStyles();Application.SetCompatibleTextRenderingDefault(false);
@@ -219,7 +218,7 @@ public partial class ItemTool : Form {
                     preview.Text="ICARUS · 이미지 확인 (요청 비활성)";
                     preview.prepare.Enabled=false;
                     preview.list.SelectedIndexChanged+=(o,e)=>preview.prepare.Enabled=false;
-                    foreach(Control c in preview.Controls)if(c is Button&&c!=preview.prepare)c.Enabled=false;
+                    foreach(Control c in preview.Controls)if(c is Button&&c!=preview.prepare&&c!=preview.setsButton&&c!=preview.detailsButton)c.Enabled=false;
                     Application.Run(preview);
                 }
                 return 0;
@@ -230,7 +229,7 @@ public partial class ItemTool : Form {
             }
         } catch(Exception ex) {
             File.WriteAllText(Path.Combine(Base,"error.txt"),ex.ToString(),Utf8);
-            if(!args.Contains("--self-test")&&!args.Contains("--suite-test")&&!args.Contains("--layout-test")&&!args.Contains("--connection-test")&&!args.Contains("--image-test")) MessageBox.Show(ex.Message,"실행 오류");
+            if(!args.Any(a=>a.EndsWith("-test"))) MessageBox.Show(ex.Message,"실행 오류");
             return 1;
         }
     }
