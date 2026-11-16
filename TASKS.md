@@ -1053,3 +1053,7 @@ A/B/C 모두 종료 프로토콜, 업데이트 실패 표시, 개인 월드 격�
 - 소스 bb511aa(= 베타 .108, 이전 정식 66093af 포함). Actions 43810495421 success, manifest 2026.11.16.16.
 - 포함: OPT-FIX-048, REDEXO-BLOOM-051, FIELD-ASSISTANT-052, EXPLORE-MODE-053, PATCH-COMPAT-054, PROSPECT-SAVE-055, CLEANUP-056. main에 소스 병합.
 - 실게임 미확인: 세이브 읽기 오프셋, 꽃 표시, 원정 도우미, 탐험 모드, 호환 점검. PC 연결 시 Claude가 업데이트 적용·확인 예정(게임 실행 중엔 교체 안 함).
+
+## INSTALLER-058 · Claude (2026-11-16 14:45, 사용자 요청: 친구에게 버튼 하나로 설치)
+- .github/workflows/installer.yml + source/tools/installer/setup.nsi: 릴리스 zip으로 NSIS 한 파일 설치기(IcarusHUD-Setup.exe, 112MB) 생성·업로드. 사용자 폴더 설치(관리자 불필요), 바탕화면·시작 메뉴 바로가기, HKCU 제거 등록, 끝나면 HUD 실행. Actions 43811923555 success, v1.0 릴리스 자산 + sha256.
+- 안내 페이지(claude.ai 아티팩트, 사용자 소유·비공개)와 README 받기 링크를 설치기로 변경. 서명 없음 → SmartScreen 경고 안내 포함. 코드 서명은 유료 인증서 필요(사용자 결정 사항).

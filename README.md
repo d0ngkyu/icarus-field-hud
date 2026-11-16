@@ -4,8 +4,9 @@
 제작 재료 계산, 보관함·광석 네비게이션, 게임 지도(동굴·탐험 기록·메모), 성장 코치를 제공합니다.
 
 ## 받기
-[Releases](../../releases/latest)에서 `IcarusHUD.zip`을 받아 압축을 풀고 `IcarusHUD.exe`를 실행하세요.
-처음 실행하면 Icarus 폴더를 찾아 모드를 설치하고, 그다음부터는 자동으로 업데이트됩니다.
+**[설치 파일 받기 (IcarusHUD-Setup.exe)](https://github.com/d0ngkyu/icarus-field-hud/releases/latest/download/IcarusHUD-Setup.exe)** → 실행 → 「설치」 → 「HUD 실행」.
+관리자 권한 없이 내 사용자 폴더에 설치되고, 처음 실행하면 Icarus 폴더를 찾아 모드를 설치합니다. 그다음부터는 자동으로 업데이트됩니다.
+압축 파일을 원하면 [Releases](../../releases/latest)의 `IcarusHUD.zip`을 받아 압축을 풀고 `IcarusHUD.exe`를 실행하세요.
 자세한 사용법은 압축 파일 안의 `사용법.txt`를 보세요.
 
 ## 알림
