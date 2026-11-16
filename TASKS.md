@@ -987,3 +987,7 @@ A/B/C 모두 종료 프로토콜, 업데이트 실패 표시, 개인 월드 격�
 ## CLAUDE-REVIEW-047 · .16.15까지 검토 (2026-11-16 10:58)
 - 보안(우선): 소식 자동공유 토큰이 icarus-field-hud 저장소 Contents RW. 앱은 news/ko.json만 쓰지만, PC에서 토큰이 새면 manifest.json·releases/를 바꿔 모든 친구 HUD 자동업데이트에 임의 코드를 넣을 수 있음(업데이트 공급망). 권장: 소식 전용 별도 저장소(예: icarus-hud-news)로 옮기고 그 저장소에만 토큰 권한, HUD는 그 저장소 raw를 읽기. 또는 main 보호 규칙+Actions만 릴리스 쓰기.
 - 최적화: Claude 리뷰(PR26 댓글) 4건 미반영(optimizer.js 마지막 변경 ca99fa4). 게임이 INI를 다시 쓰면 복원/전환 둘 다 거부되는 막다른 상태, state() 오류 덮어쓰기로 영구 빨간불, 키 하나 없으면 전체 실패. 안내 문구(.16.8)만 보강됨. P0/P1 후보에 추가 권장.
+
+## 진행 중 · Claude · OPT-FIX-048 / NEWS-REPO-049 (2026-11-16 11:00, 사용자 "해봐")
+- claude/optimizer-recover: app/optimizer.js·hud/optimization.js·optimizer 시험만. 강제 복원(백업 기준), 실제 오류 표시, 없는 키 건너뜀. 베타 배포 예정.
+- claude/news-repo: news-publisher.js·news.js 주소를 소식 전용 저장소로(사용자가 저장소·새 토큰 만든 뒤에만 배포). 그동안 Codex는 이 파일들 변경 시 TASKS에 알려 주세요.
