@@ -2,23 +2,11 @@
 // 1) Character tab: Expedition Briefing & Pre-departure Essential Checklist
 // 2) Map tab: Nearest high-value unvisited cave route recommender (Nearest-Neighbor + 2-opt)
 // 3) Craft tab: 1-click Expedition & Base Craft Kits + Custom Kit saving
-// 5) Top bar: Drift-free Mini Timer & Zero-interference Night Eye-Care Dimmer
 // Pure UI/planning module — zero additional game/native Lua reads.
 (function(root){
 'use strict';
 
 const STORAGE_KEY='icarus.assistant.v1';
-const DIM_LEVELS=[0,20,35,50];
-const DIM_LABELS={0:'밝기 100%',20:'야간 80%',35:'야간 65%',50:'심야 50%'};
-
-const TIMER_PRESETS=[
- {id:'cook-5',label:'화로·요리',seconds:300,short:'5분'},
- {id:'smelt-10',label:'제련·정제',seconds:600,short:'10분'},
- {id:'craft-15',label:'발효·공방',seconds:900,short:'15분'},
- {id:'exped-30',label:'원정·귀환',seconds:1800,short:'30분'},
- {id:'exotic-60',label:'엑조틱·장기',seconds:3600,short:'60분'}
-];
-
 const ESSENTIAL_CHECKLIST=[
  {id:'oxygen',label:'산소 용기',sub:'산소 탱크 또는 산소 주머니',keys:['Oxygen_Tank','Oxygen_Bladder'],craftKey:'Oxygen_Tank',fallbackKey:'Oxygen_Bladder'},
  {id:'water',label:'물 용기',sub:'보온병·휴대용 물통·물주머니',keys:['Thermos','Canteen','Waterskin'],craftKey:'Canteen',fallbackKey:'Waterskin'},
@@ -82,7 +70,6 @@ const HAZ_NAMES={w:'동굴웜',h:'벌집',b:'박쥐 둥지',s:'거미 둥지',l:
 
 function normalizeAssistantState(raw={}){
  if(!raw||typeof raw!=='object')raw={};
- const dim=DIM_LEVELS.includes(Number(raw.dim))?Number(raw.dim):0;
  const checked={};
  if(raw.checked&&typeof raw.checked==='object'){
   for(const item of ESSENTIAL_CHECKLIST){
@@ -102,103 +89,8 @@ function normalizeAssistantState(raw={}){
    if(items.length)customKits.push({id:String(k.id||'custom-'+customKits.length),name,items});
   }
  }
- let timer=null;
- if(raw.timer&&typeof raw.timer==='object'){
-  const label=String(raw.timer.label||'타이머').trim().slice(0,24)||'타이머';
-  const durationSec=Math.min(86400,Math.max(1,Math.round(Number(raw.timer.durationSec)||300)));
-  const endAt=Number.isFinite(Number(raw.timer.endAt))?Number(raw.timer.endAt):null;
-  const pausedRemainingMs=Number.isFinite(Number(raw.timer.pausedRemainingMs))?Math.max(0,Math.round(Number(raw.timer.pausedRemainingMs))):null;
-  const completed=!!raw.timer.completed;
-  const notified=!!raw.timer.notified;
-  if(endAt||pausedRemainingMs!==null||completed){
-   timer={label,durationSec,endAt,pausedRemainingMs,completed,notified};
-  }
- }
  const courseMode=['balanced','large','deep'].includes(raw.courseMode)?raw.courseMode:'balanced';
- return {dim,checked,customKits,timer,courseMode};
-}
-
-function cycleDimLevel(current){
- const idx=DIM_LEVELS.indexOf(Number(current));
- return DIM_LEVELS[(idx+1)%DIM_LEVELS.length];
-}
-
-function formatTimerClock(ms){
- const totalSec=Math.max(0,Math.ceil((Number(ms)||0)/1000));
- const h=Math.floor(totalSec/3600);
- const m=Math.floor((totalSec%3600)/60);
- const s=totalSec%60;
- const pad=n=>String(n).padStart(2,'0');
- return h>0?`${h}:${pad(m)}:${pad(s)}`:`${pad(m)}:${pad(s)}`;
-}
-
-function startTimer(seconds,label,now=Date.now()){
- const sec=Math.min(86400,Math.max(1,Math.round(Number(seconds)||300)));
- const cleanLabel=String(label||'타이머').trim().slice(0,24)||'타이머';
- return {
-  label:cleanLabel,
-  durationSec:sec,
-  endAt:now+sec*1000,
-  pausedRemainingMs:null,
-  completed:false,
-  notified:false
- };
-}
-
-function addTimerSeconds(timer,addSec,now=Date.now()){
- const delta=Math.round(Number(addSec)||0)*1000;
- if(!timer){
-  return delta>0?startTimer(Math.round(delta/1000),'타이머',now):null;
- }
- if(timer.completed){
-  return startTimer(Math.max(60,Math.round(delta/1000)||300),timer.label,now);
- }
- if(timer.pausedRemainingMs!==null){
-  const nextMs=Math.min(86400*1000,Math.max(1000,timer.pausedRemainingMs+delta));
-  return {...timer,pausedRemainingMs:nextMs,durationSec:Math.max(timer.durationSec,Math.round(nextMs/1000))};
- }
- const rem=Math.max(0,(timer.endAt||now)-now);
- const nextMs=Math.min(86400*1000,Math.max(1000,rem+delta));
- return {...timer,endAt:now+nextMs,durationSec:Math.max(timer.durationSec,Math.round(nextMs/1000)),completed:false,notified:false};
-}
-
-function togglePauseTimer(timer,now=Date.now()){
- if(!timer||timer.completed)return timer;
- if(timer.pausedRemainingMs!==null){
-  return {...timer,endAt:now+timer.pausedRemainingMs,pausedRemainingMs:null};
- }
- const rem=Math.max(0,(timer.endAt||now)-now);
- if(rem<=0)return {...timer,endAt:null,pausedRemainingMs:null,completed:true};
- return {...timer,endAt:null,pausedRemainingMs:rem};
-}
-
-function tickTimer(timer,now=Date.now()){
- if(!timer)return {timer:null,status:'idle',remainingMs:0,clock:'00:00',justCompleted:false};
- if(timer.completed){
-  return {timer,status:'completed',remainingMs:0,clock:'00:00',justCompleted:false};
- }
- if(timer.pausedRemainingMs!==null){
-  return {
-   timer,
-   status:'paused',
-   remainingMs:timer.pausedRemainingMs,
-   clock:formatTimerClock(timer.pausedRemainingMs),
-   justCompleted:false
-  };
- }
- const rem=Math.max(0,(timer.endAt||0)-now);
- if(rem<=0){
-  const just=!timer.notified;
-  const next={...timer,endAt:null,pausedRemainingMs:null,completed:true,notified:true};
-  return {timer:next,status:'completed',remainingMs:0,clock:'00:00',justCompleted:just};
- }
- return {
-  timer,
-  status:'running',
-  remainingMs:rem,
-  clock:formatTimerClock(rem),
-  justCompleted:false
- };
+ return {checked,customKits,courseMode};
 }
 
 function applyCraftKit(currentList,kitItems,mode='merge',validRecipes=null){
@@ -418,18 +310,9 @@ function buildBriefing({world,worldName,pose,home,caves,statusLookup,prog,goalKe
 
 const api={
  STORAGE_KEY,
- DIM_LEVELS,
- DIM_LABELS,
- TIMER_PRESETS,
  ESSENTIAL_CHECKLIST,
  CRAFT_KITS,
  normalizeAssistantState,
- cycleDimLevel,
- formatTimerClock,
- startTimer,
- addTimerSeconds,
- togglePauseTimer,
- tickTimer,
  applyCraftKit,
  caveHazardSummary,
  recommendCaveCourse,
@@ -443,13 +326,6 @@ root.HudFieldAssistant=api;
 // Register hover help descriptions so HudHoverHelp resolves all new controls cleanly.
 if(root.HudHoverHelp?.rules){
  Object.assign(root.HudHoverHelp.rules,{
-  '#hud-timer-btn':'화덕 제련·요리·원정 귀환 시간을 재는 미니 타이머를 열거나 완료 알림을 끕니다.',
-  '#hud-dim-btn':'어두운 방에서 세컨드 모니터 눈부심을 줄이는 야간 감광 단계를 바꿉니다 (클릭 및 게임 화면에는 영향 없음).',
-  '[data-timer-preset]':'선택한 시간으로 미니 타이머를 바로 시작합니다.',
-  '[data-timer-add]':'현재 타이머에 시간을 더합니다.',
-  '[data-timer-pause]':'타이머를 일시정지하거나 다시 이어갑니다.',
-  '[data-timer-stop]':'타이머를 초기화합니다.',
-  '[data-dim-level]':'보조 모니터 화면 밝기를 선택한 단계로 즉시 조절합니다.',
   '[data-briefing-cave-map]':'지도 탭으로 이동해 이 동굴 위치를 바로 가운데에 보여 줍니다.',
   '[data-briefing-cave-wp]':'이 동굴을 나침반 목표(F7)로 준비합니다.',
   '[data-check-toggle]':'원정 출발 전 이 준비물을 챙겼다고 체크합니다.',
@@ -476,27 +352,6 @@ function saveState(){
 
 const css=document.createElement('style');
 css.textContent=`
-#hud-night-veil{position:fixed;inset:0;z-index:9990;pointer-events:none!important;background:rgba(4,7,10,var(--hud-dim-alpha,0));transition:background .18s ease}
-#hud-quickbar{display:inline-flex;align-items:center;gap:6px;margin-left:auto;padding:2px 0;position:relative;flex-shrink:0}
-#hud-quickbar>button{min-height:30px;padding:4px 10px;font-size:12px;border-radius:6px;background:#18232e;border:1px solid #2e4050;color:#d3dee8;white-space:nowrap;display:inline-flex;align-items:center;gap:5px}
-#hud-quickbar>button:hover{background:#223242;border-color:#d8b77d;color:#fff}
-#hud-quickbar>button.running{border-color:#72cbb0;color:#9fe8d0;background:#142827}
-#hud-quickbar>button.paused{border-color:#d8b77d;color:#f0d49b}
-#hud-quickbar>button.completed{border-color:#f39b2b;background:#332112;color:#ffdca8;animation:hudTimerPulse 1.2s infinite}
-#hud-quickbar>button.dim-on{border-color:#87c9f5;color:#bce3ff;background:#132434}
-@keyframes hudTimerPulse{50%{background:#4d2f14;border-color:#ffc56b}}
-#hud-timer-pop{position:fixed;top:86px;right:18px;z-index:9995;width:320px;max-width:calc(100vw - 24px);background:#121b24;border:1px solid #384d60;border-radius:10px;padding:14px;box-shadow:0 12px 32px rgba(0,0,0,.65);color:#e6ebf0}
-#hud-timer-pop[hidden]{display:none!important}
-.timer-pop-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
-.timer-pop-head strong{font-size:14px;color:#d8b77d}
-.timer-display{display:flex;align-items:baseline;justify-content:space-between;background:#0c131a;border:1px solid #263544;border-radius:8px;padding:10px 12px;margin-bottom:10px}
-.timer-display b{font-size:24px;font-variant-numeric:tabular-nums;color:#f5f8fa}
-.timer-display span{font-size:12px;color:#95a7b8}
-.timer-presets{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-bottom:10px}
-.timer-presets button,.timer-controls button,.dim-levels button{font-size:12px;min-height:30px;padding:5px 8px}
-.timer-controls{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
-.dim-levels{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin-top:6px}
-.dim-levels button.on{background:#d8b77d!important;color:#121820!important;border-color:#d8b77d!important;font-weight:700}
 
 #character-briefing{margin-top:16px}
 .briefing-grid{display:grid;grid-template-columns:1.15fr 1fr;gap:14px;margin-top:12px}
@@ -520,10 +375,10 @@ css.textContent=`
 .prep-item .bag-ok{color:#72cbb0;font-size:11px;font-weight:600;white-space:nowrap}
 .prep-item button{min-height:26px;padding:2px 7px;font-size:11px;flex-shrink:0}
 
-#craft-kits-box{margin-top:14px;padding-top:12px;border-top:1px solid #283644}
+#craft-kits-box{min-width:0;max-width:100%;margin-top:14px;padding-top:12px;border-top:1px solid #283644}
 #craft-kits-box h3{font-size:13.5px;color:#d8b77d;margin:0 0 6px;display:flex;align-items:center;justify-content:space-between}
-.kit-list{display:grid;gap:6px;margin-top:8px}
-.kit-row{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:7px 9px;background:#101821;border:1px solid #283746;border-radius:7px}
+.kit-list{display:grid;grid-template-columns:minmax(0,1fr);gap:6px;margin-top:8px}
+.kit-row{min-width:0;display:flex;align-items:center;justify-content:space-between;gap:6px;padding:7px 9px;background:#101821;border:1px solid #283746;border-radius:7px}
 .kit-row-info{min-width:0;flex:1}
 .kit-row-info strong{display:block;font-size:12.5px;color:#e6edf3}
 .kit-row-info small{display:block;font-size:11px;color:#8fa2b2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -543,193 +398,6 @@ css.textContent=`
 .caveroute-stops button{text-align:left;font-size:11.5px;min-height:26px;padding:4px 7px;display:flex;justify-content:space-between;gap:6px}
 `;
 document.head.appendChild(css);
-
-// 5. Night Eye-Care Veil & Mini Timer Quickbar
-const veil=document.createElement('div');
-veil.id='hud-night-veil';
-veil.setAttribute('aria-hidden','true');
-document.body.appendChild(veil);
-
-function applyDim(){
- const alpha=(state.dim||0)/100;
- veil.style.setProperty('--hud-dim-alpha',String(alpha));
- const dimBtn=document.getElementById('hud-dim-btn');
- if(dimBtn){
-  dimBtn.textContent='🌙 '+(DIM_LABELS[state.dim]||'밝기 100%');
-  dimBtn.classList.toggle('dim-on',state.dim>0);
- }
- const pop=document.getElementById('hud-timer-pop');
- if(pop){
-  pop.querySelectorAll('[data-dim-level]').forEach(b=>{
-   b.classList.toggle('on',Number(b.dataset.dimLevel)===state.dim);
-  });
- }
-}
-
-function mountQuickbar(){
- const tabbar=document.getElementById('tabbar');
- if(!tabbar||document.getElementById('hud-quickbar'))return;
- const bar=document.createElement('div');
- bar.id='hud-quickbar';
- bar.innerHTML=`
-  <button type="button" id="hud-timer-btn" data-tip="화덕 제련·요리·원정 귀환 시간을 재는 미니 타이머를 열거나 완료 알림을 끕니다.">⏱ 타이머</button>
-  <button type="button" id="hud-dim-btn" data-tip="어두운 방에서 세컨드 모니터 눈부심을 줄이는 야간 감광 단계를 바꿉니다.">🌙 밝기 100%</button>
- `;
- tabbar.appendChild(bar);
-
- const pop=document.createElement('div');
- pop.id='hud-timer-pop';
- pop.hidden=true;
- pop.setAttribute('role','dialog');
- pop.setAttribute('aria-label','미니 타이머 및 화면 밝기 조절');
- pop.innerHTML=`
-  <div class="timer-pop-head">
-   <strong>⏱ 원정·화덕 미니 타이머</strong>
-   <button type="button" class="mini" id="hud-timer-close" aria-label="타이머 창 닫기">✕</button>
-  </div>
-  <div class="timer-display">
-   <b id="hud-timer-clock">00:00</b>
-   <span id="hud-timer-label">대기 중 · 아래 버튼을 눌러 시작</span>
-  </div>
-  <div class="timer-presets">
-   ${TIMER_PRESETS.map(p=>`<button type="button" data-timer-preset="${p.seconds}" data-timer-name="${p.label}">${p.label} · ${p.short}</button>`).join('')}
-  </div>
-  <div class="timer-controls">
-   <button type="button" data-timer-add="60">+1분</button>
-   <button type="button" data-timer-add="300">+5분</button>
-   <button type="button" data-timer-pause="1" id="hud-timer-pause">일시정지</button>
-   <button type="button" data-timer-stop="1">초기화</button>
-  </div>
-  <div class="timer-pop-head" style="margin-top:6px">
-   <strong>🌙 보조 모니터 눈부심 감광</strong>
-  </div>
-  <div class="dim-levels">
-   ${DIM_LEVELS.map(lv=>`<button type="button" data-dim-level="${lv}">${DIM_LABELS[lv].replace('밝기 ','')}</button>`).join('')}
-  </div>
- `;
- document.body.appendChild(pop);
-
- const timerBtn=document.getElementById('hud-timer-btn');
- const dimBtn=document.getElementById('hud-dim-btn');
- const closeBtn=document.getElementById('hud-timer-close');
-
- const positionPop=()=>{
-  const r=timerBtn.getBoundingClientRect();
-  pop.style.top=Math.max(40,Math.round(r.bottom+6))+'px';
-  pop.style.right=Math.max(12,Math.round(window.innerWidth-r.right))+'px';
- };
-
- timerBtn.onclick=e=>{
-  e.stopPropagation();
-  if(state.timer?.completed&&pop.hidden){
-   state.timer=null;
-   saveState();
-   syncTimerUI();
-   return;
-  }
-  pop.hidden=!pop.hidden;
-  if(!pop.hidden)positionPop();
- };
-
- closeBtn.onclick=()=>{pop.hidden=true;};
-
- dimBtn.onclick=e=>{
-  e.stopPropagation();
-  state.dim=cycleDimLevel(state.dim);
-  saveState();
-  applyDim();
- };
-
- pop.addEventListener('click',e=>{
-  const preset=e.target.closest('[data-timer-preset]');
-  if(preset){
-   state.timer=startTimer(Number(preset.dataset.timerPreset),preset.dataset.timerName,Date.now());
-   saveState();
-   syncTimerUI();
-   return;
-  }
-  const add=e.target.closest('[data-timer-add]');
-  if(add){
-   state.timer=addTimerSeconds(state.timer,Number(add.dataset.timerAdd),Date.now());
-   saveState();
-   syncTimerUI();
-   return;
-  }
-  const pause=e.target.closest('[data-timer-pause]');
-  if(pause){
-   state.timer=togglePauseTimer(state.timer,Date.now());
-   saveState();
-   syncTimerUI();
-   return;
-  }
-  const stop=e.target.closest('[data-timer-stop]');
-  if(stop){
-   state.timer=null;
-   saveState();
-   syncTimerUI();
-   return;
-  }
-  const dimLv=e.target.closest('[data-dim-level]');
-  if(dimLv){
-   const lv=Number(dimLv.dataset.dimLevel);
-   if(DIM_LEVELS.includes(lv)){
-    state.dim=lv;
-    saveState();
-    applyDim();
-   }
-  }
- });
-
- document.addEventListener('pointerdown',e=>{
-  if(pop.hidden)return;
-  if(pop.contains(e.target)||timerBtn.contains(e.target))return;
-  pop.hidden=true;
- });
-
- document.addEventListener('keydown',e=>{
-  if(e.key==='Escape'&&!pop.hidden){
-   e.stopPropagation();
-   pop.hidden=true;
-  }
- },true);
-}
-
-function syncTimerUI(){
- const res=tickTimer(state.timer,Date.now());
- state.timer=res.timer;
- if(res.justCompleted){
-  saveState();
-  try{root.__toast?.('⏱ 타이머 완료: '+res.timer.label+' 시간이 되었습니다!',true);}catch{}
-  try{if(typeof beep==='function')beep([660,880,1047],0.18);}catch{}
- }
- const btn=document.getElementById('hud-timer-btn');
- const clockEl=document.getElementById('hud-timer-clock');
- const labelEl=document.getElementById('hud-timer-label');
- const pauseBtn=document.getElementById('hud-timer-pause');
- if(btn){
-  btn.classList.remove('running','paused','completed');
-  if(res.status==='running'){
-   btn.classList.add('running');
-   btn.textContent=`⏱ ${res.clock} · ${res.timer.label}`;
-  }else if(res.status==='paused'){
-   btn.classList.add('paused');
-   btn.textContent=`⏸ ${res.clock} · ${res.timer.label}`;
-  }else if(res.status==='completed'){
-   btn.classList.add('completed');
-   btn.textContent=`🔔 ${res.timer.label} 완료! (클릭)`;
-  }else{
-   btn.textContent='⏱ 타이머';
-  }
- }
- if(clockEl)clockEl.textContent=res.clock;
- if(labelEl){
-  labelEl.textContent=res.status==='running'?`${res.timer.label} 진행 중`:res.status==='paused'?`${res.timer.label} 일시정지됨`:res.status==='completed'?`${res.timer.label} 완료됨!`:'대기 중 · 아래 버튼을 눌러 시작';
- }
- if(pauseBtn){
-  pauseBtn.disabled=res.status==='idle'||res.status==='completed';
-  pauseBtn.textContent=res.status==='paused'?'재개':'일시정지';
- }
-}
 
 // 1. Character Tab: Expedition Briefing & Pre-departure Essential Checklist
 let briefingSig='';
@@ -804,7 +472,7 @@ function renderCharacterBriefing(){
  const shortCount=(()=>{try{return typeof totals==='function'?totals().raw.filter(x=>x[1]>0).length:0;}catch{return 0;}})();
  const bag=(typeof S==='object'&&S?.inv?.bag)||{};
 
- const sig=JSON.stringify([world,S?.pose,S?.home,goalKey,S?.t,shortCount,bag,state.checked,mp?.status]);
+ const sig=JSON.stringify([world,S?.pose,S?.home,goalKey,S?.t,shortCount,bag,state.checked,mp?.activeScope&&mp?.progressByScope?.[mp.activeScope]]);
  if(sig===briefingSig)return;
  briefingSig=sig;
 
@@ -972,6 +640,13 @@ function mountCraftKits(){
   if(loadBtn){
    const id=loadBtn.dataset.kitLoad||loadBtn.dataset.kitReplace;
    const mode=loadBtn.dataset.kitReplace?'replace':'merge';
+   // replacing clears the craft list and its check marks, so it asks for a second click
+   if(mode==='replace'&&Array.isArray(S?.t)&&S.t.length&&loadBtn.dataset.armed!=='1'){
+    loadBtn.dataset.armed='1';loadBtn.textContent='한 번 더 누르면 교체';
+    setTimeout(()=>{if(loadBtn.dataset.armed==='1'){loadBtn.dataset.armed='';loadBtn.textContent='교체';}},4000);
+    root.__toast?.('교체하면 지금 만들 목록과 체크 표시가 지워집니다. 한 번 더 누르면 교체합니다.');
+    return;
+   }
    const allKits=[...CRAFT_KITS,...state.customKits];
    const kit=allKits.find(k=>k.id===id);
    if(!kit||typeof S!=='object'||!S)return;
@@ -1055,11 +730,7 @@ function renderCraftKits(){
  `;
 }
 
-// Mount all 4 features and hook cleanly into existing lifecycle without breaking any existing handlers
-mountQuickbar();
-applyDim();
-syncTimerUI();
-setInterval(()=>{if(!document.hidden||state.timer)syncTimerUI();},1000);
+// Mount the 3 features and hook cleanly into existing lifecycle without breaking any existing handlers
 
 mountCharacterBriefing();
 mountCaveRoutePlanner();
