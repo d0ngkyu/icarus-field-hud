@@ -925,3 +925,9 @@ A/B/C 모두 종료 프로토콜, 업데이트 실패 표시, 개인 월드 격�
 
 ## GAME-NEWS-SHARED-044 · stable 배포 인수
 - Codex stable2026.11.16.13 source5572634723adbf2a31f0bfed86c55f56b60901e1(PR34), feature67b7df063a6d6100bdd8e9f032d6b5462c485c20. 166검사/8소스원격일치/키없는 공유한국어 UI·사용량0/미번역 준비중 안내 확인. 현재stable.12, 타진행 배포 없음 확인. 공개 번역만 배포, 키 업로드 없음. 기존 안전 updater로 적용 예정.
+
+
+## GAME-NEWS-SHARED-044 · .16.13 원격 배포 완료 / PC 적용 확인 중
+- PR34 source5572634723adbf2a31f0bfed86c55f56b60901e1, stable2026.11.16.13 release0ab0050. Actions https://github.com/d0ngkyu/icarus-field-hud/actions/runs/43782056627 test18초/publish11초 성공.166검사·8소스원격일치·52배포파일 root/불변104해시·크기일치. Git 작업트리 clean 동기화.
+- 실제 공개 GitHub 공유주소+Steam 호출: 빈 임시 사용자 폴더/암호화 불가/키 없음 상태에서 Week258 공유한국어 수신 및 translate재열람 성공·사용량0. 브라우저 친구 환경 자동한국어/준비중 안내 확인. API키·계정정보 배포 없음. 월드/게임설정 변경 없음.
+- PC 게임OFF에서 기존 updater 시도했으나 CDN .12 반환(00:46Z)으로 현재 .13 설치 확인 중. 공개배포와 실제PC적용을 구분. 키없는 공유 읽기는 검증됨. 현재 공개1건, 향후 글은 번역·공개 발행 필요; 무인정기발행 없음. GAME-NEWS.md 절차 참고.
