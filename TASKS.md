@@ -1079,3 +1079,10 @@ A/B/C 모두 종료 프로토콜, 업데이트 실패 표시, 개인 월드 격�
 
 ## CODEX-INTEGRATION-060 · 정식 배포 인수
 - Codex stable2026.11.16.17 source470186ea26b86dcca197771badda0e3eebf2907a PR37 featurec779feea17698918e737e225140ff4913dfac0fc. 현재 stable.16/beta.109, 타진행배포 없음. Claude 완료기능/설치진행창 + 서버세이브격리/강제복원경합/호환문구 보완. 202검사·11원격소스일치·모의브라우저확인. PC.15/게임OFF 확인, 발행 뒤 기존 안전updater 적용 예정. Codex정식배포 소유.
+
+
+## CODEX-INTEGRATION-060 · PC .16 적용 / .17 외부 대기 (2026-11-16 22:06 KST)
+- Claude 정식 .16은 게임OFF에서 기존HUD 안전updater로 실제PC 적용: 13:04:47Z 11파일변경/누락0,13:04:49Z 자동재시작. 51개 non-once 설치파일 크기/SHA1 전부일치, 실제창 빌드2026.11.16.16·탐험모드 UI 확인. 기존 설정/개인탭순서 유지. 사용자 INI/게임세이브 수정 없음.
+- PR37 소스470186ea26b86dcca197771badda0e3eebf2907a의 정식 .17 발행 요청은 https://github.com/d0ngkyu/icarus-field-hud/actions/runs/43871118792 (12:56:32Z 요청). 13:06:20Z까지 약10분 status=queued/conclusion=null/jobs=[]; 다른 in_progress/queued 배포없음. 실패가 아닌 GitHub 실행 전 대기, 원인 미확정. 202검사/11원격소스일치는 완료됐지만 .17 원격배포·PC적용은 미완료. 중복실행/취소/수동발행 안 함.
+- 다음 담당은 반드시 이 run부터 확인: 성공이면 manifest .17/source/hash 확인→게임OFF 기존updater→설치파일 검증→완료기록. 실패면 실제사유검토 후 재실행, queued면 중복배포 금지. Codex .17배포 소유는 대기중 유지(침묵으로 해제/재발행하지 말 것). 무인감시/예약작업 생성 안 함.
+- Claude가 작업 중 올린 HANDOFF-GEMINI-061 db4ff22 문서2개 검토, PR38 https://github.com/d0ngkyu/icarus-field-hud/pull/38 생성. Claude가 .17완료후 병합 요청했으므로 현재 미병합. main 인수 후 최신완료상태 정정 필요. hub GEMINI.md 읽음; GEMINI-HANDOFF-2026-11-16.md는 해당경로 조회실패(없음/접근미확인), 대신 최신 프로젝트 HANDOFF-GEMINI 분기 확인. Gemini 실제열람/직접연결 미확인.
