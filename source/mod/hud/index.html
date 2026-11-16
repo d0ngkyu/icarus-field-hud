@@ -527,7 +527,7 @@ function notePlantRange(mp,list,p,now){if(!Array.isArray(p)||!Number.isFinite(p[
   if(Number.isFinite(a[4])&&a[4]>=0){np++;plant=Math.max(plant,d)}else{ns++;spot=Math.max(spot,d)}}
  if(!np&&!ns)return;const k=mp.activeScope||'?';mp.plantRange=mp.plantRange||{};const o=mp.plantRange[k]||{plant:-1,spot:-1};
  mp.plantRange[k]={plant:Math.max(o.plant,plant),spot:Math.max(o.spot,spot),plants:np,spots:ns,at:now}}
-function plantRangeText(mp){const r=mp.plantRange&&mp.plantRange[mp.activeScope||'?'];if(!r)return '';
+function plantRangeText(mp){if(S.explore)return '';const r=mp.plantRange&&mp.plantRange[mp.activeScope||'?'];if(!r)return '';
  const m=v=>v<0?'없음':v>=1000?(v/1000).toFixed(1)+'km':Math.round(v)+'m';
  return ` · 레드 식물 읽힘: 핀 꽃 최대 ${m(r.plant)} · 자리 최대 ${m(r.spot)} (지금 꽃 ${r.plants}·자리 ${r.spots})`}
 function noteHazards(mp,list,now){mp.haz=mp.haz||{};const caves=[];for(const k in mp.lm){const t=mp.lm[k][0][0];if(t==='c'||t==='w')caves.push(k)}
