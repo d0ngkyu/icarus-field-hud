@@ -1,10 +1,10 @@
 {
- "version": "2026.11.16.106",
+ "version": "2026.11.16.107",
  "channel": "beta",
- "source": "702a21dc541823fcdd78d59926263b79acfa341a",
- "notes": "게임 업데이트 호환 점검: 게임이 업데이트되면 HUD 기능이 새 버전에서 정상인지 자동 확인(설정 › 문제 해결).",
+ "source": "6915dce99ec594dcebb8e8a057b8e568fd257814",
+ "notes": "지도: 내 세이브 파일에서 지도 전체 심층 광맥 종류와 핀 레드 엑조틱 식물 표시(혼자/방장 월드만, 읽기 전용).",
  "config": {},
- "filesPath": "releases/beta/2026.11.16.106/files",
+ "filesPath": "releases/beta/2026.11.16.107/files",
  "files": [
   {
    "p": "game/Icarus/Binaries/Win64/dwmapi.dll",
@@ -70,8 +70,8 @@
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/index.html",
-   "n": 975757,
-   "h": "f1f1886fd059ed5ba6c25859552e080ac4c041ae"
+   "n": 977332,
+   "h": "509af23e87ebef3010d57828c18078183ace5883"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/animals.js",
@@ -125,8 +125,8 @@
   },
   {
    "p": "app/main.js",
-   "n": 27140,
-   "h": "728234056790e8b689b0eef0eb23622f2d33aa14"
+   "n": 27289,
+   "h": "70c8b76c1e96cf7b5a12ad82e462aff32a3b9acd"
   },
   {
    "p": "app/updater.js",
@@ -135,8 +135,8 @@
   },
   {
    "p": "app/preload.js",
-   "n": 2051,
-   "h": "27b3c4be1134c311f86fc73d1c534cac7dcaf057"
+   "n": 2109,
+   "h": "dfc22b30cbfde14cce1a956a646cad42e5689a10"
   },
   {
    "p": "app/extract.js",
@@ -287,6 +287,11 @@
    "p": "app/compat.js",
    "n": 1935,
    "h": "448c4f0bb8cf9de89e8ece6520a6f2172447af9a"
+  },
+  {
+   "p": "app/prospect-save.js",
+   "n": 4519,
+   "h": "9865a477322f9bf9dec8c66462104d41383cce0e"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/compat.js",

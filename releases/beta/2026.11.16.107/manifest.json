@@ -1,0 +1,307 @@
+{
+ "version": "2026.11.16.107",
+ "channel": "beta",
+ "source": "6915dce99ec594dcebb8e8a057b8e568fd257814",
+ "notes": "지도: 내 세이브 파일에서 지도 전체 심층 광맥 종류와 핀 레드 엑조틱 식물 표시(혼자/방장 월드만, 읽기 전용).",
+ "config": {},
+ "filesPath": "releases/beta/2026.11.16.107/files",
+ "files": [
+  {
+   "p": "game/Icarus/Binaries/Win64/dwmapi.dll",
+   "n": 279552,
+   "h": "5f3898729e8c4c8a2861ecc949ebbb45dc824d97",
+   "once": 1
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/UE4SS.dll",
+   "n": 20711424,
+   "h": "73d29299540d5c3a0a1d961fae12c95c609355c1",
+   "once": 1
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/UE4SS-settings.ini",
+   "n": 9555,
+   "h": "f29df62956f2617fbc576f2e9f9df2144d0d7c71",
+   "once": 1
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/LICENSE",
+   "n": 1085,
+   "h": "984d442253bc81e873e877556e6420974512fea3",
+   "once": 1
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/mods.txt",
+   "n": 14,
+   "h": "d8d3cc61d541091d84bd55eb58e8c5fd830f1e3e",
+   "once": 1
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/shared/UEHelpers/UEHelpers.lua",
+   "n": 10237,
+   "h": "0b2838a4830a711888bd81b7d7e6b6ff45e5f33b",
+   "once": 1
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/Keybinds/Scripts/main.lua",
+   "n": 4190,
+   "h": "fa0ac30a248b885a35a96ec0436a0167801ad2e2",
+   "once": 1
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/enabled.txt",
+   "n": 1,
+   "h": "adc83b19e793491b1c6ea0fd8b46cd9f32e592fc"
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/Scripts/main.lua",
+   "n": 48094,
+   "h": "e035717c76c07bb4b028b8dd3c8f1dd52125e445"
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/Scripts/animals.lua",
+   "n": 9782,
+   "h": "f96b2589827981910fb4c3b9c5061dec6783df85"
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/Scripts/bp_names.lua",
+   "n": 13674,
+   "h": "19bed95215822ec63ebf3a8a3a87babe9ea23d7f"
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/index.html",
+   "n": 977332,
+   "h": "509af23e87ebef3010d57828c18078183ace5883"
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/animals.js",
+   "n": 51517,
+   "h": "a8430e6b5d25863c895a4c22417013922dda2d64"
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/icons.webp",
+   "n": 2190124,
+   "h": "c420e3e64b6ffc558aac5c8c831ffb5cea769793"
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/fonts/noto-sans-kr-korean-400-normal.woff2",
+   "n": 542264,
+   "h": "ce8e136ae5ff39660fc3fa43c96671a5fa86000b"
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/fonts/noto-sans-kr-korean-700-normal.woff2",
+   "n": 559392,
+   "h": "a2b4ebfcb429d40a653460aa39b37a622a79a6e0"
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/fonts/noto-sans-kr-latin-400-normal.woff2",
+   "n": 13716,
+   "h": "0a4f68f96a093eee5638956b02ebe241a02968b2"
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/fonts/noto-sans-kr-latin-700-normal.woff2",
+   "n": 13812,
+   "h": "647e094197f03f413b2a73c6fbc35671c77182ec"
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/fonts/oxanium-latin-500-normal.woff2",
+   "n": 9040,
+   "h": "e444e828d0d5bd5cba765dff167f694c11af0a2d"
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/fonts/oxanium-latin-700-normal.woff2",
+   "n": 8776,
+   "h": "ae5fa582cbdf83b44289dc1ca30df02cea4f8bf3"
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/maps/Terrain_016.webp",
+   "n": 897132,
+   "h": "ac27139a19ab15b530dc1c26213028386795cd26"
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/maps/Terrain_017.webp",
+   "n": 840058,
+   "h": "44b1a7fa589b89abc7d5c5d075921799f4e28a4d"
+  },
+  {
+   "p": "app/main.js",
+   "n": 27289,
+   "h": "70c8b76c1e96cf7b5a12ad82e462aff32a3b9acd"
+  },
+  {
+   "p": "app/updater.js",
+   "n": 10715,
+   "h": "ca397e00da7a205a0917ce438d7855d0e49ff090"
+  },
+  {
+   "p": "app/preload.js",
+   "n": 2109,
+   "h": "dfc22b30cbfde14cce1a956a646cad42e5689a10"
+  },
+  {
+   "p": "app/extract.js",
+   "n": 9219,
+   "h": "ea2a46b935340f197098afd0922c287e9b61341c"
+  },
+  {
+   "p": "app/levjob.js",
+   "n": 1582,
+   "h": "04cf88adc6401595f272cc3cd3d1d5953d60169a"
+  },
+  {
+   "p": "app/cavejob.js",
+   "n": 5658,
+   "h": "f719b89838aa6392e35d2b19cbddb9878892aee3"
+  },
+  {
+   "p": "app/diag.js",
+   "n": 12142,
+   "h": "9c4453cb628dc1cc3de13846b0d454e35dc03579"
+  },
+  {
+   "p": "app/seticon.js",
+   "n": 1052,
+   "h": "6d63bd9865743cb8263fe2d61b069cb0d786228c"
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/layout.css",
+   "n": 20351,
+   "h": "ea13c7f01a8fb4350dc29d96e46928ec78d380f2"
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/layout.js",
+   "n": 33860,
+   "h": "60b226c63fd380d2805f4f3315ac0d7a0f1f0ddb"
+  },
+  {
+   "p": "app/game-control.js",
+   "n": 4608,
+   "h": "e3fafb12c93d9c459c5d0f892fd8893ff0051e4e"
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/Scripts/game_control.lua",
+   "n": 3637,
+   "h": "2f9da4f57f32b8cd808f59c08c9c12141fcb9121"
+  },
+  {
+   "p": "app/save-evidence.js",
+   "n": 805,
+   "h": "ff3638b72b6873662bc4d67046e6aa9d9747abce"
+  },
+  {
+   "p": "app/ActivityCounter.exe",
+   "n": 8704,
+   "h": "83ace951f4597a2c7e87a1539513fc179e150535"
+  },
+  {
+   "p": "app/activity.js",
+   "n": 8967,
+   "h": "f47f1c63e543896f8a2964d080058e5d260fbc31"
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/tab-keys.js",
+   "n": 695,
+   "h": "849f6bb23854dee9803222afbc86cc1619636c8d"
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/personalize.js",
+   "n": 9337,
+   "h": "9948f2e48b4d27971f225ce3b2b7feffa1ccc04f"
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/regions.js",
+   "n": 4452,
+   "h": "d4c550211b270b58524965ea5744cd975e401d26"
+  },
+  {
+   "p": "app/optimizer.js",
+   "n": 11539,
+   "h": "01a368cb16008e0f11362bc55633417ff9304291"
+  },
+  {
+   "p": "app/performance.js",
+   "n": 3099,
+   "h": "f5cc10539077d9c77b567f8f0482d1f7ab8b2f54"
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/optimization.js",
+   "n": 10874,
+   "h": "0fa6922bb125426d77b4a5343744cfc5f64e3c56"
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/Scripts/map_observation.lua",
+   "n": 5334,
+   "h": "3104470e464912023b2a7eead14a7b86a7d3baf1"
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/map-status.js",
+   "n": 5011,
+   "h": "e3b36a982499d6a5a0ed5fd1ae04e27dbe4a4a54"
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/map-party.js",
+   "n": 2846,
+   "h": "668586510fedd2ddb2cdf6a71a1c19584215dd76"
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/maps/Terrain_019.webp",
+   "n": 1249016,
+   "h": "80e07942280d008c7ea553d233941ddfc8c1ffb6"
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/maps/Terrain_021.webp",
+   "n": 959694,
+   "h": "eabd45281749c7e49ccd9fc4a72ac9f4d5a88e64"
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/map-spawns.js",
+   "n": 115692,
+   "h": "e2978bfb1a62309bbcc077abc7aa092e40834d48"
+  },
+  {
+   "p": "app/news.js",
+   "n": 10777,
+   "h": "c6a08ee3d2b10b29eb6b3ac3c8463f7763753ba8"
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/news.js",
+   "n": 10660,
+   "h": "49f7cc24d6633021b65725970ba7fa2ccffaca25"
+  },
+  {
+   "p": "app/news-ko.js",
+   "n": 11905,
+   "h": "c5ca7bb9a43218a41bc1fa9d3208396a60e258d7"
+  },
+  {
+   "p": "app/news-publisher.js",
+   "n": 5114,
+   "h": "0cf249fd6c0058e328d18e86ffb5cfc644d87a1d"
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/hover-help.js",
+   "n": 13640,
+   "h": "cd61a4b52ed48688da5989ea48ba7b62aceb5ffc"
+  },
+  {
+   "p": "app/compat.js",
+   "n": 1935,
+   "h": "448c4f0bb8cf9de89e8ece6520a6f2172447af9a"
+  },
+  {
+   "p": "app/prospect-save.js",
+   "n": 4519,
+   "h": "9865a477322f9bf9dec8c66462104d41383cce0e"
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/compat.js",
+   "n": 4842,
+   "h": "481f3a7941c3c11253ecca1d598c1c45de377110"
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/field-assistant.js",
+   "n": 34118,
+   "h": "0991e97374dbc1e3233dff72a26d854ee5bc5b08"
+  }
+ ]
+}
