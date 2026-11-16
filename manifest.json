@@ -1,10 +1,10 @@
 {
- "version": "2026.11.16.14",
+ "version": "2026.11.16.15",
  "channel": "stable",
- "source": "ca91b4ffb25c880471fdd96798f3149d49b6e590",
- "notes": "번역 완료 후 자동 공유: 운영자 GitHub 연결·실패 재전송·중복 번역 방지, 친구는 API 키 없이 읽기",
+ "source": "66093af75f893b7da4eddc976dc10bedeb2f992d",
+ "notes": "최근 추가 항목 도움말 보완: 소식·자동 공유·최적화·동물·꾸미기, 키보드 설명과 오래된 안내 수정",
  "config": {},
- "filesPath": "releases/stable/2026.11.16.14/files",
+ "filesPath": "releases/stable/2026.11.16.15/files",
  "files": [
   {
    "p": "game/Icarus/Binaries/Win64/dwmapi.dll",
@@ -70,8 +70,8 @@
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/index.html",
-   "n": 970530,
-   "h": "a19674dd7f375dd4d12b8afea00634f86e244109"
+   "n": 971569,
+   "h": "e874a77d620695964b26203fcab9bc7745b716aa"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/animals.js",
@@ -277,6 +277,11 @@
    "p": "app/news-publisher.js",
    "n": 5114,
    "h": "0cf249fd6c0058e328d18e86ffb5cfc644d87a1d"
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/hover-help.js",
+   "n": 13640,
+   "h": "cd61a4b52ed48688da5989ea48ba7b62aceb5ffc"
   }
  ]
 }
