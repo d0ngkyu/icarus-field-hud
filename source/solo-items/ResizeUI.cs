@@ -30,6 +30,7 @@ public partial class ItemTool {
         LayoutWindow();
     }
     void SaveWindowSize(){
+        if(imagePreviewMode)return;
         if(WindowState!=FormWindowState.Normal)return;
         try{Tuner.Atomic(windowFile,ClientSize.Width+","+ClientSize.Height);}catch{}
     }

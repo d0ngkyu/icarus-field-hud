@@ -28,8 +28,8 @@ public partial class ItemTool {
         for(int i=0;i<names.Length;i++){int n=i;var b=ActionButton(names[i],28+i*124,112,116,()=>ShowTab(n));b.Height=32;tabs.Add(b);}
         tuningPanel.BackColor=panel;tuningPanel.BorderStyle=BorderStyle.FixedSingle;Add(tuningPanel,28,155,984,477);tuningPanel.Visible=false;
         tabs[0].BackColor=gold;tabs[0].ForeColor=Color.FromArgb(25,29,32);
-        updateTimer.Interval=15*60*1000;updateTimer.Tick+=async(o,e)=>await CheckUpdates(false);updateTimer.Start();
-        Shown+=async(o,e)=>{try{SyncInstalledMod();}catch(Exception ex){message.Text="모드 갱신 대기: "+ex.Message;}await Task.Delay(2500);if(!IsDisposed)await CheckUpdates(false);};
+        updateTimer.Interval=15*60*1000;updateTimer.Tick+=async(o,e)=>await CheckUpdates(false);if(!imagePreviewMode)updateTimer.Start();
+        Shown+=async(o,e)=>{if(imagePreviewMode)return;try{SyncInstalledMod();}catch(Exception ex){message.Text="모드 갱신 대기: "+ex.Message;}await Task.Delay(2500);if(!IsDisposed)await CheckUpdates(false);};
         FormClosed+=(o,e)=>updateTimer.Dispose();
         FormClosing+=(o,e)=>{if(working){e.Cancel=true;message.Text="설정 적용이 끝나면 닫을 수 있습니다.";}};
     }

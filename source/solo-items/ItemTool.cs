@@ -16,6 +16,7 @@ public class Item {
     public string english {get;set;}
 }
 public partial class ItemTool : Form {
+    static bool imagePreviewMode;
     static readonly string Base = AppDomain.CurrentDomain.BaseDirectory;
     static readonly Encoding Utf8 = new UTF8Encoding(false);
     readonly TextBox game = new TextBox(), search = new TextBox();
@@ -124,7 +125,9 @@ public partial class ItemTool : Form {
             bool chosen=e.Item.Selected;Color bg=chosen?Color.FromArgb(48,52,52):(e.ItemIndex%2==0?panel:Color.FromArgb(26,34,43));
             using(var b=new SolidBrush(bg)) e.Graphics.FillRectangle(b,e.Bounds);
             if(chosen && e.ColumnIndex==0) using(var b=new SolidBrush(gold))e.Graphics.FillRectangle(b,e.Bounds.X,e.Bounds.Y,3,e.Bounds.Height);
-            var rect=new Rectangle(e.Bounds.X+14,e.Bounds.Y,e.Bounds.Width-24,e.Bounds.Height);
+            int inset=14;
+            if(e.ColumnIndex==0){int side=Math.Min(34,e.Bounds.Height-6);itemImages.Draw(e.Graphics,(string)e.Item.Tag,new Rectangle(e.Bounds.X+9,e.Bounds.Y+(e.Bounds.Height-side)/2,side,side));inset=side+20;}
+            var rect=new Rectangle(e.Bounds.X+inset,e.Bounds.Y,Math.Max(1,e.Bounds.Width-inset-8),e.Bounds.Height);
             TextRenderer.DrawText(e.Graphics,e.SubItem.Text,list.Font,rect,e.ColumnIndex==0?(chosen?gold:ForeColor):muted,TextFormatFlags.VerticalCenter|TextFormatFlags.EndEllipsis|TextFormatFlags.SingleLine);
         };
         Add(list,48,298,588,312);
@@ -132,10 +135,12 @@ public partial class ItemTool : Form {
             bool chosen=list.SelectedItems.Count==1;
             selectedName.Text=chosen?list.SelectedItems[0].Text:"아이템을 선택하세요";
             selectedEnglish.Text=chosen?list.SelectedItems[0].SubItems[1].Text:"왼쪽 목록에서 필요한 아이템을 골라 주세요.";
+            previewItem=chosen?(string)list.SelectedItems[0].Tag:null;
+            if(itemPreview!=null)itemPreview.Invalidate();
             if(prepare!=null)prepare.Enabled=chosen;
         };
         TextLabel("선택한 아이템",702,176,286,26).ForeColor=muted;
-        var mark=TextLabel("선택한 보급품",720,229,185,27);mark.ForeColor=gold;mark.Font=new Font("Segoe UI",13,FontStyle.Bold);mark.BackColor=Color.FromArgb(33,44,55);
+        InitializeItemImages();
         selectedName.Text="아이템을 선택하세요";selectedName.Font=new Font("맑은 고딕",16,FontStyle.Bold);selectedName.BackColor=panel;selectedName.AutoEllipsis=true;Add(selectedName,702,290,286,34);
         selectedEnglish.Text="왼쪽 목록에서 필요한 아이템을 골라 주세요.";selectedEnglish.ForeColor=muted;selectedEnglish.Font=new Font("맑은 고딕",9);selectedEnglish.BackColor=panel;selectedEnglish.AutoEllipsis=true;Add(selectedEnglish,702,326,286,24);
         TextLabel("보급 수량",702,373,180,26).Font=new Font("맑은 고딕",11,FontStyle.Bold);
@@ -168,10 +173,10 @@ public partial class ItemTool : Form {
         message.Text="준비됨  ·  아이템을 선택해 보급 요청을 준비하세요.";
         message.ForeColor=muted;message.Font=new Font("맑은 고딕",9);Add(message,28,762,984,32);
         timer.Interval=1000;timer.Tick+=(o,e)=>ReadStatus();timer.Start();
-        FormClosed+=(o,e)=>{timer.Dispose();rowHeight.Dispose();};FilterItems();InitializeSuite();InitializeDesign();
+        FormClosed+=(o,e)=>{timer.Dispose();rowHeight.Dispose();itemImages.Dispose();};FilterItems();InitializeSuite();InitializeDesign();
     }
     void FilterItems() {
-        string q=search.Text.Trim();list.BeginUpdate();list.Items.Clear();
+        string q=search.Text.Trim();list.BeginUpdate();list.Items.Clear();previewItem=null;if(itemPreview!=null)itemPreview.Invalidate();
         var matches=catalog.Where(i=>(i.name+" "+i.english+" "+i.id).IndexOf(q,StringComparison.OrdinalIgnoreCase)>=0).ToArray();
         resultCount.Text=matches.Length.ToString("N0")+" ITEMS"+(matches.Length>200?"   /   200 표시":"");
         foreach(var i in matches.Take(200)) {
@@ -204,16 +209,28 @@ public partial class ItemTool : Form {
             if(args.Length==3&&args[0]=="--apply-update"){Updater.RunHelper(args);return 0;}
             if(args.Contains("--connection-test")){ConnectionTest();return 0;}
             if(args.Contains("--layout-test")){LayoutTest();return 0;}
+            if(args.Contains("--image-test")){ImageTest();return 0;}
             if(args.Contains("--self-test")){SelfTest();return 0;}
             if(args.Contains("--suite-test")){SuiteTests.Run(Base);return 0;}
             Application.EnableVisualStyles();Application.SetCompatibleTextRenderingDefault(false);
+            if(args.Contains("--image-preview")){
+                imagePreviewMode=true;
+                using(var preview=new ItemTool()){
+                    preview.Text="ICARUS · 이미지 확인 (요청 비활성)";
+                    preview.prepare.Enabled=false;
+                    preview.list.SelectedIndexChanged+=(o,e)=>preview.prepare.Enabled=false;
+                    foreach(Control c in preview.Controls)if(c is Button&&c!=preview.prepare)c.Enabled=false;
+                    Application.Run(preview);
+                }
+                return 0;
+            }
             bool created;using(var mutex=new System.Threading.Mutex(true,"Local\\IcarusSoloTools",out created)){
                 if(!created){MessageBox.Show("싱글 도구가 이미 실행 중입니다. 작업 표시줄에서 열어 주세요.","아이카루스 싱글 도구");return 0;}
                 Application.Run(new ItemTool());mutex.ReleaseMutex();return 0;
             }
         } catch(Exception ex) {
             File.WriteAllText(Path.Combine(Base,"error.txt"),ex.ToString(),Utf8);
-            if(!args.Contains("--self-test")&&!args.Contains("--suite-test")&&!args.Contains("--layout-test")&&!args.Contains("--connection-test")) MessageBox.Show(ex.Message,"실행 오류");
+            if(!args.Contains("--self-test")&&!args.Contains("--suite-test")&&!args.Contains("--layout-test")&&!args.Contains("--connection-test")&&!args.Contains("--image-test")) MessageBox.Show(ex.Message,"실행 오류");
             return 1;
         }
     }
