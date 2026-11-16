@@ -1088,7 +1088,7 @@ A/B/C 모두 종료 프로토콜, 업데이트 실패 표시, 개인 월드 격�
 - Claude가 작업 중 올린 HANDOFF-GEMINI-061 db4ff22 문서2개 검토, PR38 https://github.com/d0ngkyu/icarus-field-hud/pull/38 생성. Claude가 .17완료후 병합 요청했으므로 현재 미병합. main 인수 후 최신완료상태 정정 필요. hub GEMINI.md 읽음; GEMINI-HANDOFF-2026-11-16.md는 해당경로 조회실패(없음/접근미확인), 대신 최신 프로젝트 HANDOFF-GEMINI 분기 확인. Gemini 실제열람/직접연결 미확인.
 
 
-## 진행 중 · SOLO-QUANTITY-062 (2026-11-17)
+## 착수 기록 · SOLO-QUANTITY-062 (2026-11-17)
 - Codex / codex/solo-items / 독립도구0.3.5: 사용자 수량한도1000개 확정. UI/프로토콜/Lua 검증 동일한도,25개씩 지연처리·요청별취소·월드/인원재검사 담당. source/solo-items 및 standalone만 수정. HUD060 정식배포 소유/queued실행·Gemini/Claude 작업 변경 없음. 실제1000개 지급/게임성능 검증으로 모의결과를 확대하지 않음.
 
 
@@ -1096,3 +1096,10 @@ A/B/C 모두 종료 프로토콜, 업데이트 실패 표시, 개인 월드 격�
 - Codex / codex/solo-items / 0.3.5 / source ac4e933c8734643ed0918d4667422b5d2aff2b51. 독립 채널만 발행, HUD060/Claude beta/Gemini 영역 불변.
 - Lua 모의 16개 통과, C# self/connection/layout 검사 통과(4크기×8탭, 1000 유지). 원격 불변 ZIP SHA256 cb7a5f050449b7f5aaea7581e1ea49acfccf6dc3ddac40af490bbe68ea6e196d 일치.
 - 현재 게임 및 기존도구 실행 확인, PC0.3.4. 파일 교체/프로세스 종료 없이 manifest 발행 후 기존 안전 updater로 게임OFF 적용 대기. 실제1000개 지급/FPS 미검증.
+
+
+## SOLO-QUANTITY-062 · 0.3.5 게시 완료 / PC 적용 대기 (2026-11-17)
+- 최대100→1000, 빠른선택1/100/500/1000. 25회씩100ms 지연·진행표시·요청ID별취소, 각묶음 플레이어/월드/인원 재검사와30초제한. 이전 지급은 취소로 회수하지 않음. 지연 사이 UObject 보관 없음.
+- source ac4e933c8734643ed0918d4667422b5d2aff2b51, manifest 9a1e6ae (codex/solo-items). 원격 manifest0.3.5 재조회, ZIP SHA256 cb7a5f050449b7f5aaea7581e1ea49acfccf6dc3ddac40af490bbe68ea6e196d 및 내부9파일 크기/SHA256 일치. fetch 후 source 의미diff 없음.
+- Lua 모의16개, exe self/connection/layout(4크기×8탭) 통과. 실제1000개 지급·실게임FPS 미검증.
+- PC 현재0.3.4와 게임 실행 확인, 설치본/게임모드/바탕화면 실행파일 교체 및 프로세스종료 하지 않음. 게임 완전종료 후 도구 재실행의 기존 자동updater로 적용 필요; 실제PC0.3.5 완료 아님. 독립채널 발행소유 해제, HUD060 배포소유/대기는 변경 없음.
