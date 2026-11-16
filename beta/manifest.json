@@ -1,10 +1,10 @@
 {
- "version": "2026.11.14.27",
+ "version": "2026.11.16.100",
  "channel": "beta",
- "source": "b72d797967dd9844cf8ab191e34e90df82e84298",
- "notes": "동굴 데이터: 엘리시움·T022·프로메테우스 동굴 레벨/광석/위험 생물 채움",
+ "source": "37edf6f5ba1dbefd471de8eaddedd6e81f63c185",
+ "notes": "최적화: 막힌 복원을 푸는 백업 강제 복원, 실제 오류 이유 표시, 없는 설정 건너뜀",
  "config": {},
- "filesPath": "releases/beta/2026.11.14.27/files",
+ "filesPath": "releases/beta/2026.11.16.100/files",
  "files": [
   {
    "p": "game/Icarus/Binaries/Win64/dwmapi.dll",
@@ -55,13 +55,13 @@
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/Scripts/main.lua",
-   "n": 62103,
-   "h": "1d72556c9392b119accaed7a8a1a65268e801be8"
+   "n": 48094,
+   "h": "e035717c76c07bb4b028b8dd3c8f1dd52125e445"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/Scripts/animals.lua",
-   "n": 5737,
-   "h": "bac2b7d6b37a004bc5fa8d456129bf49fb842ac3"
+   "n": 9782,
+   "h": "f96b2589827981910fb4c3b9c5061dec6783df85"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/Scripts/bp_names.lua",
@@ -70,13 +70,13 @@
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/index.html",
-   "n": 965159,
-   "h": "447f20e7f646cb8f50ab4eac9fd205fee6b7d821"
+   "n": 971570,
+   "h": "b33d2563dfd61fa377c9bfccc705c5544a4a3d90"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/animals.js",
-   "n": 35142,
-   "h": "666f288ae55faab1da09b6132162a445edd7e55d"
+   "n": 51517,
+   "h": "a8430e6b5d25863c895a4c22417013922dda2d64"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/icons.webp",
@@ -125,18 +125,18 @@
   },
   {
    "p": "app/main.js",
-   "n": 18185,
-   "h": "47ee1c43aa7de83ec37bc40fc7c030783ee98aeb"
+   "n": 27035,
+   "h": "aa367a68a6d1a7e3688977c4bf7d5c5a44936bae"
   },
   {
    "p": "app/updater.js",
-   "n": 11010,
-   "h": "a0a58a63ce219f5717ba45480233f8f5e802941a"
+   "n": 10715,
+   "h": "ca397e00da7a205a0917ce438d7855d0e49ff090"
   },
   {
    "p": "app/preload.js",
-   "n": 1622,
-   "h": "f7f07b24ac9d44c55c9e396c5a537549df2fcd28"
+   "n": 2051,
+   "h": "27b3c4be1134c311f86fc73d1c534cac7dcaf057"
   },
   {
    "p": "app/extract.js",
@@ -155,13 +155,133 @@
   },
   {
    "p": "app/diag.js",
-   "n": 11751,
-   "h": "af6e5a609eaa60d086622d72269428ea471c83cf"
+   "n": 12142,
+   "h": "9c4453cb628dc1cc3de13846b0d454e35dc03579"
   },
   {
    "p": "app/seticon.js",
    "n": 1052,
    "h": "6d63bd9865743cb8263fe2d61b069cb0d786228c"
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/layout.css",
+   "n": 20351,
+   "h": "ea13c7f01a8fb4350dc29d96e46928ec78d380f2"
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/layout.js",
+   "n": 33860,
+   "h": "60b226c63fd380d2805f4f3315ac0d7a0f1f0ddb"
+  },
+  {
+   "p": "app/game-control.js",
+   "n": 4608,
+   "h": "e3fafb12c93d9c459c5d0f892fd8893ff0051e4e"
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/Scripts/game_control.lua",
+   "n": 3637,
+   "h": "2f9da4f57f32b8cd808f59c08c9c12141fcb9121"
+  },
+  {
+   "p": "app/save-evidence.js",
+   "n": 805,
+   "h": "ff3638b72b6873662bc4d67046e6aa9d9747abce"
+  },
+  {
+   "p": "app/ActivityCounter.exe",
+   "n": 8704,
+   "h": "83ace951f4597a2c7e87a1539513fc179e150535"
+  },
+  {
+   "p": "app/activity.js",
+   "n": 8967,
+   "h": "f47f1c63e543896f8a2964d080058e5d260fbc31"
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/tab-keys.js",
+   "n": 695,
+   "h": "849f6bb23854dee9803222afbc86cc1619636c8d"
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/personalize.js",
+   "n": 9337,
+   "h": "9948f2e48b4d27971f225ce3b2b7feffa1ccc04f"
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/regions.js",
+   "n": 4452,
+   "h": "d4c550211b270b58524965ea5744cd975e401d26"
+  },
+  {
+   "p": "app/optimizer.js",
+   "n": 11539,
+   "h": "01a368cb16008e0f11362bc55633417ff9304291"
+  },
+  {
+   "p": "app/performance.js",
+   "n": 3099,
+   "h": "f5cc10539077d9c77b567f8f0482d1f7ab8b2f54"
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/optimization.js",
+   "n": 10874,
+   "h": "0fa6922bb125426d77b4a5343744cfc5f64e3c56"
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/Scripts/map_observation.lua",
+   "n": 5334,
+   "h": "3104470e464912023b2a7eead14a7b86a7d3baf1"
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/map-status.js",
+   "n": 5011,
+   "h": "e3b36a982499d6a5a0ed5fd1ae04e27dbe4a4a54"
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/map-party.js",
+   "n": 2846,
+   "h": "668586510fedd2ddb2cdf6a71a1c19584215dd76"
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/maps/Terrain_019.webp",
+   "n": 1249016,
+   "h": "80e07942280d008c7ea553d233941ddfc8c1ffb6"
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/maps/Terrain_021.webp",
+   "n": 959694,
+   "h": "eabd45281749c7e49ccd9fc4a72ac9f4d5a88e64"
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/map-spawns.js",
+   "n": 114752,
+   "h": "b93fbe2b4ffe091c61851190f3f1bec247846dae"
+  },
+  {
+   "p": "app/news.js",
+   "n": 10777,
+   "h": "c6a08ee3d2b10b29eb6b3ac3c8463f7763753ba8"
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/news.js",
+   "n": 10660,
+   "h": "49f7cc24d6633021b65725970ba7fa2ccffaca25"
+  },
+  {
+   "p": "app/news-ko.js",
+   "n": 11905,
+   "h": "c5ca7bb9a43218a41bc1fa9d3208396a60e258d7"
+  },
+  {
+   "p": "app/news-publisher.js",
+   "n": 5114,
+   "h": "0cf249fd6c0058e328d18e86ffb5cfc644d87a1d"
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/hover-help.js",
+   "n": 13640,
+   "h": "cd61a4b52ed48688da5989ea48ba7b62aceb5ffc"
   }
  ]
 }
