@@ -1149,9 +1149,12 @@ const showTip=(txt)=>{tipEl.textContent=txt;tipEl.style.display='block';const r=
 const hideTip=()=>{clearTimeout(tipT);tipT=null;tipFor=null;tipEl.style.display='none'};
 window.__hoverTip=(txt,x,y)=>{tipX=x;tipY=y;if(!txt){if(tipFor==='canvas')hideTip();return}if(tipFor==='canvas'&&tipEl.dataset.t===txt){if(tipEl.style.display==='block')showTip(txt);return}
  hideTip();tipFor='canvas';tipEl.dataset.t=txt;tipT=setTimeout(()=>showTip(txt),300)};
-document.addEventListener('mousemove',e=>{tipX=e.clientX;tipY=e.clientY;if(tipFor==='canvas')return;const el=e.target.closest&&e.target.closest('[data-tip],[title]');
- if(el&&el.title){el.dataset.tip=el.dataset.tip||el.title;el.removeAttribute('title')}
- if(el!==tipFor){hideTip();if(el){tipFor=el;tipT=setTimeout(()=>showTip(el.dataset.tip),300)}}},true);
+function controlTip(target){const help=window.HudHoverHelp?.resolve(target);if(help)return help;const button=target.closest?.('button');if(button&&TIPTEXT[button.textContent.trim()])return {el:button,text:TIPTEXT[button.textContent.trim()]};for(const sel in TIPS){const el=target.closest?.(sel);if(el)return {el,text:TIPS[sel]};}const el=target.closest&&target.closest('[data-tip],[title]');return el?{el,text:el.dataset.tip||el.title}:null;}
+function queueControlTip(help){if(help?.el===tipFor&&tipEl.dataset.t===help.text)return;hideTip();if(help){if(help.el.title){help.el.dataset.tip=help.el.dataset.tip||help.el.title;help.el.removeAttribute('title')}tipFor=help.el;tipEl.dataset.t=help.text;tipT=setTimeout(()=>{if(help.el.isConnected)showTip(help.text);else hideTip()},300);}}
+document.addEventListener('mousemove',e=>{tipX=e.clientX;tipY=e.clientY;if(tipFor==='canvas')return;queueControlTip(controlTip(e.target));},true);
+document.addEventListener('focusin',e=>{const help=controlTip(e.target);if(help){const r=help.el.getBoundingClientRect();tipX=r.left;tipY=r.bottom;}queueControlTip(help)},true);
+document.addEventListener('focusout',hideTip,true);document.addEventListener('keydown',e=>{if(e.key==='Escape')hideTip()},true);
+document.addEventListener('mouseleave',hideTip);document.addEventListener('scroll',hideTip,{passive:true,capture:true});
 document.addEventListener('mousedown',hideTip,true);document.addEventListener('wheel',hideTip,{passive:true,capture:true});window.addEventListener('blur',hideTip);
 applyTips();
 // problem check (desktop program only)
@@ -1191,4 +1194,4 @@ const prevDraw=draw;draw=function(){prevDraw();refreshBars()};
 setTab(S.tab2||'coach');draw();
 })();
 </script>
-<link rel="stylesheet" href="layout.css"><script src="tab-keys.js"></script><script src="personalize.js"></script><script src="optimization.js"></script><script src="news.js"></script><script src="layout.js"></script></body></html>
+<link rel="stylesheet" href="layout.css"><script src="tab-keys.js"></script><script src="personalize.js"></script><script src="optimization.js"></script><script src="news.js"></script><script src="hover-help.js"></script><script src="layout.js"></script></body></html>
