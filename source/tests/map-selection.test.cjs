@@ -102,3 +102,15 @@ test("exploration mode hides markers in places never visited and forces the fog 
  assert.ok(near.length>=0&&near.length<all);for(const x of near){const o=x.ref;assert.ok(Math.hypot(o[1]+100000,o[2]-100000)<30000)}
  c.S.explore=false;t.drawMap();assert.equal(count(),all);assert.equal(t.V.L.fog,0,'user fog switch untouched');
 });
+
+test("prospect save fills deep vein ore types and spawned red plants for the world being played",()=>{
+ const h=harness(),{t,c}=h;h.ingest({w:'Terrain_019',t:1,scope:'S1'});h.tick(2000);h.ingest({w:'Terrain_019',t:2,scope:'S1',p:[0,0,0],lm:[['r:Plant',0,120000,0,4]]});
+ const save={world:'Terrain_019',name:'Mine',savedAt:1500,veins:[['Iron',-120000,50000,300]],plants:[[150000,-90000,1200]]};
+ assert.equal(c.window.__mapSave({...save,world:'Terrain_016'}),false,'other world ignored');
+ assert.equal(c.window.__mapSave(save),true);assert.equal(c.window.__mapSave(save),false,'same save once');
+ const lm=t.M('Terrain_019').lm,vals=Object.values(lm);
+ assert.ok(vals.some(o=>o[0]==='d:Iron'&&o[6]==='save'));assert.ok(vals.some(o=>o[0]==='r:Plant'&&o[1]===150000&&o[5]===1));
+ assert.ok(vals.some(o=>o[0]==='r:Plant'&&o[2]===120000&&o[5]===4),'live observation (newer) kept');
+ h.tick(5000);assert.equal(c.window.__mapSave({...save,savedAt:4000,plants:[]}),true);
+ assert.ok(Object.values(t.M('Terrain_019').lm).filter(o=>o[0]==='r:Plant').every(o=>!(o[5]>0)),'plants missing from a newer save are gone');
+});

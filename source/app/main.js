@@ -227,6 +227,7 @@ ipcMain.handle('toggleCompact', () => toggleCompact());
 ipcMain.handle('minimize', () => win.minimize());
 ipcMain.handle('hide', () => win.hide());
 ipcMain.handle('info', () => ({ usage: usageInfo(), version: installedVersion(), app: app.getVersion(), game: gameDir, last: lastUpd && { at: lastUpd.at, changed: lastUpd.changed.length }, compat: (() => { try { return require('./compat.js').report(gameDir); } catch (e) { return null; } })() }));
+ipcMain.handle('prospectSave', () => { try { return require('./prospect-save.js').latest(process.env.LOCALAPPDATA); } catch (e) { return null; } });
 // ---------- problem check ----------
 ipcMain.handle('diagStatus', () => (doctor ? doctor.status() : null));
 ipcMain.handle('setSafe', (_e, on) => { if (doctor) doctor.setSafeMode(!!on); return doctor ? doctor.status() : null; });

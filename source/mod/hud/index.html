@@ -577,6 +577,21 @@ function statusBadge(mp,h){if(!life||!life.supported.has(h.kind))return;const e=
  ctx.save();ctx.font='bold 12px sans-serif';ctx.fillStyle=life.colors[e.state]||'#98a6b3';ctx.strokeStyle='#101820';ctx.lineWidth=3;const text=['depleted','killed'].includes(e.state)?'×':e.state==='reset'?'↻':e.state==='unknown'?'?':'✓';ctx.strokeText(text,h.x+7,h.y-7);ctx.fillText(text,h.x+7,h.y-7);ctx.restore();}
 let mapToken=null;
 
+// Local prospect save (own/solo worlds): every deep vein's ore type and every spawned red exotic
+// plant across the map, as of the last save. Newer live observations always win.
+function ingestSave(r,now){if(!r||!r.world||!Number.isFinite(r.savedAt)||!MAPB[r.world])return false;
+ if(!session.active(now)||session.world!==r.world)return false;
+ const mp=M(r.world),at=r.savedAt;if(mp.saveAt===at)return false;mp.saveAt=at;mp.saveName=r.name||'';
+ for(const v of r.veins||[]){if(!Array.isArray(v)||typeof v[0]!=='string'||!/^[A-Za-z][A-Za-z0-9_]*$/.test(v[0]))continue;
+  const k=keyOf('d',v[1],v[2]),o=mp.lm[k];if(o&&o[6]!=='save'&&o[4]>=at)continue;
+  mp.lm[k]=['d:'+v[0],v[1],v[2],v[3]||0,at,o&&o[0]==='d:'+v[0]?o[5]:-1,'save']}
+ const live=new Set();
+ for(const p of r.plants||[]){if(!Array.isArray(p)||!Number.isFinite(p[0]))continue;const k=keyOf('r:Plant',p[0],p[1]);live.add(k);
+  const o=mp.lm[k];if(o&&o[4]>=at)continue;mp.lm[k]=['r:Plant',p[0],p[1],p[2]||0,at,1,'save']}
+ for(const [k,o] of Object.entries(mp.lm))if(o[0]==='r:Plant'&&!live.has(k)&&o[4]<at&&o[5]>0)mp.lm[k]=[o[0],o[1],o[2],o[3],at,-1,'save'];
+ mp.spawnRev=(mp.spawnRev||0)+1;return true}
+window.__mapSave=r=>{const ok=ingestSave(r,Date.now());if(ok){save();if(mapOn())requestDraw()}return ok};
+(()=>{const A=window.hudApp;if(!A||!A.prospectSave)return;const poll=()=>{if(!session.active(Date.now()))return;A.prospectSave().then(r=>{try{window.__mapSave(r)}catch(e){console.error(e)}}).catch(()=>{})};setInterval(poll,90000);setTimeout(poll,20000)})();
 window.__mapIngest=m=>{
  const now=Date.now(),previous=session.view;
  if(m.t!=null&&mapToken===m.t)return;mapToken=m.t;
@@ -878,7 +893,7 @@ function showInfo(h){const box=$('mapinfo'),mp=M();let t='',body='';selKey=h.key
  else if(h.kind==='deep'){t='심층 광맥 자리';body=`<div class="bench">${cell([h.ref[1],h.ref[2]])} · 가까이 가면 광석 종류가 표시됩니다</div>${wpButton(h.ref[1],h.ref[2],h.ref[3],h.ref[0])}`}
  else if(h.kind==='boss'){t='월드 보스: '+bossName(h.ref[0]);body=`<div class="bench">${cell([h.ref[1],h.ref[2]])} · 마지막 게임 관측 기록</div>${wpButton(h.ref[1],h.ref[2],h.ref[3])}`}
  else if(h.kind==='exo'){t='엑조틱 지점';body=`<div class="bench">${cell([h.ref[1],h.ref[2]])}</div>${wpButton(h.ref[1],h.ref[2],h.ref[3],h.ref[0])}`}
- else if(h.kind==='redexo'){t=redName(h.ref[0]);const bt=h.bloom?({live:'🌺 지금 꽃 핌 · 채집 가능',seen:'🌺 꽃 핀 상태로 마지막 확인 '+ago(h.bloom.at)+' · 그 뒤 누가 채집했을 수 있음',none:'꽃 없음 (마지막 확인 '+ago(h.bloom.at)+')',unknown:'아직 근처에 가 보지 않음'})[h.bloom.state]:'';
+ else if(h.kind==='redexo'){t=redName(h.ref[0]);const bt=h.bloom?({live:'🌺 지금 꽃 핌 · 채집 가능',seen:'🌺 꽃 핀 상태로 마지막 확인 '+ago(h.bloom.at)+(h.ref[6]==='save'?' (세이브 파일)':'')+' · 그 뒤 누가 채집했을 수 있음',none:'꽃 없음 (마지막 확인 '+ago(h.bloom.at)+')',unknown:'아직 근처에 가 보지 않음'})[h.bloom.state]:'';
   body=`${bt?`<div class="bench" style="color:${h.bloom.state==='live'?'#66d99d':'#c9ccd0'}">${bt}</div>`:''}<div class="bench">${cell([h.ref[1],h.ref[2]])} · ${h.ref[4]?'마지막 확인 '+ago(h.ref[4]):'생성 후보지'}</div><div class="bench">R = 나무 · P = 식물. 생성 후보지는 미탐험 상태에도 표시하며, 현재 자원 유무는 게임에서 관측한 범위만 확인됩니다.</div>${wpButton(h.ref[1],h.ref[2],h.ref[3],h.ref[0])}`}
  else if(h.kind==='dep'){const old=h.ref[4]&&Date.now()-h.ref[4]>6*3600e3;t='심층 광맥: '+rowItem(h.ref[0])+(old?' (예전 기록)':'');body=`<div class="bench">${fmtD([h.ref[1],h.ref[2]])} · 채굴기(드릴)를 설치하는 곳 · 마지막 확인 ${ago(h.ref[4])}</div><div class="bench">광맥 종류는 탐사(서버)마다 바뀔 수 있습니다. 근처에 가면 지금 종류로 다시 바뀝니다.</div>${wpButton(h.ref[1],h.ref[2],h.ref[3],h.ref[0])}`}
  else if(h.kind==='gey'){t=h.ref[0].indexOf('Oil')>=0?'석유 간헐천':'효소 간헐천';body=`<div class="bench">${fmtD([h.ref[1],h.ref[2]])} · 추출기 설치 지점</div>${wpButton(h.ref[1],h.ref[2],h.ref[3],h.ref[0])}`}
