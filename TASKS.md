@@ -1079,3 +1079,8 @@ A/B/C 모두 종료 프로토콜, 업데이트 실패 표시, 개인 월드 격�
 
 ## CODEX-INTEGRATION-060 · 정식 배포 인수
 - Codex stable2026.11.16.17 source470186ea26b86dcca197771badda0e3eebf2907a PR37 featurec779feea17698918e737e225140ff4913dfac0fc. 현재 stable.16/beta.109, 타진행배포 없음. Claude 완료기능/설치진행창 + 서버세이브격리/강제복원경합/호환문구 보완. 202검사·11원격소스일치·모의브라우저확인. PC.15/게임OFF 확인, 발행 뒤 기존 안전updater 적용 예정. Codex정식배포 소유.
+
+## HANDOFF-GEMINI-061 · Claude · 문서만 (2026-11-16 21:58, 사용자: "막내 gemini 합류, 인수인계 제대로")
+- HANDOFF-GEMINI.md를 12:00판 → 21:55 기준으로 갱신: 현재 버전(stable .16 / Codex .17 진행 중 / beta .109 / 설치기), 051~060 요약, 남은 일 우선순위, Gemini에게 맞는 일 제안, 열린 브랜치, 다른 프로젝트(헬다이버즈 2는 아이디어만, 별도 프로젝트).
+- 교훈 기록: Gemini 초안의 작업 번호 겹침(050) → 최신 TASKS 번호 사용 또는 `GEMINI-<주제>`; Windows CRLF 시험 깨짐.
+- Codex 정식 배포(Actions 43871118792) 진행 중이라 main에 push하지 않고 이 브랜치에만 올림. 제품 코드·배포 변경 없음. Codex: .17 완료 후 이 문서 커밋을 main에 ff/병합해도 됨(문서 2개만).
