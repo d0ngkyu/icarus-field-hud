@@ -1,0 +1,35 @@
+name: Build installer
+# One-file Windows installer (IcarusHUD-Setup.exe) made from the release's IcarusHUD.zip.
+# Installs per user (no admin) to %LOCALAPPDATA%\IcarusHUD, adds shortcuts and an uninstaller,
+# then the app itself installs the mod and keeps it updated as before.
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag that holds IcarusHUD.zip
+        required: true
+        default: v1.0
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install NSIS
+        run: sudo apt-get update -q && sudo apt-get install -y -q nsis
+      - name: Build
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          set -e
+          mkdir build && cd build
+          gh release download "$TAG" -R "$GITHUB_REPOSITORY" -p IcarusHUD.zip
+          unzip -q IcarusHUD.zip -d app
+          test -f app/IcarusHUD/IcarusHUD.exe
+          cp ../source/tools/installer/setup.nsi ../source/tools/installer/icon.ico .
+          LANG=C.UTF-8 LC_ALL=C.UTF-8 makensis -V2 setup.nsi
+          test -s IcarusHUD-Setup.exe
+          sha256sum IcarusHUD-Setup.exe | tee IcarusHUD-Setup.exe.sha256
+          gh release upload "$TAG" IcarusHUD-Setup.exe IcarusHUD-Setup.exe.sha256 -R "$GITHUB_REPOSITORY" --clobber
