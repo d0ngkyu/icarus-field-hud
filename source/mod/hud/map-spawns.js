@@ -32,5 +32,20 @@
   if(s.type==='oil'||s.type==='geyser')return '고정 간헐천 후보지 · 서버별 이용 상태는 관측 후 표시합니다.';
   return '추출기 자리 '+s.count+'개 · 생성 후보지입니다.';
  }
- const api={maps,view,countdown,detail,kind};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.HudMapSpawns=api;
+ // Wild red exotic plants: the spawn point is always there; the plant actor only exists once it has
+ // spawned (bloomed) and can be harvested. Stored rows are [type,x,y,z,seenAt,count].
+ // live = seen bloomed in the last scan window, seen = bloomed when last loaded, none/unknown = hide.
+ const LIVE_MS=90000;
+ function bloom(o,marks,now){
+  if(!Array.isArray(o)||o[0]!=='r:Plant')return null;
+  const seen=Number(o[4])||0,n=o[5];
+  if(!seen)return {state:'unknown'};
+  if(!(Number.isFinite(n)&&n>0))return {state:'none',at:seen};
+  if(now-seen<LIVE_MS)return {state:'live',at:seen,count:n};
+  // the area was loaded again later and this plant was not seen: harvested or gone
+  for(const k in marks||{}){const v=marks[k];if(v===o||!Array.isArray(v)||v[0]!=='r:Plant')continue;
+   if((Number(v[4])||0)>seen&&!(v[5]>0)&&Math.hypot(v[1]-o[1],v[2]-o[2])<1500)return {state:'none',at:v[4]};}
+  return {state:'seen',at:seen,count:n};
+ }
+ const api={maps,view,countdown,detail,kind,bloom};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.HudMapSpawns=api;
 })(typeof window!=='undefined'?window:globalThis);

@@ -24,3 +24,16 @@ test('clock uses prospect phase, stops offline/stale and never claims guaranteed
 });
 
 test("all public resource layer counts included without claiming ore types or presence",()=>{const rows=Object.values(api.maps).flat(),count=t=>rows.filter(r=>r[1]===t).length;assert.equal(count("deep"),1865);assert.equal(count("geyser"),92);assert.equal(count("oil"),82);assert.equal(count("uranium"),8);assert.equal(count("cave"),113);const v=api.view({lm:{}},"Terrain_019");assert.equal(Object.values(v).filter(o=>o[0]==="e:Deposit").length,412);assert.ok(Object.values(v).every(o=>o[4]===0&&o[5]===-1));});
+
+test('red exotic plant shows only when bloomed (plant actor seen with resources)',()=>{
+ const now=1e7,b=(o,m)=>api.bloom(o,m||{},now);
+ assert.equal(b(['r:Tree',0,0,0,now,5]),null);
+ assert.equal(b(['r:Plant',0,0,0,0,-1]).state,'unknown');            // static candidate, never loaded
+ assert.equal(b(['r:Plant',0,0,0,now-1000,-1]).state,'none');        // spawn point loaded, no plant
+ assert.equal(b(['r:Plant',0,0,0,now-1000,0]).state,'none');         // plant with nothing left
+ assert.equal(b(['r:Plant',0,0,0,now-1000,3]).state,'live');
+ const old=['r:Plant',0,0,0,now-3600e3,3];
+ assert.equal(b(old,{a:old}).state,'seen');                          // not loaded since: last known
+ assert.equal(b(old,{a:old,b:['r:Plant',400,0,0,now-60e3,-1]}).state,'none');  // reloaded later without the plant
+ assert.equal(b(old,{a:old,b:['r:Plant',5000,0,0,now-60e3,-1]}).state,'seen'); // other spot does not count
+});
