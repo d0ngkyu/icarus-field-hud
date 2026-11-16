@@ -1,10 +1,10 @@
 {
- "version": "2026.11.16.103",
+ "version": "2026.11.16.106",
  "channel": "beta",
- "source": "fa2bc29d9193b3cc32fdad8fc8668bb4be277d9d",
- "notes": "Gemini 원정 도우미: 캐릭터 탭 탐사 브리핑·준비물 점검, 지도 동굴 최단 코스 추천, 제작 추천 세트(교체는 두 번 눌러 확인). 이전 베타 내용 포함.",
+ "source": "702a21dc541823fcdd78d59926263b79acfa341a",
+ "notes": "게임 업데이트 호환 점검: 게임이 업데이트되면 HUD 기능이 새 버전에서 정상인지 자동 확인(설정 › 문제 해결).",
  "config": {},
- "filesPath": "releases/beta/2026.11.16.103/files",
+ "filesPath": "releases/beta/2026.11.16.106/files",
  "files": [
   {
    "p": "game/Icarus/Binaries/Win64/dwmapi.dll",
@@ -70,8 +70,8 @@
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/index.html",
-   "n": 974351,
-   "h": "7c1972b4c15b158a1738ed066b2da7e81636cd79"
+   "n": 975757,
+   "h": "f1f1886fd059ed5ba6c25859552e080ac4c041ae"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/animals.js",
@@ -125,8 +125,8 @@
   },
   {
    "p": "app/main.js",
-   "n": 27035,
-   "h": "aa367a68a6d1a7e3688977c4bf7d5c5a44936bae"
+   "n": 27140,
+   "h": "728234056790e8b689b0eef0eb23622f2d33aa14"
   },
   {
    "p": "app/updater.js",
@@ -284,9 +284,19 @@
    "h": "cd61a4b52ed48688da5989ea48ba7b62aceb5ffc"
   },
   {
+   "p": "app/compat.js",
+   "n": 1935,
+   "h": "448c4f0bb8cf9de89e8ece6520a6f2172447af9a"
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/compat.js",
+   "n": 4842,
+   "h": "481f3a7941c3c11253ecca1d598c1c45de377110"
+  },
+  {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/field-assistant.js",
-   "n": 33536,
-   "h": "7bf964ae2bb6fd2ccdf75442be59f310ee512168"
+   "n": 34118,
+   "h": "0991e97374dbc1e3233dff72a26d854ee5bc5b08"
   }
  ]
 }
