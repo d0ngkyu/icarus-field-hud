@@ -1,10 +1,10 @@
 {
- "version": "2026.11.16.100",
+ "version": "2026.11.16.101",
  "channel": "beta",
- "source": "37edf6f5ba1dbefd471de8eaddedd6e81f63c185",
- "notes": "최적화: 막힌 복원을 푸는 백업 강제 복원, 실제 오류 이유 표시, 없는 설정 건너뜀",
+ "source": "ae6234792577a81216f297c54147197d23302200",
+ "notes": "지도: 레드 엑조틱 식물은 꽃 펴서 채집 가능한 것만 표시(레이어에서 끌 수 있음). 최적화 복구 포함.",
  "config": {},
- "filesPath": "releases/beta/2026.11.16.100/files",
+ "filesPath": "releases/beta/2026.11.16.101/files",
  "files": [
   {
    "p": "game/Icarus/Binaries/Win64/dwmapi.dll",
@@ -70,8 +70,8 @@
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/index.html",
-   "n": 971570,
-   "h": "b33d2563dfd61fa377c9bfccc705c5544a4a3d90"
+   "n": 972806,
+   "h": "8aa3295275ebaba12f450f4205a15591c8b30e6d"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/animals.js",
@@ -255,8 +255,8 @@
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/map-spawns.js",
-   "n": 114752,
-   "h": "b93fbe2b4ffe091c61851190f3f1bec247846dae"
+   "n": 115692,
+   "h": "e2978bfb1a62309bbcc077abc7aa092e40834d48"
   },
   {
    "p": "app/news.js",
