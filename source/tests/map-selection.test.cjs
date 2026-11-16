@@ -76,8 +76,41 @@ test('boss heartbeat updates both death and return without terrain marker change
  t.V.L.redexo=0;t.V.L.dep=1;t.drawMap();assert.equal(t.getHits().filter(x=>x.kind==='redexo'||x.ref?.[0]==='d:Exotic_Red_Raw').length,0);
  });
 
-test("offline map renders all Prometheus exotic candidates and independent layer switches",()=>{const h=harness(),{t}=h;t.selectMap("Terrain_019");t.resize();t.fitMap();t.drawMap();assert.equal(t.getHits().filter(h=>h.kind==="redexo").length,54);assert.equal(t.getHits().filter(h=>h.kind==="exo").length,153);t.V.L.redexo=0;t.drawMap();assert.equal(t.getHits().filter(h=>h.kind==="redexo").length,0);assert.equal(t.getHits().filter(h=>h.kind==="exo").length,153);});
+test("offline map renders all Prometheus exotic candidates and independent layer switches",()=>{const h=harness(),{t}=h;t.selectMap("Terrain_019");t.resize();t.fitMap();t.drawMap();assert.equal(t.getHits().filter(h=>h.kind==="redexo").length,21);t.V.L.redbloom=0;t.drawMap();assert.equal(t.getHits().filter(h=>h.kind==="redexo").length,54);assert.equal(t.getHits().filter(h=>h.kind==="exo").length,153);t.V.L.redexo=0;t.drawMap();assert.equal(t.getHits().filter(h=>h.kind==="redexo").length,0);assert.equal(t.getHits().filter(h=>h.kind==="exo").length,153);});
 
 test("prospect clocks are reset on server/world switch and replaced by new server time",()=>{const h=harness();h.ingest({t:1,w:"Terrain_019",scope:"A"});h.tick(2000);h.ingest({t:2,w:"Terrain_019",scope:"A",prospectClock:{seconds:10000,open:true}});assert.equal(h.t.getClock().seconds,10000);h.tick(3000);h.ingest({t:3,w:"Terrain_019",scope:"B"});assert.equal(h.t.getClock(),null);h.tick(4000);h.ingest({t:4,w:"Terrain_019",scope:"B",prospectClock:{seconds:300,open:true}});assert.equal(h.t.getClock().seconds,300);h.tick(5000);h.ingest({t:5,w:"Terrain_021",scope:"C"});assert.equal(h.t.getClock(),null);});
 
 test("pose-only packets skip cave matching; player observations still trigger it",()=>{const h=harness();let visits=0;h.c.window.HudMapStatus.visits=()=>visits++;for(let i=1;i<=80;i++){h.tick(i*750);h.ingest({t:i,w:"Terrain_019",scope:"A",p:[i,0,0]});}assert.equal(visits,0);h.ingest({t:81,w:"Terrain_019",scope:"A",players:[[1,0,0,1]]});assert.equal(visits,1);});
+
+test("bloomed red plant appears on the map and the read range is recorded per server",()=>{
+ const h=harness(),{t}=h;t.resize();h.ingest({w:'Terrain_019',t:1,scope:'S1'});h.tick(2000);
+ h.ingest({w:'Terrain_019',t:2,scope:'S1',p:[0,0,0],lm:[['r:Plant',50000,0,0,-1],['r:Plant',0,120000,0,4]]});
+ t.selectMap('Terrain_019');t.fitMap();t.drawMap();
+ const live=t.getHits().filter(x=>x.kind==='redexo'&&x.bloom&&x.bloom.state==='live');assert.equal(live.length,1);
+ const r=t.M('Terrain_019').plantRange;const k=Object.keys(r)[0];assert.equal(Math.round(r[k].plant),1200);assert.equal(Math.round(r[k].spot),500);
+ h.tick(3000);h.ingest({w:'Terrain_019',t:3,scope:'S1',p:[0,0,0],lm:[['r:Plant',0,120000,0,-1]]});t.drawMap();
+ assert.equal(t.getHits().filter(x=>x.kind==='redexo'&&x.ref[0]==='r:Plant').length,0);
+});
+
+test("exploration mode hides markers in places never visited and forces the fog view; off by default",()=>{
+ const h=harness(),{t,c}=h;t.selectMap("Terrain_019");t.resize();t.fitMap();t.V.L.redbloom=0;t.drawMap();
+ const count=()=>t.getHits().filter(x=>['cave','exo','redexo','deep','gey','boss'].includes(x.kind)).length;
+ const all=count();assert.ok(all>200);assert.equal(c.S.explore,undefined);
+ c.S.explore=true;t.drawMap();assert.equal(count(),0);
+ const any=t.getHits();t.markSeen(t.M('Terrain_019'),-100000,100000);c.S.explore=true;t.drawMap();
+ const near=t.getHits().filter(x=>['cave','exo','redexo','deep','gey','boss'].includes(x.kind));
+ assert.ok(near.length>=0&&near.length<all);for(const x of near){const o=x.ref;assert.ok(Math.hypot(o[1]+100000,o[2]-100000)<30000)}
+ c.S.explore=false;t.drawMap();assert.equal(count(),all);assert.equal(t.V.L.fog,0,'user fog switch untouched');
+});
+
+test("prospect save fills deep vein ore types and spawned red plants for the world being played",()=>{
+ const h=harness(),{t,c}=h;h.ingest({w:'Terrain_019',t:1,scope:'S1'});h.tick(2000);h.ingest({w:'Terrain_019',t:2,scope:'S1',p:[0,0,0],lm:[['r:Plant',0,120000,0,4]]});
+ const save={world:'Terrain_019',name:'Mine',savedAt:1500,veins:[['Iron',-120000,50000,300]],plants:[[150000,-90000,1200]]};
+ assert.equal(c.window.__mapSave({...save,world:'Terrain_016'}),false,'other world ignored');
+ assert.equal(c.window.__mapSave(save),true);assert.equal(c.window.__mapSave(save),false,'same save once');
+ const lm=t.M('Terrain_019').lm,vals=Object.values(lm);
+ assert.ok(vals.some(o=>o[0]==='d:Iron'&&o[6]==='save'));assert.ok(vals.some(o=>o[0]==='r:Plant'&&o[1]===150000&&o[5]===1));
+ assert.ok(vals.some(o=>o[0]==='r:Plant'&&o[2]===120000&&o[5]===4),'live observation (newer) kept');
+ h.tick(5000);assert.equal(c.window.__mapSave({...save,savedAt:4000,plants:[]}),true);
+ assert.ok(Object.values(t.M('Terrain_019').lm).filter(o=>o[0]==='r:Plant').every(o=>!(o[5]>0)),'plants missing from a newer save are gone');
+});
