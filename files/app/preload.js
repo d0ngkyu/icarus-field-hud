@@ -19,6 +19,7 @@ contextBridge.exposeInMainWorld('hudApp', {
   setActivityEnabled: on => ipcRenderer.invoke('setActivityEnabled',on),
   setTitle: id => ipcRenderer.invoke('setTitle',id),
   info: () => ipcRenderer.invoke('info'),
+  prospectSave: () => ipcRenderer.invoke('prospectSave'),
   checkUpdate: () => ipcRenderer.invoke('checkUpdate'),
   diagStatus: () => ipcRenderer.invoke('diagStatus'),
   diagReport: () => ipcRenderer.invoke('diagReport'),
