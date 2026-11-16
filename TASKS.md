@@ -1075,3 +1075,7 @@ A/B/C 모두 종료 프로토콜, 업데이트 실패 표시, 개인 월드 격�
 - Claude의 Linux CI 성공보고와 별개로 Codex Windows검사 최초3곳실패 확인: field-assistant, window-security, first-install source정규식이 CRLF를 허용하지 않음. 시험입력 줄바꿈 정규화 후 202검사 전부통과(신규 identity/복원경합 및 지도서버전환 회귀 포함).
 - 읽기전용 실제오래된로컬세이브1개 해석: ProspectID존재/Terrain_016/심층43/식물0. 45분기준밖이므로 현재지도에는 주입하지 않음. 실제좌표정확도/신규월드/호스트저장완료/FPS는 미검증. 소식키/토큰·개인세이브 내용 업로드 없음.
 - 모의브라우저 캐릭터 브리핑→추천코스 버튼→지도4동굴 경로 표시 확인, 콘솔오류0. 게임내 자동이동 아님. 설치기는 Claude 배포 기존자산 유지; 재설치시 taskkill /F 사용·제거후 게임mod잔존은 후속설치기 점검 후보. NEWS-REPO-049 권한분리는 보류 유지.
+
+
+## CODEX-INTEGRATION-060 · 정식 배포 인수
+- Codex stable2026.11.16.17 source470186ea26b86dcca197771badda0e3eebf2907a PR37 featurec779feea17698918e737e225140ff4913dfac0fc. 현재 stable.16/beta.109, 타진행배포 없음. Claude 완료기능/설치진행창 + 서버세이브격리/강제복원경합/호환문구 보완. 202검사·11원격소스일치·모의브라우저확인. PC.15/게임OFF 확인, 발행 뒤 기존 안전updater 적용 예정. Codex정식배포 소유.
