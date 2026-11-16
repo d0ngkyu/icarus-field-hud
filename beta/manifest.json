@@ -1,10 +1,10 @@
 {
- "version": "2026.11.16.102",
+ "version": "2026.11.16.103",
  "channel": "beta",
- "source": "010d9a4bce2aac53854bf9db2d7cc7e6296ee767",
- "notes": "지도: 레드 엑조틱 식물 읽히는 거리 표시(지도 아래 상태 줄). 핀 꽃만 표시 포함.",
+ "source": "fa2bc29d9193b3cc32fdad8fc8668bb4be277d9d",
+ "notes": "Gemini 원정 도우미: 캐릭터 탭 탐사 브리핑·준비물 점검, 지도 동굴 최단 코스 추천, 제작 추천 세트(교체는 두 번 눌러 확인). 이전 베타 내용 포함.",
  "config": {},
- "filesPath": "releases/beta/2026.11.16.102/files",
+ "filesPath": "releases/beta/2026.11.16.103/files",
  "files": [
   {
    "p": "game/Icarus/Binaries/Win64/dwmapi.dll",
@@ -70,8 +70,8 @@
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/index.html",
-   "n": 974004,
-   "h": "4b84cac64bc0d25552a9b825fd6ea30ebf971643"
+   "n": 974351,
+   "h": "7c1972b4c15b158a1738ed066b2da7e81636cd79"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/animals.js",
@@ -282,6 +282,11 @@
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/hover-help.js",
    "n": 13640,
    "h": "cd61a4b52ed48688da5989ea48ba7b62aceb5ffc"
+  },
+  {
+   "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/field-assistant.js",
+   "n": 33536,
+   "h": "7bf964ae2bb6fd2ccdf75442be59f310ee512168"
   }
  ]
 }

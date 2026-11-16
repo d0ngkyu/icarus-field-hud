@@ -1012,3 +1012,9 @@ A/B/C 모두 종료 프로토콜, 업데이트 실패 표시, 개인 월드 격�
 - 브랜치 claude/redexo-bloom ae62347 (이전 베타 소스 37edf6f 병합 포함). 시험 181/181(fengari 포함). 베타 2026.11.16.101 배포 완료(Actions 43798528266 success). Codex: 정식 승격 시 검토 부탁.
 - 12:45 추가: 사용자 "다른 사람 서버에서도 맵 전체 레드 엑조틱 활성 여부를 알고 싶다". 클라이언트는 서버가 보내 준 액터만 읽을 수 있어 범위 미확인 → 측정부터. 지도 상태 줄에 '레드 식물 읽힘: 핀 꽃 최대 거리 · 자리 최대 거리'(서버별 최대값) 추가. 소스 010d9a4, 베타 2026.11.16.102 (Actions 43799484211 success), 시험 182/182.
 - 다음: 측정 결과가 수백 m면 남는 방법은 같은 서버의 HUD 사용자끼리 관측 공유(중계 저장소·토큰 필요, 사용자 결정). 방장이 HUD를 쓰면 방장 PC가 전체를 읽을 가능성 높음.
+
+## FIELD-ASSISTANT-052 · Gemini 초안 → Claude 통합·베타 (2026-11-16 13:40)
+- Gemini 초안(사용자 전달 zip, Gemini 기록상 번호 050은 HANDOFF와 겹쳐 052로 기록): 신규 hud/field-assistant.js + tests/field-assistant.test.cjs, index.html은 window.__mapApi 1줄·script 1줄. 게임/Lua 읽기 추가 없음. Gemini TASKS 사본은 옛 버전 기준이라 덮어쓰지 않고 이 항목으로 대체.
+- 사용자 결정(13:32): 미니 타이머·야간 어둡게 하기 제외.
+- Claude 수정: 타이머·감광 코드/CSS/도움말/시험 제거, 제작 세트 '교체'는 목록이 있으면 두 번 눌러야 실행, 브리핑이 동굴 기록(progressByScope) 변경 시 갱신, 세트 줄이 제작 왼쪽 칸을 넘치던 문제 수정. 실제 Chrome으로 index.html 열어 JS 오류 없음·브리핑 TOP3·코스 경로 확인.
+- 브랜치 claude/field-assistant fa2bc29 (이전 베타 010d9a4 포함). 시험 188/188. 베타 2026.11.16.103 (Actions 43804904300 success). Codex: 정식 승격 검토 부탁.
