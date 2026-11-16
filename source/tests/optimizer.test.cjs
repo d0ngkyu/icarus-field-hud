@@ -42,3 +42,8 @@ test('a setting missing in this game version is skipped, required quality keys s
  const s=setup(t,{bytes:Buffer.from(text)});const r=await s.opt.run('host');assert.equal(r.color,'green');assert.match(r.message,/건너뜀/);
  assert.equal((await s.opt.run('restore')).color,'yellow');assert.equal(fs.readFileSync(s.configFile,'utf8'),text);
  assert.throws(()=>O.plan(fixture().replace('Shadows=Epic',''),'host'));});
+
+
+test('force restore rechecks game and file after staging, preserving concurrent edits',async t=>{
+ for(const mode of ['game','file']){let armed=false,up=false;let s;const io=Object.create(fs);io.writeFileSync=(p,b,o)=>{fs.writeFileSync(p,b,o);if(armed&&p.endsWith('.hud-opt.tmp')){if(mode==='game')up=true;else fs.appendFileSync(s.configFile,'; concurrent edit');}};s=setup(t,{io,gameUp:async()=>up});await s.opt.run('host');const before=fs.readFileSync(s.configFile,'utf8');armed=true;const result=await s.opt.run('force-restore');assert.equal(result.color,'red');assert.equal(fs.readFileSync(s.configFile,'utf8'),before+(mode==='file'?'; concurrent edit':''));assert.equal(fs.existsSync(s.configFile+'.hud-opt.tmp'),false);}
+});

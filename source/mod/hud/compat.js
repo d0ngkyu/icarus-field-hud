@@ -28,7 +28,7 @@ function summary(state,failures,updatedAt){
  const level=fail.length?'bad':wait.length?'wait':'ok';
  const lines=[head];
  if(fail.length)lines.push('오류: '+fail.join('·')+' — 문제 보고서를 만들어 보내 주세요');
- if(ok.length)lines.push('정상: '+ok.join('·'));
+ if(ok.length)lines.push('수신 확인: '+ok.join('·'));
  if(wait.length)lines.push('아직 못 봄: '+wait.join('·')+' (이번 판에서 안 쓴 기능일 수 있음)');
  return {level,text:lines.join('\n'),fail,ok,wait}}
 
@@ -40,9 +40,10 @@ root.HudCompat=api;
 const A=root.hudApp,sec=document.getElementById('diagsec');
 if(!sec||typeof S!=='object'||!S)return;
 const row=document.createElement('div');row.className='set';
+row.dataset.tip='새 게임 빌드에서 데이터 수신 여부와 로그 오류를 확인합니다. 수신됨은 기능 전체의 정상 작동을 보장하지 않습니다.';
 row.innerHTML='<span class="lb">게임 업데이트 호환<small id="compatinfo" style="white-space:pre-line">게임 연결 후 확인합니다.</small></span>';
 const first=sec.querySelector('.set');if(first&&first.parentNode)first.parentNode.insertBefore(row,first.nextSibling);else sec.appendChild(row);
-if(root.HudHoverHelp&&root.HudHoverHelp.rules)root.HudHoverHelp.rules['#compatinfo']='게임이 매주 업데이트되면, HUD 기능들이 새 버전에서도 정상인지 자동으로 확인한 결과입니다.';
+if(root.HudHoverHelp&&root.HudHoverHelp.rules)root.HudHoverHelp.rules['#compatinfo']='새 게임 빌드의 데이터 수신·로그 오류 점검입니다. 실제 기능 전체의 정상 작동을 보장하지 않습니다.';
 
 let failures=[],updatedAt=null,warned=false;
 const paint=()=>{const el=document.getElementById('compatinfo');if(!el)return;const r=summary(S.compat,failures,updatedAt);el.textContent=r.text;el.style.color=r.level==='bad'?'var(--bad,#ff8a7a)':r.level==='ok'?'var(--ok,#66d99d)':''};
