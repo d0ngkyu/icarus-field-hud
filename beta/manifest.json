@@ -1,10 +1,10 @@
 {
- "version": "2026.11.16.104",
+ "version": "2026.11.16.105",
  "channel": "beta",
- "source": "cb67138ff3f74c970e744a222e53ba7aedbc1e0e",
- "notes": "설정에 탐험 모드 추가(기본 꺼짐): 켜면 안 가 본 곳의 동굴·자원·보스·레드 엑조틱을 숨기고 동굴 추천도 가 본 곳에서만.",
+ "source": "41fea2ec9517bec36871821cc7e0b2edcffd3c8f",
+ "notes": "탐험 모드에서 레드 식물 감지 거리 줄도 숨김.",
  "config": {},
- "filesPath": "releases/beta/2026.11.16.104/files",
+ "filesPath": "releases/beta/2026.11.16.105/files",
  "files": [
   {
    "p": "game/Icarus/Binaries/Win64/dwmapi.dll",
@@ -70,8 +70,8 @@
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/index.html",
-   "n": 975701,
-   "h": "74dcba1d1a8f1a393e05aa3d727f5767d1828e9a"
+   "n": 975724,
+   "h": "3514752b0915be9102f048e5866503c1989fd00f"
   },
   {
    "p": "game/Icarus/Binaries/Win64/ue4ss/Mods/IcarusHUD/hud/animals.js",
