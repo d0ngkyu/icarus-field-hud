@@ -194,7 +194,7 @@ function buildTray() {
 let gameControlAction=null;
 let optimizer = null;
 ipcMain.handle('optimization', async (_e, action) => {
-  if (!['status','host','personal','restore','hardware','sample-before','sample-after'].includes(action)) throw Error('지원하지 않는 최적화 요청입니다.');
+  if (!['status','host','personal','restore','force-restore','hardware','sample-before','sample-after'].includes(action)) throw Error('지원하지 않는 최적화 요청입니다.');
   if (action === 'hardware') return require('./performance.js').hardware();
   if (action.startsWith('sample-')) {
     const result = await require('./performance.js').sample();

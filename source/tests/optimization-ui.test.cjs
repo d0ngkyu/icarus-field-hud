@@ -4,7 +4,7 @@ function harness(api){
  const fields=new Map(),buttons=[],events={};
  function element(){return{hidden:false,offsetParent:{},dataset:{},disabled:false,textContent:'',classList:{toggle(){}},append(){},replaceChildren(){},insertRow(){return{insertCell(){return{}}}}}}
  const section=element(),details=element();
- for(const [key,values]of [['mode',['host','personal']],['action',['hardware','status','restore']],['sample',['before','after']],['status',['host','personal']]])for(const value of values){const e=element();e.dataset[key]=value;fields.set('[data-'+key+'="'+value+'"]',e);if(key!=='status')buttons.push(e)}
+ for(const [key,values]of [['mode',['host','personal']],['action',['hardware','status','restore','force-restore']],['sample',['before','after']],['status',['host','personal']]])for(const value of values){const e=element();e.dataset[key]=value;fields.set('[data-'+key+'="'+value+'"]',e);if(key!=='status')buttons.push(e)}
  for(const key of ['result','backup','hardware','measures'])fields.set('[data-'+key+']',element());
  section.querySelector=s=>s==='details'?details:fields.get(s);
  section.querySelectorAll=s=>s==='button'?buttons:buttons.filter(b=>Object.hasOwn(b.dataset,s.slice(6,-1)));
@@ -31,4 +31,11 @@ test('pending request blocks double clicks only until completion',async()=>{
 });
 test('focus refreshes visible optimization pane after game exits',async()=>{
  let current=running;const h=harness(async()=>current);await h.open();current={...running,canWrite:true,running:false};h.events.focus();await flush();assert.match(h.card('personal').textContent,/적용 가능/);
+});
+
+test('force restore button appears only when the backend says the normal restore is stuck',async()=>{
+ let state={color:'red',canWrite:true,canRestore:false,canForce:true,message:'stuck'};const calls=[];
+ const h=harness(async a=>{calls.push(a);if(a==='force-restore')state={color:'yellow',canWrite:true,canRestore:false,canForce:false,message:'ok'};return state});
+ await h.open();await flush();const b=h.fields.get('[data-action="force-restore"]');assert.equal(b.hidden,false);
+ await b.onclick();await flush();assert.ok(calls.includes('force-restore'));assert.equal(b.hidden,true);
 });

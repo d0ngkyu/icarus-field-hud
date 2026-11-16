@@ -21,3 +21,24 @@ test('interruption after config rename recovers using exact output hash',async t
 test('pending transaction with unexpected config is never reported successful',async t=>{let fail=false;const io=Object.create(fs);io.renameSync=(from,to)=>{if(fail&&from.endsWith('.hud-opt.tmp'))throw Error('injected');fs.renameSync(from,to)};const s=setup(t,{io});await s.opt.run('host');fail=true;await s.opt.run('restore');fs.appendFileSync(s.configFile,'Outside=1');assert.equal((await s.opt.status()).color,'red');assert.equal((await s.opt.run('personal')).color,'red')});
 test('performance comparison retains unsupported metrics as null',()=>{const {compare}=require('../app/performance.js');assert.deepEqual(compare({cpuPercent:20,ramMB:100,gpu3DPercent:null},{cpuPercent:15,ramMB:110,gpu3DPercent:0}),{cpuPercent:-5,ramMB:10,gpu3DPercent:null})});
 test('IPC restricts actions, persists both measurements and reloads them with status',async t=>{const vm=require('vm'),dir=fs.mkdtempSync(path.join(os.tmpdir(),'hud-opt-ipc-'));t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));let handle,number=0;const cfg={},saved=path.join(dir,'settings.json');const source=fs.readFileSync(path.join(__dirname,'../app/main.js'),'utf8');vm.runInNewContext(source.slice(source.indexOf('let optimizer = null;'),source.indexOf("ipcMain.handle('gameControl'")),{ipcMain:{handle:(_n,fn)=>handle=fn},cfg,fs,path,cfgFile:()=>saved,process:{env:{LOCALAPPDATA:dir}},app:{getPath:()=>dir},gameUp:asyncFalse,require:n=>n==='./performance.js'?{sample:async()=>({cpuPercent:++number,at:1})}:{create:()=>({status:async()=>({color:'yellow'})})}});await assert.rejects(handle(null,'arbitrary-path'));await handle(null,'sample-before');await handle(null,'sample-after');const persisted=JSON.parse(fs.readFileSync(saved));assert.equal(persisted.optimizationMeasurements.before.cpuPercent,1);assert.equal(persisted.optimizationMeasurements.after.cpuPercent,2);assert.equal((await handle(null,'status')).measurements.before.cpuPercent,1)});
+
+test('force restore: game rewrote an owned value, normal restore refuses, force puts owned keys back and keeps other edits',async t=>{const s=setup(t);await s.opt.run('host');
+ fs.writeFileSync(s.configFile,fs.readFileSync(s.configFile,'utf8').replace('Shadows=Low','Shadows=High')+'Added=1\n');
+ assert.equal((await s.opt.run('restore')).color,'red');const st=await s.opt.status();assert.equal(st.canForce,true);
+ const r=await s.opt.run('force-restore');assert.notEqual(r.color,'red');const text=fs.readFileSync(s.configFile,'utf8');
+ assert.equal(text,fixture()+'Added=1\r\n');assert.equal(r.mode,null);assert.equal(r.canForce,false);
+ assert.ok(fs.readdirSync(s.storeDir).some(n=>n.startsWith('before-force-restore-')));
+ assert.equal((await s.opt.run('personal')).color,'green');});
+test('force restore: pending journal that matches nothing is recoverable, and never while the game runs',async t=>{let up=false;const s=setup(t,{gameUp:async()=>up});await s.opt.run('host');
+ const jf=path.join(s.storeDir,'optimization.json'),j=JSON.parse(fs.readFileSync(jf));fs.writeFileSync(jf,JSON.stringify({pending:true,previous:j,next:j,beforeHash:'x',afterHash:'y',backup:j.backup}));
+ let st=await s.opt.status();assert.equal(st.color,'red');assert.equal(st.canForce,true);assert.match(st.message,/강제 복원/);
+ up=true;const cur=fs.readFileSync(s.configFile);assert.equal((await s.opt.run('force-restore')).color,'yellow');assert.deepEqual(fs.readFileSync(s.configFile),cur);
+ up=false;assert.notEqual((await s.opt.run('force-restore')).color,'red');assert.equal(fs.readFileSync(s.configFile,'utf8'),fixture());assert.equal((await s.opt.status()).color,'yellow');});
+test('force restore: unreadable journal still finds the newest backup; without any backup it refuses',async t=>{const s=setup(t);await s.opt.run('personal');fs.writeFileSync(path.join(s.storeDir,'optimization.json'),'{broken');
+ assert.equal((await s.opt.status()).canForce,true);assert.notEqual((await s.opt.run('force-restore')).color,'red');assert.equal(fs.readFileSync(s.configFile,'utf8'),fixture());
+ const n=setup(t);assert.equal((await n.opt.run('force-restore')).color,'red');assert.equal(fs.readFileSync(n.configFile,'utf8'),fixture());});
+test('a setting missing in this game version is skipped, required quality keys still fail closed',async t=>{const text=fixture().replace(/bDisableGrassShadows=False\r?\n?/,'');
+ const p=O.plan(text,'host');assert.deepEqual(p.skipped,['bDisableGrassShadows']);assert.ok(!Object.keys(p.changes).some(k=>k.endsWith('bDisableGrassShadows')));
+ const s=setup(t,{bytes:Buffer.from(text)});const r=await s.opt.run('host');assert.equal(r.color,'green');assert.match(r.message,/건너뜀/);
+ assert.equal((await s.opt.run('restore')).color,'yellow');assert.equal(fs.readFileSync(s.configFile,'utf8'),text);
+ assert.throws(()=>O.plan(fixture().replace('Shadows=Epic',''),'host'));});
