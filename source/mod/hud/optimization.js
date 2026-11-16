@@ -17,7 +17,7 @@
   <li><strong>빨간색이나 오류가 뜨면</strong> 계속 누르지 말고, 아래 오류 문구를 확인해 주세요. ‘별도로 바꾼 설정’이라고 나오면 덮어쓰지 않도록 멈춘 상태예요.</li>
   <li><strong>적용 뒤 로딩이 오래 걸리거나 화면이 이상하면</strong> 게임을 정상 종료하고 HUD에서 ‘변경 전으로 복원’을 눌러 주세요. 복원도 실패하면 오류 문구를 알려 주세요.</li>
   </ul><p class="hint">설정을 바꾸기 전에는 자동으로 백업해요. 로딩 문제의 원인이 항상 최적화인 것은 아니며, 복원이 해결을 보장하지는 않아요.</p></details>
-  <div class="bt"><button data-action="hardware">내 사양으로 추천</button><button data-action="status">적용 상태 확인</button><button data-action="restore">변경 전으로 복원</button></div>
+  <div class="bt"><button data-action="hardware">내 사양으로 추천</button><button data-action="status">적용 상태 확인</button><button data-action="restore">변경 전으로 복원</button><button data-action="force-restore" hidden title="일반 복원이 거부될 때만 나타납니다. 최적화가 바꾼 항목만 첫 적용 전 백업 값으로 되돌리고, 지금 설정 파일은 사본으로 남깁니다.">백업으로 강제 복원</button></div>
   <p data-hardware class="hint"></p><p data-result role="status" class="opt-state">● 설정 확인 중</p><p data-backup class="hint"></p>
   <p class="hint">🟢 선택한 설정이 저장됐어요 · 🟡 아래 안내를 확인해 주세요 · 🔴 오류 문구를 확인해 주세요. 초록색은 렉이 없어졌다는 뜻이 아니에요.</p>
   <details><summary>무엇이 바뀌나요?</summary><p class="hint">내 PC의 그림자·효과와 최대 FPS를 조절합니다. 서버장용도 서버원 PC까지 바꾸지는 않습니다. 지형·테셀레이션·표시 거리·수풀 품질·동물 AI·월드 저장은 바꾸지 않습니다. 원래 설정보다 품질·FPS 제한을 높이지 않으며, 두 모드는 첫 적용 전 설정을 기준으로 계산합니다. 모든 끊김이 사라지는 것은 아닙니다.</p></details>
@@ -31,7 +31,7 @@
   function say(message,color='yellow'){const e=$('[data-result]');e.textContent=({'green':'● ','red':'✕ '}[color]||'● ')+message;e.dataset.color=color}
   // Only an in-flight request locks apply. Backend rechecks game state on every click.
   // A stale canWrite=false must not prevent a retry after the game has exited.
-  function controls(){section.querySelectorAll('button').forEach(b=>b.disabled=busy||!app?.optimization);$('[data-action="restore"]').disabled=busy||!app?.optimization||!last?.canRestore;}
+  function controls(){section.querySelectorAll('button').forEach(b=>b.disabled=busy||!app?.optimization);$('[data-action="restore"]').disabled=busy||!app?.optimization||!last?.canRestore;const f=$('[data-action="force-restore"]');if(f)f.hidden=!last?.canForce;}
   function paint(s){
     last=s;if(s.measurements){results=s.measurements;measures();}say(s.message,s.color);
     for(const mode of ['host','personal']){
