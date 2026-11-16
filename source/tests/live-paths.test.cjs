@@ -238,7 +238,7 @@ test('first-install progress: check, one step per file, then install', async () 
   assert.equal(quiet.version, '2026.1.1.1', 'a failing progress callback never breaks the update');
 });
 test('first-install window: shown before the install download, closed before any dialog', () => {
-  const src = fs.readFileSync(path.join(appDir, 'main.js'), 'utf8');
+  const src = fs.readFileSync(path.join(appDir, 'main.js'), 'utf8').replace(/\r\n/g,'\n');
   assert.match(src, /showSplash\(\);\n    const r = await runUpdate\(true\);\n    closeSplash\(\);/);
   assert.match(src, /await gameUp\(\) === false, p => \{ if \(typeof splashProgress === 'function'\) splashProgress\(p\); \}\);/);
   assert.match(src, /sandbox: true, javascript: true/);

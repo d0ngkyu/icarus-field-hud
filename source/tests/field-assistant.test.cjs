@@ -5,7 +5,7 @@ const path=require('node:path');
 const vm=require('node:vm');
 const fa=require('../mod/hud/field-assistant.js');
 
-const html=fs.readFileSync(path.join(__dirname,'../mod/hud/index.html'),'utf8');
+const html=fs.readFileSync(path.join(__dirname,'../mod/hud/index.html'),'utf8').replace(/\r\n/g,'\n');
 const dataMatch=html.match(/<script id="d" type="application\/json">(.*?)<\/script>/);
 const D=JSON.parse(dataMatch[1]);
 const CAVEMAP=JSON.parse(html.match(/const CAVEMAP=(\{.*?\});\n/)[1]);

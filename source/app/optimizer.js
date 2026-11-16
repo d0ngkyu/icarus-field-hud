@@ -38,7 +38,7 @@ function create({configFile,storeDir,gameUp,io=fs}){let busy=false;const journal
   const keep=path.join(storeDir,'before-force-restore-'+Date.now()+'.ini');io.writeFileSync(keep,before,{flag:'wx'});
   if(await gameUp()!==false||hash(read())!==hash(before))throw Error('게임이 실행됐거나 설정이 바뀌어 변경을 중단했습니다.');
   const temp=configFile+'.hud-opt.tmp';io.writeFileSync(temp,output,{flag:'wx'});
-  try{io.renameSync(temp,configFile)}finally{try{io.unlinkSync(temp)}catch{}}
+  try{if(await gameUp()!==false||hash(read())!==hash(before))throw Error('상태가 바뀌어 강제 복원을 중단했습니다.');io.renameSync(temp,configFile)}finally{try{io.unlinkSync(temp)}catch{}}
   if(hash(read())!==hash(output))throw Error('저장 후 검증에 실패했습니다. 백업을 보존했습니다.');
   save({version:2,mode:null,original:{},applied:{},backup,pending:false,restoredAt:Date.now(),forced:true});
   return{...(await status()),message:'백업 값으로 되돌렸습니다('+Object.keys(changes).length+'개 항목). 직전 설정 사본: '+keep};

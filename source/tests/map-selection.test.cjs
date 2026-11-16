@@ -105,12 +105,16 @@ test("exploration mode hides markers in places never visited and forces the fog 
 
 test("prospect save fills deep vein ore types and spawned red plants for the world being played",()=>{
  const h=harness(),{t,c}=h;h.ingest({w:'Terrain_019',t:1,scope:'S1'});h.tick(2000);h.ingest({w:'Terrain_019',t:2,scope:'S1',p:[0,0,0],lm:[['r:Plant',0,120000,0,4]]});
- const save={world:'Terrain_019',name:'Mine',savedAt:1500,veins:[['Iron',-120000,50000,300]],plants:[[150000,-90000,1200]]};
+ const save={scope:'S1',world:'Terrain_019',name:'Mine',savedAt:1500,veins:[['Iron',-120000,50000,300]],plants:[[150000,-90000,1200]]};
  assert.equal(c.window.__mapSave({...save,world:'Terrain_016'}),false,'other world ignored');
+ assert.equal(c.window.__mapSave({...save,scope:'other-server'}),false,'same map different prospect rejected');
+ assert.equal(c.window.__mapSave({...save,scope:null}),false,'unidentified save rejected');
  assert.equal(c.window.__mapSave(save),true);assert.equal(c.window.__mapSave(save),false,'same save once');
  const lm=t.M('Terrain_019').lm,vals=Object.values(lm);
  assert.ok(vals.some(o=>o[0]==='d:Iron'&&o[6]==='save'));assert.ok(vals.some(o=>o[0]==='r:Plant'&&o[1]===150000&&o[5]===1));
  assert.ok(vals.some(o=>o[0]==='r:Plant'&&o[2]===120000&&o[5]===4),'live observation (newer) kept');
  h.tick(5000);assert.equal(c.window.__mapSave({...save,savedAt:4000,plants:[]}),true);
  assert.ok(Object.values(t.M('Terrain_019').lm).filter(o=>o[0]==='r:Plant').every(o=>!(o[5]>0)),'plants missing from a newer save are gone');
+ h.tick(6000);h.ingest({w:'Terrain_019',t:3,scope:'S2'});assert.ok(!Object.values(t.M('Terrain_019').lm).some(o=>o[6]==='save'),'old server save markers removed');assert.equal(c.window.__mapSave({...save,savedAt:5500}),false);
+ h.tick(7000);h.ingest({w:'Terrain_019',t:4,scope:'S1'});assert.equal(c.window.__mapSave({...save,savedAt:4000}),true,'returning to same server can restore snapshot');
 });

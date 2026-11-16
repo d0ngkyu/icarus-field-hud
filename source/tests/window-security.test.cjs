@@ -1,5 +1,5 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('fs'),path=require('path');
-const src=fs.readFileSync(path.join(__dirname,'../app/main.js'),'utf8');
+const src=fs.readFileSync(path.join(__dirname,'../app/main.js'),'utf8').replace(/\r\n/g,'\n');
 const pick=n=>src.match(new RegExp('function '+n+'\\(url\\) \\{.*\\n'))[0];
 const make=hud=>new Function('path','hudFile',pick('safeExternal')+pick('sameHud')+'return {safeExternal,sameHud};')(path.win32,()=>hud);
 test('only https leaves the app; the HUD window cannot navigate away from its own page',()=>{

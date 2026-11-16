@@ -24,7 +24,7 @@ function rawBlob(text) {
 }
 function blobOf(text) {
   const raw = rawBlob(text); if (!raw) return null;
-  for (const f of [zlib.inflateSync, zlib.unzipSync, zlib.inflateRawSync]) { try { return f(raw); } catch {} }
+  for (const f of [zlib.inflateSync, zlib.unzipSync, zlib.inflateRawSync]) { try { return f(raw, { maxOutputLength: LIMIT }); } catch {} }
   return null;
 }
 // off the main thread: zlib runs in libuv's pool, so the HUD window never freezes on a big save
@@ -32,7 +32,7 @@ const { promisify } = require('util');
 const ASYNC = [promisify(zlib.inflate), promisify(zlib.unzip), promisify(zlib.inflateRaw)];
 async function blobOfAsync(text) {
   const raw = rawBlob(text); if (!raw) return null;
-  for (const f of ASYNC) { try { return await f(raw); } catch {} }
+  for (const f of ASYNC) { try { return await f(raw, { maxOutputLength: LIMIT }); } catch {} }
   return null;
 }
 
@@ -75,8 +75,11 @@ function scan(data) {
   for (const w of WORLDS) { const i = data.indexOf(B(w)); if (i >= 0 && i < at) { at = i; world = w; } }
   return { world, veins: veinsOf(data), plants: plantsOf(data) };
 }
-function parse(buf) { const data = blobOf(decodeText(buf)); return data ? scan(data) : null; }
-async function parseAsync(buf) { const data = await blobOfAsync(decodeText(buf)); return data ? scan(data) : null; }
+function identity(text) {
+  try { const id = JSON.parse(text)?.ProspectInfo?.ProspectID; return typeof id === 'string' && /^[A-Za-z0-9_-]{1,160}$/.test(id) ? id : null; } catch { return null; }
+}
+function parse(buf) { if(buf.length>LIMIT)return null;const text=decodeText(buf),data=blobOf(text);return data?{...scan(data),scope:identity(text)}:null; }
+async function parseAsync(buf) { if(buf.length>LIMIT)return null;const text=decodeText(buf),data=await blobOfAsync(text);return data?{...scan(data),scope:identity(text)}:null; }
 
 function prospectFiles(localAppData) {
   const root = path.join(localAppData || '', 'Icarus', 'Saved', 'PlayerData'), out = [];

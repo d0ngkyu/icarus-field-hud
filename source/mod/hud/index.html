@@ -581,7 +581,8 @@ let mapToken=null;
 // plant across the map, as of the last save. Newer live observations always win.
 function ingestSave(r,now){if(!r||!r.world||!Number.isFinite(r.savedAt)||!MAPB[r.world])return false;
  if(!session.active(now)||session.world!==r.world)return false;
- const mp=M(r.world),at=r.savedAt;if(mp.saveAt===at)return false;mp.saveAt=at;mp.saveName=r.name||'';
+ const mp=M(r.world),at=r.savedAt;if(!r.scope||!mp.activeScope||r.scope!==mp.activeScope)return false;
+ if(mp.saveScope===r.scope&&mp.saveAt===at)return false;mp.saveAt=at;mp.saveScope=r.scope;mp.saveName=r.name||'';
  for(const v of r.veins||[]){if(!Array.isArray(v)||typeof v[0]!=='string'||!/^[A-Za-z][A-Za-z0-9_]*$/.test(v[0]))continue;
   const k=keyOf('d',v[1],v[2]),o=mp.lm[k];if(o&&o[6]!=='save'&&o[4]>=at)continue;
   mp.lm[k]=['d:'+v[0],v[1],v[2],v[3]||0,at,o&&o[0]==='d:'+v[0]?o[5]:-1,'save']}
@@ -611,7 +612,10 @@ window.__mapIngest=m=>{
  }
  if(!S.world||!m.w||m.w==='?')return;
  const mp=M(S.world);
- if(typeof m.scope==='string')mp.activeScope=session.active(now)?m.scope||null:null;
+ if(typeof m.scope==='string'){const nextScope=session.active(now)?m.scope||null:null;
+  if(mp.saveAt!==undefined&&mp.saveScope!==nextScope){let removed=false;for(const [key,row]of Object.entries(mp.lm))if(row[6]==='save'){delete mp.lm[key];removed=true;}delete mp.saveAt;delete mp.saveName;delete mp.saveScope;if(removed)mp.spawnRev=(mp.spawnRev||0)+1;}
+  mp.activeScope=nextScope;
+ }
  if(spawns&&m.prospectClock&&session.active(now)&&Number.isFinite(m.prospectClock.seconds)&&m.prospectClock.open===true)spawnClock={seconds:m.prospectClock.seconds,at:now,world:m.w,scope:m.scope};
  if(spawnClock&&(spawnClock.world!==m.w||spawnClock.scope!==m.scope))spawnClock=null;
  if(party&&m.party&&session.active(now))party.ingest(mp,m.party,now);

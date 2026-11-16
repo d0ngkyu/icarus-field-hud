@@ -10,7 +10,7 @@ function saveFile(blob,utf16){const b64=zlib.deflateSync(blob).toString('base64'
 const blob=Buffer.concat([Z(20),L('/Game/Maps/Terrain_019/Terrain_019'),Z(10),deposit('Iron',-120000.5,50000,300),deposit('Exotic_Red_Raw',10000,-20000,0),plant(150000,-90000,1200),plant(1e9,0,0),deposit('Bad Name!',1,1,1),L('/Game/Maps/Terrain_016/x')]);
 test('parses world, deep veins with ore type, and spawned red exotic plants (UTF-8 and UTF-16)',()=>{
  for(const u of [false,true]){const r=ps.parse(saveFile(blob,u));
-  assert.equal(r.world,'Terrain_019');
+  assert.equal(r.world,'Terrain_019');assert.equal(r.scope,'Test');
   assert.deepEqual(r.veins,[['Iron',-120000,50000,300],['Exotic_Red_Raw',10000,-20000,0]]);
   assert.deepEqual(r.plants,[[150000,-90000,1200]],'out-of-map positions dropped');}
  assert.equal(ps.parse(Buffer.from('{"nothing":1}')),null);
@@ -26,3 +26,7 @@ test('latest save only, read-only, cached per file version, stale saves ignored'
  assert.equal(await ps.latest(path.join(root,'none')),null);
  assert.deepEqual(await ps.parseAsync(saveFile(blob)),ps.parse(saveFile(blob)));
 });
+
+ test('missing or malformed prospect identity is never guessed from a filename',()=>{
+ const original=saveFile(blob).toString('utf8');for(const id of [null,{},'','other/server']){const data=JSON.parse(original);data.ProspectInfo.ProspectID=id;assert.equal(ps.parse(Buffer.from(JSON.stringify(data))).scope,null);}
+ });
