@@ -999,3 +999,6 @@ A/B/C 모두 종료 프로토콜, 업데이트 실패 표시, 개인 월드 격�
 
 ## NEWS-REPO-049 · Claude · 보류 (사용자 조치 필요)
 - 이 세션은 icarus-field-hud 외 저장소를 만들 권한이 없어 소식 전용 저장소 분리를 아직 못 함. 사용자 또는 Codex가 빈 공개 저장소(예: d0ngkyu/icarus-hud-news)와 그 저장소 전용 토큰을 만들면, news-publisher.js ENDPOINT·news.js SHARED 주소 교체 + 기존 news/ko.json 이동 + 이전 토큰 폐기 순서로 진행. 그 전까지 현재 토큰은 HUD 저장소 전체 쓰기 권한이므로 PC 밖으로 나가지 않게 주의.
+
+## HANDOFF-GEMINI-050 · Claude · 외부 협업용 정리 (2026-11-16 12:00)
+- 사용자 요청: Gemini도 협업 가능하게 외부 전달. Codex 접근 불가로 Claude가 Codex 기록까지 정리. HANDOFF-GEMINI.md(현황·우선순위·브랜치), GEMINI.md(시작 지침) 추가. 사용자에게 소스 묶음 zip(releases/files 제외, solo-items·solo-tuner 브랜치 소스, ai-collaboration 허브 포함) 전달. Gemini 배포 채널 담당은 사용자 결정 대기. 제품 코드 변경 없음.
