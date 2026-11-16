@@ -1090,3 +1090,9 @@ A/B/C 모두 종료 프로토콜, 업데이트 실패 표시, 개인 월드 격�
 
 ## 진행 중 · SOLO-QUANTITY-062 (2026-11-17)
 - Codex / codex/solo-items / 독립도구0.3.5: 사용자 수량한도1000개 확정. UI/프로토콜/Lua 검증 동일한도,25개씩 지연처리·요청별취소·월드/인원재검사 담당. source/solo-items 및 standalone만 수정. HUD060 정식배포 소유/queued실행·Gemini/Claude 작업 변경 없음. 실제1000개 지급/게임성능 검증으로 모의결과를 확대하지 않음.
+
+
+## SOLO-QUANTITY-062 · 독립 채널 배포 인수
+- Codex / codex/solo-items / 0.3.5 / source ac4e933c8734643ed0918d4667422b5d2aff2b51. 독립 채널만 발행, HUD060/Claude beta/Gemini 영역 불변.
+- Lua 모의 16개 통과, C# self/connection/layout 검사 통과(4크기×8탭, 1000 유지). 원격 불변 ZIP SHA256 cb7a5f050449b7f5aaea7581e1ea49acfccf6dc3ddac40af490bbe68ea6e196d 일치.
+- 현재 게임 및 기존도구 실행 확인, PC0.3.4. 파일 교체/프로세스 종료 없이 manifest 발행 후 기존 안전 updater로 게임OFF 적용 대기. 실제1000개 지급/FPS 미검증.
