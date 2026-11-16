@@ -24,6 +24,7 @@ VIAddVersionKey /LANG=1042 "LegalCopyright" "팬 제작 무료 도구 · 비공�
 !define MUI_FINISHPAGE_TITLE "설치 완료"
 !define MUI_FINISHPAGE_TEXT "이제 HUD를 실행하면 Icarus 게임 폴더를 찾아 모드를 설치합니다.$\r$\n그다음부터는 게임을 켤 때 같이 켜지고, 새 버전은 자동으로 받아요."
 !define MUI_FINISHPAGE_RUN "$INSTDIR\IcarusHUD.exe"
+!define MUI_FINISHPAGE_RUN_PARAMETERS "--from-setup"
 !define MUI_FINISHPAGE_RUN_TEXT "지금 HUD 실행하기"
 !define MUI_FINISHPAGE_SHOWREADME "$INSTDIR\사용법.txt"
 !define MUI_FINISHPAGE_SHOWREADME_TEXT "사용법 보기"

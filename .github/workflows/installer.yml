@@ -9,6 +9,9 @@ on:
         description: Release tag that holds IcarusHUD.zip
         required: true
         default: v1.0
+      source:
+        description: Commit whose source/app code the installer ships (first-run window etc.)
+        required: true
 permissions:
   contents: write
 jobs:
@@ -16,6 +19,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source }}
       - name: Install NSIS
         run: sudo apt-get update -q && sudo apt-get install -y -q nsis
       - name: Build
@@ -28,6 +33,11 @@ jobs:
           gh release download "$TAG" -R "$GITHUB_REPOSITORY" -p IcarusHUD.zip
           unzip -q IcarusHUD.zip -d app
           test -f app/IcarusHUD/IcarusHUD.exe
+          # ship the current program code, so the very first run already has the install progress window
+          R=app/IcarusHUD/resources/app
+          cp ../source/app/*.js ../source/app/icon.png ../source/app/ActivityCounter.exe "$R"/
+          node -e "const fs=require('fs'),p='$R/package.json',j=JSON.parse(fs.readFileSync(p));const s=JSON.parse(fs.readFileSync('../source/app/package.json'));j.contentVersion=s.contentVersion;fs.writeFileSync(p,JSON.stringify(j,null,1))"
+          node --check "$R/main.js"
           cp ../source/tools/installer/setup.nsi ../source/tools/installer/icon.ico .
           LANG=C.UTF-8 LC_ALL=C.UTF-8 makensis -V2 setup.nsi
           test -s IcarusHUD-Setup.exe

@@ -221,3 +221,29 @@ for(const failure of ['download','running','write'])test('update preserves old p
 });
 
 test('resize timer cannot access a destroyed window, even if already queued',()=>{const h=liveHarness('defer');h.resize();h.destroy();h.closed();assert.equal(h.cancelled(),true);assert.doesNotThrow(()=>h.late());});
+
+test('first-install progress: check, one step per file, then install', async () => {
+  const game = fs.mkdtempSync(path.join(os.tmpdir(), 'prog-'));
+  const files = ['a', 'b'].map(n => ({ p: 'game/Icarus/x/' + n + '.txt', n: 1, h: crypto.createHash('sha1').update(n).digest('hex') }));
+  const net = { fetch: async url => {
+    if (url.includes('manifest.json')) return { ok: true, json: async () => ({ version: '2026.1.1.1', files }) };
+    const n = url.endsWith('a.txt') ? 'a' : 'b'; return { ok: true, arrayBuffer: async () => Buffer.from(n) };
+  } };
+  const u = load('updater.js', { electron: { net } });
+  const seen = [];
+  const r = await u.module.exports.update(game, 'https://example.test', null, async () => true, p => seen.push(p.phase + ':' + p.done + '/' + p.total));
+  assert.deepEqual(JSON.parse(JSON.stringify([...r.changed].sort())), files.map(f => f.p).sort());
+  assert.deepEqual(seen, ['check:0/2', 'download:0/2', 'download:1/2', 'install:2/2']);
+  const quiet = await u.module.exports.update(game, 'https://example.test', null, async () => true, () => { throw Error('ui gone'); });
+  assert.equal(quiet.version, '2026.1.1.1', 'a failing progress callback never breaks the update');
+});
+test('first-install window: shown before the install download, closed before any dialog', () => {
+  const src = fs.readFileSync(path.join(appDir, 'main.js'), 'utf8');
+  assert.match(src, /showSplash\(\);\n    const r = await runUpdate\(true\);\n    closeSplash\(\);/);
+  assert.match(src, /await gameUp\(\) === false, p => \{ if \(typeof splashProgress === 'function'\) splashProgress\(p\); \}\);/);
+  assert.match(src, /sandbox: true, javascript: true/);
+  const txt = new Function(src.match(/function splashText\(p\) \{[\s\S]*?\n\}/)[0] + 'return splashText;')();
+  assert.deepEqual(txt({ phase: 'download', done: 50, total: 100 }), [48, '파일 받는 중… 48%']);
+  assert.equal(txt({ phase: 'install' })[0], 100);
+  assert.equal(txt(null)[0], 3);
+});

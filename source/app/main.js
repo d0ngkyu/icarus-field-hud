@@ -156,6 +156,36 @@ function createWindow(hud) {
   win.webContents.on('will-navigate', (e, url) => { if (!sameHud(url)) { e.preventDefault(); if (safeExternal(url)) shell.openExternal(url); } });
 }
 
+// First install only: a small window so the 1-2 minute download does not look like nothing happened.
+const SPLASH_HTML = '<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src \'none\'; style-src \'unsafe-inline\'; script-src \'unsafe-inline\'">'
+  + '<style>body{margin:0;background:#0b1016;color:#e8eef3;font:14px "Malgun Gothic","Noto Sans KR",sans-serif;padding:22px 24px;-webkit-app-region:drag;user-select:none}'
+  + 'b{color:#d8b77d;font-size:16px}p{margin:6px 0 14px;color:#98a9b8}.bar{height:8px;background:#1c2733;border-radius:4px;overflow:hidden}'
+  + '.bar i{display:block;height:100%;width:3%;background:#d8b77d;transition:width .3s}small{display:block;margin-top:8px;color:#98a9b8}</style></head>'
+  + '<body><b>Icarus HUD 설치 중</b><p id="t">업데이트 목록을 받는 중…</p><div class="bar"><i id="b"></i></div><small>처음 한 번만 1~2분 걸려요. 창을 닫지 마세요.</small>'
+  + '<script>function set(p,t){document.getElementById("b").style.width=Math.max(3,Math.min(100,p))+"%";document.getElementById("t").textContent=t}</script></body></html>';
+let splash = null;
+function showSplash() {
+  try {
+    splash = new BrowserWindow({ width: 380, height: 150, frame: false, resizable: false, maximizable: false, center: true, alwaysOnTop: true,
+      backgroundColor: '#0b1016', title: 'Icarus HUD 설치 중', icon: iconPath,
+      webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true, javascript: true } });
+    splash.webContents.on('will-navigate', e => e.preventDefault());
+    splash.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+    splash.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(SPLASH_HTML));
+  } catch (e) { splash = null; }
+}
+function splashText(p) {
+  if (!p || p.phase === 'check') return [3, '업데이트 목록을 받는 중…'];
+  if (p.phase === 'install') return [100, '게임 모드 폴더에 설치하는 중…'];
+  const pct = p.total ? Math.round(p.done / p.total * 95) : 3;
+  return [pct, '파일 받는 중… ' + pct + '%'];
+}
+function splashProgress(p) {
+  if (!splash || splash.isDestroyed()) return;
+  const [pct, text] = splashText(p);
+  splash.webContents.executeJavaScript('window.set&&set(' + Number(pct) + ',' + JSON.stringify(String(text)) + ')').catch(() => {});
+}
+function closeSplash() { try { if (splash && !splash.isDestroyed()) splash.destroy(); } catch (e) {} splash = null; }
 function safeExternal(url) { try { return new URL(url).protocol === 'https:'; } catch { return false; } }
 function sameHud(url) { try { const u = new URL(url), h = hudFile(); return u.protocol === 'file:' && !!h && path.normalize(decodeURIComponent(u.pathname).replace(/^\/([A-Za-z]:)/, '$1')).toLowerCase() === path.normalize(h).toLowerCase(); } catch { return false; } }
 function toggleTop() {
@@ -268,7 +298,7 @@ async function performUpdate(manual) {
       return null;
     }
     if(activityTracker){activityPaused=true;await activityTracker.pause();}
-    const r = await UPD.update(gameDir, UPDATE_URL, ulog, async () => process.platform !== 'win32' || await gameUp() === false);
+    const r = await UPD.update(gameDir, UPDATE_URL, ulog, async () => process.platform !== 'win32' || await gameUp() === false, p => { if (typeof splashProgress === 'function') splashProgress(p); });
     if(r.deferred){ulog('update deferred: game started during download');return null;}
     lastUpd = { ...r, at: Date.now() };
     // Keep crash-disabled features and safe mode across updates. A changed Lua file
@@ -303,11 +333,14 @@ async function start() {
   cfg.game = gameDir; saveCfg();
   if (!fs.existsSync(hudFile())) {
     if (!UPDATE_URL) { dialog.showErrorBox('Icarus HUD', '설치 파일 주소가 비어 있습니다.'); app.quit(); return; }
-    const ok = ask({ type: 'question', title: 'Icarus HUD 설치', message: 'Icarus에 HUD 모드를 설치할까요?',
+    // the one-file setup already asked; its 'run now' passes --from-setup
+    const ok = process.argv.includes('--from-setup') ? 0 : ask({ type: 'question', title: 'Icarus HUD 설치', message: 'Icarus에 HUD 모드를 설치할까요?',
       detail: '설치 위치: ' + gameDir + '\n\n게임 파일은 바꾸지 않고, 모드 폴더(Binaries\\Win64\\ue4ss)만 추가합니다.\n이미 UE4SS를 쓰고 있다면 그대로 두고 HUD만 추가합니다.',
       buttons: ['설치', '취소'], defaultId: 0, cancelId: 1 });
     if (ok !== 0) { app.quit(); return; }
+    showSplash();
     const r = await runUpdate(true);
+    closeSplash();
     if (!r || !fs.existsSync(hudFile())) {
       dialog.showErrorBox('Icarus HUD', '설치하지 못했습니다. 인터넷 연결을 확인하거나, 게임을 끄고 다시 실행해 주세요.' + (r && r.skipped.length ? '\n\n' + r.skipped.slice(0, 5).join('\n') : ''));
       app.quit(); return;
