@@ -77,7 +77,7 @@ Codex(ChatGPT)는 지금 사용자가 열 수 없어, Codex 기록(TASKS.md·리
 ## 6. 협업 규칙 핵심 (Gemini 포함 3자)
 - 작업 시작 전 `git pull`, TASKS.md 맨 아래 `## 진행 중 · <AI> · <섹터>` 한 줄 기록 후 push. 다른 AI가 잡은 섹터 파일은 고치지 않음.
 - 브랜치에서 작업(`gemini/<주제>`), 테스트 통과 후 push. 상대 작업의 문제는 TASKS에 `리뷰` 한 줄 또는 PR 댓글.
-- 배포는 Actions 한 경로로만. 채널 담당(현재 정식=Codex, 베타=Claude)과 Gemini의 채널은 **사용자 결정 필요**(제안: Gemini는 브랜치·PR까지, 배포는 담당 AI).
+- 배포는 Actions 한 경로로만. 채널 담당: 정식=Codex, 베타=Claude. **Gemini는 브랜치·PR까지만 하고 배포하지 않는다**(2026-11-16 사용자 결정). Gemini 변경은 담당 AI가 검토 후 배포.
 - 커밋 작성자: `user.name=d0ngkyu`, `user.email=d0ngkyu@users.noreply.github.com`. 사용자 개인 이메일·토큰을 커밋/문서에 넣지 않음.
 - 게임 실행 중 설치 파일 교체·게임 강제 종료·세이브 수정 금지. 자동 게임 조작(자동 채굴·이동 등)은 제거된 기능이며 다시 넣지 않음.
 - 기록에는 "검증됨"과 "미검증"을 구분해 적음.

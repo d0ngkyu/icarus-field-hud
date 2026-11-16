@@ -1002,3 +1002,4 @@ A/B/C 모두 종료 프로토콜, 업데이트 실패 표시, 개인 월드 격�
 
 ## HANDOFF-GEMINI-050 · Claude · 외부 협업용 정리 (2026-11-16 12:00)
 - 사용자 요청: Gemini도 협업 가능하게 외부 전달. Codex 접근 불가로 Claude가 Codex 기록까지 정리. HANDOFF-GEMINI.md(현황·우선순위·브랜치), GEMINI.md(시작 지침) 추가. 사용자에게 소스 묶음 zip(releases/files 제외, solo-items·solo-tuner 브랜치 소스, ai-collaboration 허브 포함) 전달. Gemini 배포 채널 담당은 사용자 결정 대기. 제품 코드 변경 없음.
+- 사용자 결정(12:01): Gemini는 브랜치·PR까지, 배포 안 함. 정식 Codex / 베타 Claude 유지.
