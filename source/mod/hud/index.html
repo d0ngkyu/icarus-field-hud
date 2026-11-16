@@ -486,7 +486,11 @@ const session=mapSession(S.mapBrowse||S.world);
 const currentMap=()=>session.active(Date.now())&&session.view===session.world;
 window.__mapViewWorld=()=>session.view;
 const M=(w=session.view)=>{S.maps=S.maps||{};const m=S.maps[w]=S.maps[w]||{lm:{},ore:{},track:[],pins:[],paths:[],rings:[],notes:{}};if(!m.seen){m.seen={};for(const p of m.track)markSeen(m,p[0],p[1])}tidyDeposits(m);return m};
-const SEEN=10000;function markSeen(m,x,y){if(!Number.isFinite(x)||!Number.isFinite(y))return;const i=Math.floor(x/SEEN),j=Math.floor(y/SEEN);for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++){const k=(i+a)+','+(j+b);if(!m.seen[k]){m.seen[k]=1;m.seenRev=(m.seenRev||0)+1}}}
+const SEEN=10000;
+// Exploration mode (settings): the map only shows what lies in places I have been.
+function knownAt(m,x,y){if(!S.explore)return true;if(!m||!m.seen||!Number.isFinite(x)||!Number.isFinite(y))return false;const i=Math.floor(x/SEEN),j=Math.floor(y/SEEN);
+ for(let a=i-1;a<=i+1;a++)for(let b=j-1;b<=j+1;b++)if(m.seen[a+','+b]&&Math.hypot(x-(a+.5)*SEEN,y-(b+.5)*SEEN)<=SEEN*.76)return true;return false}
+function markSeen(m,x,y){if(!Number.isFinite(x)||!Number.isFinite(y))return;const i=Math.floor(x/SEEN),j=Math.floor(y/SEEN);for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++){const k=(i+a)+','+(j+b);if(!m.seen[k]){m.seen[k]=1;m.seenRev=(m.seenRev||0)+1}}}
 S.mapv=Object.assign({x:0,y:0,s:0.25,rot:0,follow:true,flip:0,L:{terr:1,fog:0,grid:1,cave:1,exo:1,boss:1,dep:1,gey:1,ore:1,box:1,home:1,pins:1,paths:1,track:1,me:1}},S.mapv||{});
 const V=S.mapv;if(V.L.redexo===undefined)V.L.redexo=1;if(V.L.redbloom===undefined)V.L.redbloom=1;if(V.L.party===undefined)V.L.party=1;if(V.L.regions===undefined)V.L.regions=1;if(V.L.terr===undefined)V.L.terr=1;if(V.L.exo===undefined)V.L.exo=1;if(V.L.boss===undefined)V.L.boss=1;if(V.L.fog===undefined)V.L.fog=0;if(!V.ori2){V.rot=1;V.ori2=1}V.flip=0;
 const LAYERS=[['terr','지형 (게임 지도)','#6b8a4a'],['fog','미탐험 가리기 (HUD 방문 기록)','#333'],['regions','지역 이름','#f3e8cb'],['grid','격자','#2b3a44'],['cave','동굴 (규모별 Lv.1~3·M)','#4fc6c0'],['exo','엑조틱 지점','#b77bff'],['redexo','레드 엑조틱 지점','#ff656f'],['redbloom','└ 식물(P)은 핀 것만','#ff656f'],['boss','월드 보스','#ff4a4a'],['dep','심층 광맥','#e0a050'],['gey','간헐천','#7bd96a'],['ore','광석 노드 (F10)','#b9c2c8'],
@@ -701,6 +705,7 @@ function drawCave(a,b,size,hl,opt){opt=opt||{};const r=[10,10,11,12,13][size];ct
 function noteLabel(txt,a,b,col){if(!txt)return;const t=txt.length>22?txt.slice(0,21)+'…':txt;ctx.font='12px "Noto Sans KR"';const w=ctx.measureText(t).width;
  ctx.fillStyle='rgba(6,9,12,.78)';ctx.fillRect(a+10,b-17,w+8,17);ctx.fillStyle=col||'#ffe3b0';ctx.fillText(t,a+14,b-4)}
 const boxKey=b=>'b:'+Math.round(b.p[0]/100)+','+Math.round(b.p[1]/100);
+let mapLblExplore=null;
 let caveDedup={n:-1,hide:{}};
 function dedupCaves(mp){const ks=Object.keys(mp.lm),gc=mapCaves();if(caveDedup.mp===mp&&caveDedup.n===ks.length&&caveDedup.gc===gc)return caveDedup.hide;const w=[],c=[],hide={};
  for(const k of ks){const t=mp.lm[k][0][0];if(t==='w')w.push(mp.lm[k]);else if(t==='c')c.push(k)}
@@ -714,7 +719,7 @@ function drawMap(){if(!W)return;const mp=M();hits=[];
  if(currentMap()&&V.follow&&S.pose){V.x=S.pose[0];V.y=S.pose[1]}
  ctx.setTransform(DPR,0,0,DPR,0,0);ctx.clearRect(0,0,W,H);
  const g=ctx.createRadialGradient(W/2,H/2,0,W/2,H/2,Math.max(W,H)*.7);g.addColorStop(0,'#101820');g.addColorStop(1,'#070a0d');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
- const L=V.L;
+ const L=S.explore?{...V.L,fog:1}:V.L;if(mapLblExplore!==!!S.explore){mapLblExplore=!!S.explore;try{fogLbl()}catch(e){}}
  const hasT=L.terr&&drawTerrain();
  if(L.fog)drawVisitedFog(mp);
  if(L.grid&&MAPB[session.view]){const[gx0,gx1,gy0,gy1]=MAPB[session.view],C=50400;ctx.lineWidth=1;ctx.strokeStyle=hasT?'rgba(255,240,215,.28)':'rgba(243,155,43,.25)';ctx.beginPath();
@@ -739,14 +744,14 @@ function drawMap(){if(!W)return;const mp=M();hits=[];
   const[a,b]=toS(pa.pts[0][0],pa.pts[0][1]);ctx.fillStyle=pa.c||'#58b7e8';ctx.font='12px "Noto Sans KR"';ctx.fillText(pa.n||'',a+6,b-6);if(pa!==drawing)hits.push({x:a,y:b,r:9,kind:'path',ref:pa})}
  for(const r of mp.rings){const[a,b]=toS(r.x,r.y);const rad=r.r*V.s;ctx.strokeStyle='rgba(243,155,43,.8)';ctx.fillStyle='rgba(243,155,43,.07)';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(a,b,rad,0,7);ctx.fill();ctx.stroke();ctx.fillStyle='#ffc56b';ctx.font='11px Oxanium';ctx.fillText(r.r+'m',a+rad*.7,b-rad*.7)}
  const flt=$('mapore').value;
- if(L.ore){for(const k in mp.ore){const o=mp.ore[k];if(flt&&o[0]!==flt)continue;const[a,b]=toS(o[1],o[2]);if(a<-10||b<-10||a>W+10||b>H+10)continue;
+ if(L.ore){for(const k in mp.ore){const o=mp.ore[k];if(flt&&o[0]!==flt)continue;if(!knownAt(mp,o[1],o[2]))continue;const[a,b]=toS(o[1],o[2]);if(a<-10||b<-10||a>W+10||b>H+10)continue;
   const r=flt?5:3.2;ctx.fillStyle=oreCol(o[0]);ctx.beginPath();ctx.arc(a,b,r,0,7);ctx.fill();if(flt){ctx.strokeStyle='#fff';ctx.lineWidth=1;ctx.stroke()}noteLabel(mp.notes[k],a,b);hits.push({x:a,y:b,r:6,kind:'ore',ref:o,key:k})}}
  const hideC=dedupCaves(mp);
- if(L.cave)mapCaves().forEach((r,i)=>{const[a,b]=toS(r[0],r[1]);if(a<-20||b<-20||a>W+20||b>H+20)return;const k='g:'+i,ci=gCaveInfo(r);const rr=drawCave(a,b,ci.size,selKey===k,ci);
+ if(L.cave)mapCaves().forEach((r,i)=>{const[a,b]=toS(r[0],r[1]);if(a<-20||b<-20||a>W+20||b>H+20||!knownAt(mp,r[0],r[1]))return;const k='g:'+i,ci=gCaveInfo(r);const rr=drawCave(a,b,ci.size,selKey===k,ci);
   if(!mp.notes[k]&&V.s>.35){ctx.font='bold 11px sans-serif';ctx.fillStyle=ci.size===4?'#ffb3a1':'#ffe39a';ctx.shadowColor='#000';ctx.shadowBlur=3;ctx.fillText(ci.size===4?'':String(ci.size),a+rr+15,b+4);ctx.shadowBlur=0}
   noteLabel(mp.notes[k],a,b-rr*.3,'#bfefe9');hits.push({x:a,y:b,r:rr+4,kind:'cave',ref:['c:'+r[8],r[0],r[1]],key:k,ci})});
  const displayMarks=spawns?spawns.view(mp,session.view):mp.lm;
- for(const k in displayMarks){const o=displayMarks[k],t=o[0][0];const[a,b]=toS(o[1],o[2]);if(a<-20||b<-20||a>W+20||b>H+20)continue;
+ for(const k in displayMarks){const o=displayMarks[k],t=o[0][0];const[a,b]=toS(o[1],o[2]);if(a<-20||b<-20||a>W+20||b>H+20||!knownAt(mp,o[1],o[2]))continue;
   if((t==='c'||t==='w')&&L.cave){if(hideC[k])continue;const ci=caveInfo(o[0].slice(2));const r=drawCave(a,b,ci.size,selKey===k,ci);
    if(ci.lv&&!mp.notes[k]&&V.s>.35){ctx.font='bold 11px sans-serif';ctx.fillStyle=ci.size===4?'#ffb3a1':'#ffe39a';ctx.shadowColor='#000';ctx.shadowBlur=3;ctx.fillText(ci.size===4?'':ci.lv.replace('Lv.',''),a+r+15,b+4);ctx.shadowBlur=0}
    noteLabel(mp.notes[k],a,b-r*.3,'#bfefe9');hits.push({x:a,y:b,r:r+4,kind:'cave',ref:o,key:k,ci})}
@@ -837,7 +842,7 @@ $('mzout').onclick=()=>{V.s=Math.max(0.01,V.s/1.5);save();requestDraw()};
 const followBtn=()=>{$('mtfollow').style.color=V.follow?'var(--ok)':''};followBtn();
 $('mtme').onclick=()=>{if(currentMap()&&S.pose){V.x=S.pose[0];V.y=S.pose[1];requestDraw()}};
 $('mtfollow').onclick=()=>{if(!currentMap())return;V.follow=!V.follow;followBtn();save();requestDraw()};
-const fogLbl=()=>{$('mfogbtn').textContent=V.L.fog?'🌫 안 가 본 곳: 가림':'🗺 안 가 본 곳: 보임';const c=document.querySelector('[data-ml=fog]');if(c)c.checked=!!V.L.fog};
+const fogLbl=()=>{$('mfogbtn').textContent=S.explore?'🧭 탐험 모드: 가 본 곳만':V.L.fog?'🌫 안 가 본 곳: 가림':'🗺 안 가 본 곳: 보임';const c=document.querySelector('[data-ml=fog]');if(c)c.checked=!!V.L.fog};
 $('mfogbtn').onclick=()=>{V.L.fog=V.L.fog?0:1;fogLbl();save();requestDraw()};fogLbl();
 $('mtwpclr').onclick=()=>{if(!currentMap())return;S.wp=null;S.wpSel=null;save();draw();requestDraw();addLog('지도에서 나침반 목표 표시를 지웠습니다')};
 $('mtrot').onclick=()=>{V.rot=(V.rot+1)&3;save();requestDraw()};
@@ -931,7 +936,7 @@ cv.addEventListener('wheel',e=>{e.preventDefault();const[wx,wy]=toW(e.offsetX,e.
  if(!V.follow){const[nx,ny]=toW(e.offsetX,e.offsetY);V.x+=wx-nx;V.y+=wy-ny}save();requestDraw()},{passive:false});
 function addPin(x,y){const mp=M();const p={x:Math.round(x),y:Math.round(y),z:currentMap()&&S.pose?S.pose[2]:0,n:'핀 '+(mp.pins.length+1),c:'#ff6a55',t:''};mp.pins.push(p);addLog('지도에 핀 추가');save();requestDraw();showInfo({kind:'pin',ref:p})}
 
-window.__mapApi={CAVEMAP,gridName,gCaveInfo,gHaz,hazText,currentMap,focus(x,y,zoom){V.follow=false;followBtn();V.x=x;V.y=y;if(zoom)V.s=Math.max(V.s,zoom);save();requestDraw()},setPathsLayer(on){V.L.paths=on?1:0;const c=document.querySelector('[data-ml=paths]');if(c)c.checked=!!on;save();requestDraw()}};
+window.__mapApi={CAVEMAP,known:(w,x,y)=>knownAt(M(w),x,y),gridName,gCaveInfo,gHaz,hazText,currentMap,focus(x,y,zoom){V.follow=false;followBtn();V.x=x;V.y=y;if(zoom)V.s=Math.max(V.s,zoom);save();requestDraw()},setPathsLayer(on){V.L.paths=on?1:0;const c=document.querySelector('[data-ml=paths]');if(c)c.checked=!!on;save();requestDraw()}};
 window.__mapRecordsChanged=()=>{fogCacheKey='';renderRoutes();requestDraw()};
 window.__mapShown=()=>{fillOre();renderRoutes();setTimeout(resize,30)};
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&mapOn())resize()});
@@ -1032,6 +1037,7 @@ P.help.firstChild.innerHTML=`
 <div class="set"><span class="lb">알림 소리<small>재료가 채워지거나 목표를 마치면 소리</small></span><span id="sslot"></span></div>
 <div class="set"><span class="lb">알림 팝업<small>오른쪽 아래에 잠깐 뜨는 알림</small></span><label><input type="checkbox" id="optToast"> 켜기</label></div>
 <div class="set"><span class="lb">자동 탭 전환<small>게임에서 F8·F9를 누르면 제작 탭으로 이동</small></span><label><input type="checkbox" id="optAuto"> 켜기</label></div>
+<div class="set"><span class="lb">탐험 모드<small>지도에 안 가 본 곳의 동굴·자원·보스·레드 엑조틱을 숨기고, 동굴 추천도 가 본 곳에서만 합니다. 편의 기능(제작·네비·기록)은 그대로입니다.</small></span><label><input type="checkbox" id="optExplore"> 켜기</label></div>
 <div class="set"><span class="lb">접어 둔 칸<small>제목을 눌러 접은 칸을 모두 펼치기</small></span><span id="uslot"></span></div>
 </section>
 <section id="updsec"><h2>업데이트</h2>
@@ -1092,7 +1098,7 @@ document.addEventListener('keydown',e=>{if(e.ctrlKey&&!e.altKey&&e.key>='1'&&e.k
  if(e.ctrlKey&&(e.key==='f'||e.key==='F')){const s={craft:'q',nav:'navq',map:'mapq'}[cur];if(s){e.preventDefault();$(s).focus();$(s).select()}}});
 // settings
 const opt=(id,key,def)=>{const el=$(id);el.checked=S[key]===undefined?def:!!S[key];el.onchange=()=>{S[key]=el.checked;save()}};
-opt('optToast','optToast',true);opt('optAuto','optAuto',true);
+opt('optToast','optToast',true);opt('optAuto','optAuto',true);opt('optExplore','explore',false);$('optExplore').addEventListener('change',()=>{try{window.__mapRecordsChanged&&window.__mapRecordsChanged()}catch(e){}try{window.draw&&window.draw()}catch(e){}});
 document.addEventListener('click',e=>{const c=e.target.dataset&&e.target.dataset.clr;if(!c)return;
  if(e.target.dataset.confirm!=='yes'){e.target.dataset.confirm='yes';e.target.textContent='정말 지울까요?';setTimeout(()=>{delete e.target.dataset.confirm;e.target.textContent='지우기'},4000);return}delete e.target.dataset.confirm;
  if(c==='log')S.log=[];if(c==='mem')S.mem={};if(c==='home')delete S.home;if(c==='built')S.built={};
@@ -1137,7 +1143,7 @@ const TIPS={
  '#mtwpclr':'지도에 남은 초록 십자(나침반 목표) 표시를 지웁니다','#mtpin':'지도를 눌러 핀을 찍습니다 (오른쪽 클릭으로도 가능)','#mtpath':'지도를 차례로 눌러 경로를 그리고, 두 번 눌러 끝냅니다',
  '#mtring':'지도를 눌러 범위 원을 그립니다 (반지름은 아래 칸)','#mtringr':'범위 원의 반지름 (m)','#mttrackclr':'지금 맵의 이동 기록(점선)을 지웁니다','#mtringclr':'범위 원을 모두 지웁니다',
  '#mzin':'확대 (마우스 휠도 됩니다)','#mzout':'축소','#mfogbtn':'안 가 본 곳을 가릴지 보일지 바꿉니다 (게임의 탐험 기록 기준)',
- '#maplayers':'지도에 보일 것들을 고릅니다','#optToast':'오른쪽 아래에 잠깐 뜨는 알림을 켜고 끕니다','#optAuto':'게임에서 F8·F9를 누르면 제작 탭으로 자동 이동',
+ '#maplayers':'지도에 보일 것들을 고릅니다','#optToast':'오른쪽 아래에 잠깐 뜨는 알림을 켜고 끕니다','#optAuto':'게임에서 F8·F9를 누르면 제작 탭으로 자동 이동','#optExplore':'켜면 직접 가 본 곳의 정보만 지도와 동굴 추천에 보입니다. 기본은 꺼짐(전부 보임).',
  '#updbtn':'새 업데이트가 있는지 바로 확인합니다','#zm':'글자 작게','#zp':'글자 크게','#snd':'알림 소리 켜기/끄기','#unfold':'접어 둔 칸을 모두 펼칩니다',
  '#sbgoal':'지금 코치 목표 (누르면 코치 탭)','#sbneed':'부족한 재료 요약 (누르면 제작 탭)','#sbwp':'게임 나침반에 표시 중인 목표',
  '[data-ml=terr]':'게임 지도 그림을 배경으로 깝니다','[data-ml=fog]':'안 가 본 곳을 어둡게 가립니다','[data-ml=grid]':'게임 지도와 같은 칸(A1, G11…)을 그립니다',

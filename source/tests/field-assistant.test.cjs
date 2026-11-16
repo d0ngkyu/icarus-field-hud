@@ -223,3 +223,14 @@ test('DOM mount (no timer/dimmer), cave route replacement, replace confirmation,
  assert.deepEqual(ctx.__icarusLive({t:1}),{t:1});
  assert.equal(liveCalls,1);
 });
+
+test('exploration mode filter: course and briefing only use allowed (visited) caves',()=>{
+ const caves=CAVEMAP.Terrain_016,origin=[0,0];
+ const allow=r=>r[0]>0&&r[1]>0;
+ const course=fa.recommendCaveCourse(caves,origin,()=>null,{maxStops:4,allow});
+ assert.ok(course.stops.length>0);for(const s of course.stops)assert.ok(s.x>0&&s.y>0);
+ assert.ok(course.stops.every(s=>caves[s.index][0]===s.x),'keys keep original cave index');
+ assert.equal(fa.recommendCaveCourse(caves,origin,()=>null,{allow:()=>false}).stops.length,0);
+ const b=fa.buildBriefing({world:'Terrain_016',pose:[0,0],caves,statusLookup:()=>null,allow:()=>false});
+ assert.equal(b.topCaves.length,0);
+});

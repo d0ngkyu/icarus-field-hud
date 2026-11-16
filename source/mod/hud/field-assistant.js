@@ -161,10 +161,12 @@ function recommendCaveCourse(caves,origin,statusLookup,options={}){
  const mode=options.mode||'balanced';
  const maxStops=Math.max(2,Math.min(6,Number(options.maxStops)||4));
  const gridFn=typeof options.gridName==='function'?options.gridName:()=>'';
+ const allow=typeof options.allow==='function'?options.allow:null;
 
  const candidates=[];
  rows.forEach((r,i)=>{
   if(!Array.isArray(r)||!Number.isFinite(r[0])||!Number.isFinite(r[1]))return;
+  if(allow&&!allow(r))return;
   const key='g:'+i;
   const st=typeof statusLookup==='function'?statusLookup(key):(statusLookup&&statusLookup[key]);
   const stateName=typeof st==='string'?st:st?.state;
@@ -259,13 +261,13 @@ function recommendCaveCourse(caves,origin,statusLookup,options={}){
  };
 }
 
-function buildBriefing({world,worldName,pose,home,caves,statusLookup,prog,goalKey,goalName,craftList,shortCount,bag,checked,validRecipes,gridName}){
+function buildBriefing({world,worldName,pose,home,caves,statusLookup,prog,goalKey,goalName,craftList,shortCount,bag,checked,validRecipes,gridName,allow}){
  const hasPose=Array.isArray(pose)&&Number.isFinite(pose[0])&&Number.isFinite(pose[1]);
  const hasHome=Array.isArray(home)&&Number.isFinite(home[0])&&Number.isFinite(home[1]);
  const anchor=hasPose?[pose[0],pose[1]]:hasHome?[home[0],home[1]]:[0,0];
  const anchorLabel=hasPose?'내 실시간 위치 기준':hasHome?'저장된 기지(🏠) 기준':'지도 중심 기준 (위치 수신 전)';
 
- const course=recommendCaveCourse(caves||[],anchor,statusLookup,{mode:'balanced',maxStops:3,gridName});
+ const course=recommendCaveCourse(caves||[],anchor,statusLookup,{mode:'balanced',maxStops:3,gridName,allow});
  const topCaves=course.stops.slice(0,3);
 
  const bagMap=(bag&&typeof bag==='object')?bag:{};
@@ -401,6 +403,8 @@ document.head.appendChild(css);
 
 // 1. Character Tab: Expedition Briefing & Pre-departure Essential Checklist
 let briefingSig='';
+// exploration mode: only caves in places I have been
+const exploreAllow=world=>(typeof S==='object'&&S&&S.explore&&root.__mapApi?.known)?(r=>root.__mapApi.known(world,r[0],r[1])):null;
 function mountCharacterBriefing(){
  const pane=document.getElementById('pane-character');
  if(!pane)return;
@@ -472,7 +476,7 @@ function renderCharacterBriefing(){
  const shortCount=(()=>{try{return typeof totals==='function'?totals().raw.filter(x=>x[1]>0).length:0;}catch{return 0;}})();
  const bag=(typeof S==='object'&&S?.inv?.bag)||{};
 
- const sig=JSON.stringify([world,S?.pose,S?.home,goalKey,S?.t,shortCount,bag,state.checked,mp?.activeScope&&mp?.progressByScope?.[mp.activeScope]]);
+ const sig=JSON.stringify([world,!!S?.explore,S?.pose,S?.home,goalKey,S?.t,shortCount,bag,state.checked,mp?.activeScope&&mp?.progressByScope?.[mp.activeScope]]);
  if(sig===briefingSig)return;
  briefingSig=sig;
 
@@ -491,7 +495,8 @@ function renderCharacterBriefing(){
   bag,
   checked:state.checked,
   validRecipes:typeof R==='object'?R:null,
-  gridName:root.__mapApi?.gridName
+  gridName:root.__mapApi?.gridName,
+  allow:exploreAllow(world)
  });
 
  const escHtml=typeof esc==='function'?esc:s=>String(s);
@@ -517,7 +522,7 @@ function renderCharacterBriefing(){
         <button type="button" data-briefing-cave-wp="1" data-x="${c.x}" data-y="${c.y}">나침반(F7)</button>
        </div>
       </div>
-     `).join(''):'<div class="empty">표시할 동굴 데이터가 없습니다.</div>'}
+     `).join(''):(S?.explore?'<div class="empty">탐험 모드: 가 본 곳에서 추천할 동굴이 아직 없습니다.</div>':'<div class="empty">표시할 동굴 데이터가 없습니다.</div>')}
     </div>
    </div>
    <div class="briefing-card">
@@ -590,10 +595,11 @@ function mountCaveRoutePlanner(){
   const res=recommendCaveCourse(caves,origin,statusLookup,{
    mode:state.courseMode,
    maxStops,
-   gridName:root.__mapApi?.gridName
+   gridName:root.__mapApi?.gridName,
+   allow:exploreAllow(viewWorld)
   });
   if(!res.stops.length){
-   summaryEl.textContent='조건에 맞는 동굴을 찾지 못했습니다.';
+   summaryEl.textContent=S?.explore?'탐험 모드: 가 본 곳에서 조건에 맞는 동굴을 찾지 못했습니다.':'조건에 맞는 동굴을 찾지 못했습니다.';
    stopsEl.innerHTML='';
    return;
   }

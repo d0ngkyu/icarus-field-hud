@@ -91,3 +91,14 @@ test("bloomed red plant appears on the map and the read range is recorded per se
  h.tick(3000);h.ingest({w:'Terrain_019',t:3,scope:'S1',p:[0,0,0],lm:[['r:Plant',0,120000,0,-1]]});t.drawMap();
  assert.equal(t.getHits().filter(x=>x.kind==='redexo'&&x.ref[0]==='r:Plant').length,0);
 });
+
+test("exploration mode hides markers in places never visited and forces the fog view; off by default",()=>{
+ const h=harness(),{t,c}=h;t.selectMap("Terrain_019");t.resize();t.fitMap();t.V.L.redbloom=0;t.drawMap();
+ const count=()=>t.getHits().filter(x=>['cave','exo','redexo','deep','gey','boss'].includes(x.kind)).length;
+ const all=count();assert.ok(all>200);assert.equal(c.S.explore,undefined);
+ c.S.explore=true;t.drawMap();assert.equal(count(),0);
+ const any=t.getHits();t.markSeen(t.M('Terrain_019'),-100000,100000);c.S.explore=true;t.drawMap();
+ const near=t.getHits().filter(x=>['cave','exo','redexo','deep','gey','boss'].includes(x.kind));
+ assert.ok(near.length>=0&&near.length<all);for(const x of near){const o=x.ref;assert.ok(Math.hypot(o[1]+100000,o[2]-100000)<30000)}
+ c.S.explore=false;t.drawMap();assert.equal(count(),all);assert.equal(t.V.L.fog,0,'user fog switch untouched');
+});
