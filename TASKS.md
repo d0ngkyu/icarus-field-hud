@@ -940,3 +940,7 @@ A/B/C 모두 종료 프로토콜, 업데이트 실패 표시, 개인 월드 격�
 
 ## NEWS-AUTO-PUBLISH-045 · 진행 중
 - Codex · codex/news-auto-publish · 2026-11-16: app/news.js·신규 news-publisher.js·news IPC·hud/news.js·검사·GAME-NEWS.md 소유. 사용자 번역 후 자동 공유 요청. 번역 저장과 업로드 결과 분리, GitHub 파일 SHA 충돌 병합/재전송, 기존 번역 재사용. 사용자 PC에만 제한 토큰 암호화 저장, 배포금지. 새 토큰 발급/권한 연결은 구현 검증 후 사용자 확인 필요. 정식배포 잠금 없음.
+
+
+## NEWS-AUTO-PUBLISH-045 · stable 배포 인수
+- Codex stable2026.11.16.14 sourceca91b4ffb25c880471fdd96798f3149d49b6e590 PR35, feature12d3632aabb5615c94a5afdeb6c6ec3a383dd487.171검사·7원격소스일치·운영자 UI 확인. 현재stable.13/beta.27, 타진행배포없음. 새 토큰 미연결로 실계정 자동업로드 아직미검증. 정식발행 후 사용자 확인으로 연결·실검증 예정. 게임OFF에서기존updater 적용.
