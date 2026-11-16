@@ -1103,3 +1103,7 @@ A/B/C 모두 종료 프로토콜, 업데이트 실패 표시, 개인 월드 격�
 - source ac4e933c8734643ed0918d4667422b5d2aff2b51, manifest 9a1e6ae (codex/solo-items). 원격 manifest0.3.5 재조회, ZIP SHA256 cb7a5f050449b7f5aaea7581e1ea49acfccf6dc3ddac40af490bbe68ea6e196d 및 내부9파일 크기/SHA256 일치. fetch 후 source 의미diff 없음.
 - Lua 모의16개, exe self/connection/layout(4크기×8탭) 통과. 실제1000개 지급·실게임FPS 미검증.
 - PC 현재0.3.4와 게임 실행 확인, 설치본/게임모드/바탕화면 실행파일 교체 및 프로세스종료 하지 않음. 게임 완전종료 후 도구 재실행의 기존 자동updater로 적용 필요; 실제PC0.3.5 완료 아님. 독립채널 발행소유 해제, HUD060 배포소유/대기는 변경 없음.
+
+
+## 진행 중 · SOLO-IMAGES-063 (2026-11-17)
+- Codex / codex/solo-items / 독립0.3.6: 아이템 목록 썸네일·선택 미리보기, 기존 HUD 아이콘/정확한 static ID 매핑 재사용 검토. 소유 source/solo-items 및 standalone. 추가 기능은 제안만, HUD060/Claude/Gemini 작업과 게임 실행중 설치파일 보존. 모의 UI검증 후 독립 업데이트 발행.
