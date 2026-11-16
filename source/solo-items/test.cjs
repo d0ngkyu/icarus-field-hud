@@ -6,7 +6,7 @@ const mod=fs.readFileSync(__dirname+'/Scripts/main.lua','utf8');
 function run(tail){
  const L=lauxlib.luaL_newstate();lualib.luaL_openlibs(L);
  const harness=`
- files={}; nativeCalls=0; calls=0; standalone=true; authority=false; players=1; spectators=0; modeValid=true; valid=true; count=0
+ files={}; nativeCalls=0; calls=0; queue={}; now=1000; identity=1; standalone=true; authority=false; players=1; spectators=0; modeValid=true; valid=true; count=0
  io.open=function(p,m)
    local k=p:match('([^/]+)$')
    if m=='r' then if not files[k] then return nil end; return {read=function() return files[k] end,close=function() end} end
@@ -14,10 +14,10 @@ function run(tail){
  end
  os.remove=function(p) files[p:match('([^/]+)$')]=nil; return true end
  os.rename=function(a,b) a=a:match('([^/]+)$');b=b:match('([^/]+)$'); if not files[a] then return nil end;files[b]=files[a];files[a]=nil;return true end
- os.time=function() return 1000 end
+ os.time=function() return now end
  debug.getinfo=function() return {source='@mock/Scripts/main.lua'} end
  dofile=function() return {Fiber=true} end
- local pc={IsValid=function() return valid end, IsLocalController=function() return true end, HasAuthority=function() return authority end,
+ local pc={GetAddress=function() return identity end,GetFullName=function() return "Player"..identity end,IsValid=function() return valid end, IsLocalController=function() return true end, HasAuthority=function() return authority end,
  AddItemToInventory=function(self,item) assert(item.RowName=='Fiber');calls=calls+1 end}
  package.preload.UEHelpers=function() return {GetPlayerController=function() return pc end,GetPlayer=function() return pc end} end
  StaticFindObject=function() nativeCalls=nativeCalls+1; return {IsValid=function() return true end,IsStandalone=function() return standalone end,GetGameMode=function() return {IsValid=function() return modeValid end,GetNumPlayers=function() return players end,GetNumSpectators=function() return spectators end} end,IsValidName=function() return true end} end
@@ -26,6 +26,9 @@ function run(tail){
  Key={F11=122}
  RegisterKeyBind=function(k,f) key=f end
  ExecuteInGameThread=function(f) f() end
+ ExecuteWithDelay=function(ms,f) assert(ms==100);table.insert(queue,f) end
+ pump=function() local f=table.remove(queue,1);if f then f() end end
+ drain=function() while #queue>0 do pump() end end
  print=function() end
  `;
  const result=lauxlib.luaL_dostring(L,to_luastring(harness+'\n'+mod+'\n'+tail));
@@ -33,6 +36,16 @@ function run(tail){
  lua.lua_close(L);
 }
 const id='a'.repeat(32);
+test('1000 is accepted and runs as forty bounded batches; repeated F11 cannot duplicate it',()=>run(`files['request.txt']='${id}|1000|Fiber|1000';key();assert(calls==25 and #queue==1);key();assert(calls==25);local batches=1;while #queue>0 do local before=calls;pump();assert(calls-before<=25);batches=batches+1 end;assert(calls==1000 and batches==40);assert(not files['processing.txt']);assert(files['status.txt']:find('|SENT|1000|',1,true));key();assert(calls==1000)`));
+test('cancel matches request id and stops remaining batches without rolling back prior calls',()=>run(`files['request.txt']='${id}|1000|Fiber|1000';key();files['cancel.txt']='not-this-request';pump();assert(calls==50);files['cancel.txt']='${id}';drain();assert(calls==50);assert(files['status.txt']:find('|CANCELLED|50|',1,true));assert(not files['processing.txt'])`));
+test('changed player, unavailable player, joining player and deadline stop pending calls',()=>{
+ for(const change of ['identity=2','valid=false','players=2','now=1031'])
+ run(`standalone=false;authority=true;files['request.txt']='${id}|1000|Fiber|1000';key();assert(calls==25);${change};drain();assert(calls==25);assert(files['status.txt']:find('|ERROR|25|',1,true));assert(not files['processing.txt'])`);
+});
+test('missing scheduler fails before generating and scheduler failure reports partial count',()=>{
+ run(`ExecuteWithDelay=nil;files['request.txt']='${id}|1000|Fiber|1000';key();assert(calls==0);assert(not files['processing.txt'])`);
+ run(`ExecuteWithDelay=function() error('scheduler unavailable') end;files['request.txt']='${id}|1000|Fiber|1000';key();assert(calls==25);assert(files['status.txt']:find('|ERROR|25|',1,true));assert(not files['processing.txt'])`);
+});
 test('one-player authoritative host is allowed even when IsStandalone is false',()=>run(`standalone=false;authority=true;files['request.txt']='${id}|1000|Fiber|1';key();assert(calls==1);assert(files['world-check.txt']:find('|HOST',1,true));assert(files['status.txt']:find('|SENT|1|',1,true))`));
 test('remote client is blocked even when alone',()=>run(`standalone=false;authority=false;files['request.txt']='${id}|1000|Fiber|1';key();assert(calls==0)`));
 test('multiple players, spectators, missing mode and uncertain counts fail closed',()=>{
@@ -46,7 +59,7 @@ test('readiness reports multiplayer and missing player separately',()=>{run(`sta
 test('explicit request calls the template function once per item; replay has no effect',()=>run(`files['request.txt']='${id}|1000|Fiber|3';key();assert(calls==3);key();assert(calls==3);assert(files['status.txt']:find('|SENT|3|',1,true))`));
 test('multiplayer blocked without a generation call',()=>run(`standalone=false;files['request.txt']='${id}|1000|Fiber|3';key();assert(calls==0);assert(files['status.txt']:find('|ERROR|',1,true))`));
 test('expired, malformed, unknown and oversized requests are consumed without spawning',()=>{
- for(const request of [`${id}|800|Fiber|1`,`${id}|1000|Unknown|1`,`${id}|1000|Fiber|101`,'broken'])
+ for(const request of [`${id}|800|Fiber|1`,`${id}|1000|Unknown|1`,`${id}|1000|Fiber|1001`,'broken'])
  run(`files['request.txt']='${request}';key();assert(calls==0);assert(not files['request.txt']);assert(files['status.txt']:find('|ERROR|',1,true))`);
 });
 test('missing player blocks generation',()=>run(`valid=false;files['request.txt']='${id}|1000|Fiber|1';key();assert(calls==0)`));

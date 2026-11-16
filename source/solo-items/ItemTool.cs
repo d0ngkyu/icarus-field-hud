@@ -33,7 +33,7 @@ public partial class ItemTool : Form {
         return new JavaScriptSerializer { MaxJsonLength = 8000000 }.Deserialize<Item[]>(File.ReadAllText(Path.Combine(Base,"catalog.json"),Utf8));
     }
     public static string Request(string id, int count) {
-        if (!System.Text.RegularExpressions.Regex.IsMatch(id,@"^[A-Za-z0-9_]+$") || count<1 || count>100) throw new Exception("아이템 또는 수량이 올바르지 않습니다.");
+        if (!System.Text.RegularExpressions.Regex.IsMatch(id,@"^[A-Za-z0-9_]+$") || count<1 || count>1000) throw new Exception("아이템 또는 수량이 올바르지 않습니다.");
         return Guid.NewGuid().ToString("N")+"|"+DateTimeOffset.UtcNow.ToUnixTimeSeconds()+"|"+id+"|"+count;
     }
     static void AssertStopped() {
@@ -139,9 +139,9 @@ public partial class ItemTool : Form {
         selectedName.Text="아이템을 선택하세요";selectedName.Font=new Font("맑은 고딕",16,FontStyle.Bold);selectedName.BackColor=panel;selectedName.AutoEllipsis=true;Add(selectedName,702,290,286,34);
         selectedEnglish.Text="왼쪽 목록에서 필요한 아이템을 골라 주세요.";selectedEnglish.ForeColor=muted;selectedEnglish.Font=new Font("맑은 고딕",9);selectedEnglish.BackColor=panel;selectedEnglish.AutoEllipsis=true;Add(selectedEnglish,702,326,286,24);
         TextLabel("보급 수량",702,373,180,26).Font=new Font("맑은 고딕",11,FontStyle.Bold);
-        TextLabel("1–100개",902,375,86,24).ForeColor=muted;
-        amount.Minimum=1;amount.Maximum=100;amount.Value=1;amount.Font=new Font("Segoe UI",18,FontStyle.Bold);amount.BackColor=Color.FromArgb(32,42,53);amount.ForeColor=ForeColor;amount.BorderStyle=BorderStyle.FixedSingle;Add(amount,702,410,286,42);
-        int bx=702;foreach(int n in new[]{1,10,50,100}){int value=n;var b=ActionButton(n.ToString(),bx,464,64,()=>amount.Value=value);b.Height=30;bx+=74;}
+        TextLabel("1–1,000개",878,375,110,24).ForeColor=muted;
+        amount.Minimum=1;amount.Maximum=1000;amount.Value=1;amount.Font=new Font("Segoe UI",18,FontStyle.Bold);amount.BackColor=Color.FromArgb(32,42,53);amount.ForeColor=ForeColor;amount.BorderStyle=BorderStyle.FixedSingle;Add(amount,702,410,286,42);
+        int bx=702;foreach(int n in new[]{1,100,500,1000}){int value=n;var b=ActionButton(n.ToString(),bx,464,64,()=>amount.Value=value);b.Height=30;bx+=74;}
         prepare=ActionButton("생성 요청 준비   →",702,516,286,()=>{
             if(list.SelectedItems.Count!=1) throw new Exception("목록에서 아이템을 선택하세요.");
             string target=ModPath(game.Text);
@@ -154,10 +154,15 @@ public partial class ItemTool : Form {
         });
         prepare.Height=46;prepare.BackColor=gold;prepare.ForeColor=Color.FromArgb(25,29,32);prepare.Font=new Font("맑은 고딕",12,FontStyle.Bold);prepare.FlatAppearance.MouseOverBackColor=Color.FromArgb(239,206,157);prepare.Enabled=false;
         var hint=TextLabel("게임으로 돌아가  F11  을 누르세요.",702,575,286,24);hint.ForeColor=muted;hint.TextAlign=ContentAlignment.MiddleCenter;
-        var cancel=ActionButton("대기 요청 취소",702,600,286,()=>{
+        var cancel=ActionButton("요청 중지 / 취소",702,600,286,()=>{
             string target=ModPath(game.Text);
-            if(File.Exists(Path.Combine(target,"processing.txt"))) throw new Exception("이미 처리 중인 요청은 취소할 수 없습니다.");
-            File.Delete(Path.Combine(target,"request.txt"));lastId="";message.Text="대기 요청을 취소했습니다.";
+            string pending=Path.Combine(target,"request.txt"),running=Path.Combine(target,"processing.txt");
+            string id=lastId;
+            if(id==""){string file=File.Exists(running)?running:pending;if(File.Exists(file))id=File.ReadAllText(file,Utf8).Split('|')[0];}
+            if(!System.Text.RegularExpressions.Regex.IsMatch(id,@"^[a-f0-9]{32}$"))throw new Exception("취소할 요청이 없습니다.");
+            Tuner.Atomic(Path.Combine(target,"cancel.txt"),id);File.Delete(pending);
+            if(File.Exists(running)){lastId=id;message.Text="중지를 요청했습니다. 이미 처리한 아이템은 유지됩니다.";}
+            else{lastId="";message.Text="대기 요청을 취소했습니다.";}
         });
         cancel.Height=24;cancel.BackColor=panel;cancel.ForeColor=muted;cancel.Font=new Font("맑은 고딕",9);
         message.Text="준비됨  ·  아이템을 선택해 보급 요청을 준비하세요.";
@@ -181,14 +186,16 @@ public partial class ItemTool : Form {
             if(p.Length<4 || p[0]!=lastId) return;
             if(p[1]=="SENT") {message.Text="생성 함수 "+p[2]+"회 호출 완료. 실제 지급 수량은 게임 가방에서 확인하세요.";lastId="";}
             if(p[1]=="ERROR") {message.Text="처리 중단 (호출 "+p[2]+"회): "+p[3];lastId="";}
-            if(p[1]=="WORKING") message.Text="게임에서 생성 요청을 처리하고 있습니다.";
+            if(p[1]=="CANCELLED") {message.Text="중지 완료 · 생성 함수 "+p[2]+"회 호출. 실제 수량은 가방에서 확인하세요.";lastId="";}
+            if(p[1]=="WORKING") message.Text="분할 처리 중 · "+p[2]+" / "+p[3]+"회";
         }catch(IOException){}catch(UnauthorizedAccessException){}
     }
     static void SelfTest() {
         var cat=LoadCatalog();
         if(cat.Length!=2989 || !cat.Any(i=>i.id=="Fiber")) throw new Exception("Catalog test failed");
         if(!System.Text.RegularExpressions.Regex.IsMatch(Request("Fiber",3),@"^[a-f0-9]{32}\|\d+\|Fiber\|3$")) throw new Exception("Protocol failed");
-        foreach(int n in new[]{0,101}) {bool rejected=false;try{Request("Fiber",n);}catch{rejected=true;}if(!rejected)throw new Exception("Range failed");}
+        foreach(int n in new[]{0,1001}) {bool rejected=false;try{Request("Fiber",n);}catch{rejected=true;}if(!rejected)throw new Exception("Range failed");}
+        if(!Request("Fiber",1000).EndsWith("|Fiber|1000"))throw new Exception("Maximum quantity failed");
         bool invalid=false;try{Request("../bad",1);}catch{invalid=true;}if(!invalid)throw new Exception("ID failed");
         File.WriteAllText(Path.Combine(Base,"self-test.txt"),"PASS: catalog, request protocol, quantity limits, invalid identifier",Utf8);
     }

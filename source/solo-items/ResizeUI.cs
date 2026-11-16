@@ -60,6 +60,8 @@ public partial class ItemTool {
     }
     static void LayoutTest(){
         using(var form=new ItemTool()){
+            if(form.amount.Maximum!=1000)throw new Exception("UI quantity limit mismatch");
+            form.amount.Value=1000;
             form.tuning.Health=200;form.dirty=true;
             foreach(var size in new[]{new Size(860,580),new Size(980,650),new Size(1500,900),new Size(980,650)}){
                 form.ClientSize=size;
@@ -70,6 +72,7 @@ public partial class ItemTool {
                         if(c.Right>c.Parent.ClientSize.Width+2||c.Bottom>c.Parent.ClientSize.Height+2)throw new Exception("Clipped control: "+c.Text+" at "+size);
                     }
                     if(form.tuning.Health!=200||!form.dirty)throw new Exception("Resize lost pending values");
+                    if(form.amount.Value!=1000)throw new Exception("Resize lost selected quantity");
                 }
             }
             if(form.FormBorderStyle!=FormBorderStyle.Sizable||!form.MaximizeBox)throw new Exception("Window is fixed");
