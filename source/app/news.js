@@ -20,34 +20,38 @@ function request(url,options={}){return new Promise((resolve,reject)=>{
  const req=https.request(url,{method:options.body?'POST':'GET',headers:{'Accept':'application/json',...(options.body?{'Content-Type':'application/json'}:{}),...options.headers}},res=>{let size=0,chunks=[];res.on('data',b=>{size+=b.length;if(size>3000000){req.destroy();reject(Error('응답 용량이 너무 큽니다.'));}else chunks.push(b);});res.on('error',()=>reject(Error('연결이 중단되었습니다.')));res.on('end',()=>{if(res.statusCode!==200)return reject(Error(res.statusCode===403?'API 사용 설정·키 제한·결제 계정을 확인해 주세요.':res.statusCode===429?'서비스 사용량 제한입니다. 잠시 뒤 다시 시도하세요.':'소식 서비스 응답 오류 ('+res.statusCode+')'));try{resolve(JSON.parse(Buffer.concat(chunks).toString('utf8')))}catch{reject(Error('응답을 읽지 못했습니다.'));}});});
  const timer=setTimeout(()=>req.destroy(Error('소식 서비스 연결 시간이 초과되었습니다.')),15000);req.on('close',()=>clearTimeout(timer));req.on('error',()=>reject(Error('소식 서비스에 연결하지 못했습니다. 인터넷 연결을 확인하세요.')));if(options.body)req.write(JSON.stringify(options.body));req.end();
 });}
-function create({dir,secure,fetchJSON=request,now=()=>Date.now(),sharedFetch=request,bundled=require('./news-ko.js')}){
+function create({dir,secure,fetchJSON=request,now=()=>Date.now(),sharedFetch=request,bundled=require('./news-ko.js'),publisher=null}){
  const stateFile=path.join(dir,'game-news.json'),keyFile=path.join(dir,'news-key.dat');let db={items:[],at:0,translations:{},usage:{}},feedFlight=null,translationFlight=null,lastAttempt=0;
  try{if(fs.statSync(stateFile).size<8000000){const x=JSON.parse(fs.readFileSync(stateFile,'utf8'));if(Array.isArray(x.items)&&x.translations&&x.usage)db=x;}}catch{}
  const write=()=>{fs.mkdirSync(dir,{recursive:true});fs.writeFileSync(stateFile+'.tmp',JSON.stringify(db));fs.renameSync(stateFile+'.tmp',stateFile);};
- let sharedAt=0,sharedFlight=null,sharedError='';
+ let sharedAt=0,sharedFlight=null,sharedError='',publishError='',publishAt=0,publishFlight=null;
+ const uploader=publisher||require('./news-publisher.js').create({dir,secure});
+ function pending(){return db.items.filter(a=>{const t=db.translations[a.hash];return t&&!t.shared&&typeof t.text==='string'&&crypto.createHash('sha256').update(a.text).digest('hex')===a.hash;}).map(a=>({id:a.id,hash:a.hash,text:db.translations[a.hash].text,at:db.translations[a.hash].at}));}
+ async function retryPublish(force=false){if(publishFlight)return publishFlight;if(!uploader.connected()||!pending().length)return status();if(!force&&publishAt&&now()-publishAt<60000)return status();publishAt=now();publishFlight=(async()=>{try{const sent=await uploader.publish(pending());for(const e of sent)db.translations[e.hash]={text:e.text,at:e.at,shared:true};write();publishError='';}catch(e){publishError=e.message;}finally{publishFlight=null;}return status();})();return publishFlight;}
+ async function setPublisher(token){uploader.setToken(token);publishError='';if(token)await retryPublish(true);return status();}
  function importShared(value){let changed=false;for(const e of sharedEntries(value)){if(db.items.some(a=>a.id===e.id&&a.hash===e.hash)&&!(db.translations[e.hash]?.shared&&db.translations[e.hash].at>e.at)){db.translations[e.hash]={text:e.text,at:e.at,shared:true};changed=true;}}const keys=Object.keys(db.translations).sort((a,b)=>db.translations[b].at-db.translations[a].at);for(const h of keys.slice(64))delete db.translations[h];return changed;}
  async function refreshShared(force){if(sharedFlight)return sharedFlight;if(sharedAt&&now()-sharedAt<(force?60000:3600000))return;sharedAt=now();sharedFlight=(async()=>{try{if(importShared(await sharedFetch(SHARED)))write();sharedError='';}catch{sharedError='공유 번역 확인 실패 · 저장된 번역과 원문은 계속 볼 수 있습니다.';}finally{sharedFlight=null;}})();return sharedFlight;}
  const month=()=>new Date(now()).toISOString().slice(0,7);
- function status(){return {sharedError,connected:fs.existsSync(keyFile),used:Number(db.usage[month()])||0,limit:LIMIT,month:month()};}
+ function status(){return {sharedError,publishError,publisherConnected:uploader.connected(),publishPending:pending().length,publishing:!!publishFlight,connected:fs.existsSync(keyFile),used:Number(db.usage[month()])||0,limit:LIMIT,month:month()};}
  function setKey(key){if(translationFlight)throw Error('번역이 끝난 뒤 키를 변경하세요.');if(key===''){if(fs.existsSync(keyFile))fs.unlinkSync(keyFile);return status();}if(typeof key!=='string'||!/^AIza[\w-]{30,100}$/.test(key.trim()))throw Error('Google Cloud API 키 형식을 확인하세요.');if(!secure.isEncryptionAvailable())throw Error('Windows 암호화 저장소를 사용할 수 없습니다.');fs.mkdirSync(dir,{recursive:true});fs.writeFileSync(keyFile,secure.encryptString(key.trim()));return status();}
  async function list(force=false){
   if(feedFlight)return feedFlight;
-  if(db.items.length&&!force&&now()-db.at<3600000){if(importShared(bundled))write();await refreshShared(false);return snapshot();}
+  if(db.items.length&&!force&&now()-db.at<3600000){if(importShared(bundled))write();await refreshShared(false);await retryPublish();return snapshot();}
   if(now()-lastAttempt<60000)return snapshot('소식 확인은 1분에 한 번 가능합니다.');lastAttempt=now();
-  feedFlight=(async()=>{try{const r=await fetchJSON(FEED);if(r?.appnews?.appid!==1149460||!Array.isArray(r.appnews.newsitems))throw Error('공식 소식 응답 형식이 다릅니다.');const items=r.appnews.newsitems.map(article).filter(Boolean).slice(0,8);if(!items.length)throw Error('공식 소식을 찾지 못했습니다.');db.items=items;db.at=now();importShared(bundled);write();await refreshShared(force);return snapshot();}catch{if(importShared(bundled))write();await refreshShared(force);return snapshot('소식을 불러오지 못했습니다. 저장된 글이 있으면 대신 표시합니다.');}finally{feedFlight=null;}})();return feedFlight;
+  feedFlight=(async()=>{try{const r=await fetchJSON(FEED);if(r?.appnews?.appid!==1149460||!Array.isArray(r.appnews.newsitems))throw Error('공식 소식 응답 형식이 다릅니다.');const items=r.appnews.newsitems.map(article).filter(Boolean).slice(0,8);if(!items.length)throw Error('공식 소식을 찾지 못했습니다.');db.items=items;db.at=now();importShared(bundled);write();await refreshShared(force);await retryPublish();return snapshot();}catch{if(importShared(bundled))write();await refreshShared(force);return snapshot('소식을 불러오지 못했습니다. 저장된 글이 있으면 대신 표시합니다.');}finally{feedFlight=null;}})();return feedFlight;
  }
  function snapshot(error=''){return {items:db.items.map(a=>({...a,translated:!!db.translations[a.hash],shared:!!db.translations[a.hash]?.shared})),at:db.at,error,...status()};}
  function read(id){const a=db.items.find(a=>a.id===id);if(!a)throw Error('목록을 새로 불러오세요.');return {...a,translation:db.translations[a.hash]?.text||null,shared:!!db.translations[a.hash]?.shared,...status()};}
  async function translate(id){
-  const a=read(id);if(a.translation)return a;
+  const a=read(id);if(a.translation){await retryPublish(true);return read(id);}
   if(translationFlight)throw Error('다른 글을 번역 중입니다. 완료 후 다시 눌러 주세요.');
   if(!secure.isEncryptionAvailable()||!fs.existsSync(keyFile))throw Error('번역 설정에서 API 키를 먼저 연결하세요.');
   let key;try{key=secure.decryptString(fs.readFileSync(keyFile));}catch{throw Error('이 Windows 계정에서 키를 읽을 수 없습니다. 다시 연결하세요.');}
   const used=Number(db.usage[month()])||0;if(a.characters>80000)throw Error('글이 너무 깁니다. 공식 원문에서 확인해 주세요.');if(used+a.characters>LIMIT)throw Error('이 PC의 월 번역 제한에 도달했습니다. 저장된 번역은 계속 읽을 수 있습니다.');
   // Reserve before sending: a timeout may already have been billed. Never retry automatically.
   db.usage[month()]=used+a.characters;write();
-  translationFlight=(async()=>{try{const chars=Array.from(a.text),out=[];for(let i=0;i<chars.length;i+=4000){const r=await fetchJSON('https://translation.googleapis.com/language/translate/v2',{headers:{'X-goog-api-key':key},body:{q:chars.slice(i,i+4000).join(''),target:'ko',format:'text',model:'nmt'}});const t=r?.data?.translations?.[0]?.translatedText;if(typeof t!=='string')throw Error('번역 응답을 읽지 못했습니다.');out.push(decode(t));}db.translations[a.hash]={text:out.join(''),at:now()};const old=Object.keys(db.translations).sort((a,b)=>db.translations[b].at-db.translations[a].at);for(const h of old.slice(64))delete db.translations[h];write();return read(id);}finally{translationFlight=null;key='';}})();return translationFlight;
+  translationFlight=(async()=>{try{const chars=Array.from(a.text),out=[];for(let i=0;i<chars.length;i+=4000){const r=await fetchJSON('https://translation.googleapis.com/language/translate/v2',{headers:{'X-goog-api-key':key},body:{q:chars.slice(i,i+4000).join(''),target:'ko',format:'text',model:'nmt'}});const t=r?.data?.translations?.[0]?.translatedText;if(typeof t!=='string')throw Error('번역 응답을 읽지 못했습니다.');out.push(decode(t));}db.translations[a.hash]={text:out.join(''),at:now()};const old=Object.keys(db.translations).sort((a,b)=>db.translations[b].at-db.translations[a].at);for(const h of old.slice(64))delete db.translations[h];write();await retryPublish(true);return read(id);}finally{translationFlight=null;key='';}})();return translationFlight;
  }
- return {list,read,translate,status,setKey};
+ return {list,read,translate,status,setKey,setPublisher,retryPublish};
 }
 module.exports={create,article,imageURL,request,LIMIT,SHARED,sharedEntries};

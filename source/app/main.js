@@ -8,6 +8,8 @@ ipcMain.handle('news',async (_event,action,value)=>{
  if(action==='list')return newsService.list(value===true);
  if(action==='status')return newsService.status();
  if(action==='setKey')return newsService.setKey(value);
+ if(action==='setPublisher')return newsService.setPublisher(value);
+ if(action==='retryPublish')return newsService.retryPublish(true);
  if(action==='read'||action==='translate'){if(typeof value!=='string'||!/^\d+$/.test(value))throw Error('소식 번호를 확인하세요.');return newsService[action](value);}
  throw Error('지원하지 않는 소식 작업입니다.');
 });
