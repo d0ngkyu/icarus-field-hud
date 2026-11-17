@@ -1148,3 +1148,11 @@ A/B/C 모두 종료 프로토콜, 업데이트 실패 표시, 개인 월드 격�
 
 ## 진행 중 · MAP-AUTO-SHARE-065 · Codex · codex/map-auto-share-065 · 2026-11-17
 - 사용자 구현 승인. 소유 신규 source/experimental/map-share/*, source/tests/map-share.test.cjs, MAP-AUTO-SHARE.md. 기존앱/UI/Lua/Claude·독립도구 작업은 변경하지 않음. 현재 main e99cb92 기준; 호스트월드 일치/저장중 읽기 보호, 최소지도자료 프로토콜, 인증역할을 주입하는 전송·수신 모듈과 loopback 중계기로 두 HUD 모의통신 시험. 실제 외부 공유는 서비스/멤버십인증/호스트·클라이언트 식별 실증 전까지 비활성. 신규계정·과금·운영배포 없음. 리뷰 가능한 시험구현을 브랜치/PR로 보관, 기존 stable.17 유지.
+
+
+## MAP-AUTO-SHARE-065 · 시험구현 게시 / 운영 연결 보류 (2026-11-17)
+- codex/map-auto-share-065 source8574d9b1e69adc8fc2da3da819163bb78d6b4188, draft PR39 https://github.com/d0ngkyu/icarus-field-hud/pull/39. 원격 ls-remote 일치 및 로컬clean 확인. 신규6파일410줄, 정식앱/Lua/기존UI/설치파일 변경없음.
+- 현재월드 정확일치 저장 선택(후보8개/2초안정/읽기전후파일검사), 지도필드 allowlist/1MiB·10000행 상한, 단일요청·30초이상간격·동일전송생략·timeout/최대5분backoff, 전환취소/이전응답차단 구현. loopback 전용 중계·호스트쓰기/친구읽기·권한scope검사/만료/호스트교체·과거저장덮어쓰기차단.
+- 실제 로컬HTTP 호스트1/친구2/별도월드 수신자 테스트. 신규11개/전체213개 pass, 실패·skip0. 마지막 테스트보강(grant월드·역할불일치) 후 신규11개 재통과. 게임2PC·FPS·native읽기·실좌표 검증 아님. 테스트서버 종료됨, 실제세이브나ID 외부전송없음.
+- 한계: 모의컨트롤러가 신뢰된 grant를 발급한다. 운영용 자동멤버십/호스트 인증과 relay서비스는 아직 없고, 월드ID/해시는 인증 대체 불가. Steam공식 auth/ISteamUserAuth/SDR 문서 조사했으나 이 HUD에서 Icarus세션티켓을 얻어검증하는 지원경로 미확인. 새계정/비용/호스팅/뉴스토큰공유하지 않음. 같은 앱만 켜는 UX는 아직 제공 못 함.
+- 상세 MAP-AUTO-SHARE.md의 운영전제 1~4 참조. 후속 실제양쪽scope일치·역할 자동판별 및 인증/운영전송경로 확보 후 앱·지도 연결/2PC시험. 서버장 코드/파일/포트설정 요구로 사용자조건을 우회하지 말 것. 안정화 확인 전 정식 배포·UI 활성화 금지. 065 시험구현 작업은 게시완료, 운영통합은 보류; SOLO064 소유 그대로.
