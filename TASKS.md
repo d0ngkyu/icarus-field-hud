@@ -1156,3 +1156,11 @@ A/B/C 모두 종료 프로토콜, 업데이트 실패 표시, 개인 월드 격�
 - 실제 로컬HTTP 호스트1/친구2/별도월드 수신자 테스트. 신규11개/전체213개 pass, 실패·skip0. 마지막 테스트보강(grant월드·역할불일치) 후 신규11개 재통과. 게임2PC·FPS·native읽기·실좌표 검증 아님. 테스트서버 종료됨, 실제세이브나ID 외부전송없음.
 - 한계: 모의컨트롤러가 신뢰된 grant를 발급한다. 운영용 자동멤버십/호스트 인증과 relay서비스는 아직 없고, 월드ID/해시는 인증 대체 불가. Steam공식 auth/ISteamUserAuth/SDR 문서 조사했으나 이 HUD에서 Icarus세션티켓을 얻어검증하는 지원경로 미확인. 새계정/비용/호스팅/뉴스토큰공유하지 않음. 같은 앱만 켜는 UX는 아직 제공 못 함.
 - 상세 MAP-AUTO-SHARE.md의 운영전제 1~4 참조. 후속 실제양쪽scope일치·역할 자동판별 및 인증/운영전송경로 확보 후 앱·지도 연결/2PC시험. 서버장 코드/파일/포트설정 요구로 사용자조건을 우회하지 말 것. 안정화 확인 전 정식 배포·UI 활성화 금지. 065 시험구현 작업은 게시완료, 운영통합은 보류; SOLO064 소유 그대로.
+
+
+## PATCH-CHECK-2026-11-20 · Claude (예약 점검, 클라우드·PC 접근 없음)
+- 패치: Week 259 'Powered Armor Stand' 2026-11-19, 빌드 V3.0.37.160033(patchbot 사본; Steam API는 이 세션 프록시 403으로 직접 확인 못 함). 11-18~20 핫픽스 못 찾음. 참고 Week 258 'Workshop Lantern' 2026-11-12, 3.0.36.159996. 근거: https://patchbot.io/games/icarus/articles/2318-week-259-update-powered-armor-stand , https://patchbot.io/games/icarus/articles/2224-week-258-update-workshop-lantern
+- 259 주요: 고급 갑옷 거치대(T4, 전원 시 수리) 추가, 고양이/개/말 시체 재질 수정. 나머지는 잠긴 향후 콘텐츠(곰 탈것 음향·안장, PenPals 펫 여우/도마뱀/거북, 납 배낭, 유리 건축, 페인트붓·새집 등, CRE_Dragonfly_Nest 지열 변형).
+- 대조: 새 지도/동굴/DLC 공개, 엑조틱·메타 스폰·광맥·오일/효소 간헐천, 그래픽 설정, 엔진/UE4SS 변경 언급 없음. main.lua/map_observation.lua/animals.lua가 읽는 클래스(BP_ExoticPlantSpawn_C, BP_Exotic_Plant_C, BP_IcarusMetaSpawn_C, ResourceDeposit, BP_OilGeyser_C, BP_EnzymeGeyser_C, UMG_StatDisplayMount/UMG_MountInterface_V 등) 관련 항목 없음.
+- 위험 판단: 낮음. 탈것(곰) 작업은 잠긴 자산·음향 위주이고 탈것 정보 창 변경 언급 없음. 새 아이템(고급 갑옷 거치대)은 HUD 아이템 목록/아이콘에 아직 없을 수 있음(표시 누락 수준). 258의 Spelunking 소금·규사·유황 광맥 종류 변경은 Spelunking 쪽이라 HUD 광맥 읽기 영향 근거 없음. 코드 수정·배포 안 함(근거 불충분).
+- 사용자 확인: 게임을 한 번 켠 뒤 HUD 설정 › 문제 해결 › '게임 업데이트 호환' 줄이 새 빌드에서 '정상'인지(오류면 다음 점검/작업 때 UE4SS.log 확인).
