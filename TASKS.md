@@ -1164,3 +1164,10 @@ A/B/C 모두 종료 프로토콜, 업데이트 실패 표시, 개인 월드 격�
 - 대조: 새 지도/동굴/DLC 공개, 엑조틱·메타 스폰·광맥·오일/효소 간헐천, 그래픽 설정, 엔진/UE4SS 변경 언급 없음. main.lua/map_observation.lua/animals.lua가 읽는 클래스(BP_ExoticPlantSpawn_C, BP_Exotic_Plant_C, BP_IcarusMetaSpawn_C, ResourceDeposit, BP_OilGeyser_C, BP_EnzymeGeyser_C, UMG_StatDisplayMount/UMG_MountInterface_V 등) 관련 항목 없음.
 - 위험 판단: 낮음. 탈것(곰) 작업은 잠긴 자산·음향 위주이고 탈것 정보 창 변경 언급 없음. 새 아이템(고급 갑옷 거치대)은 HUD 아이템 목록/아이콘에 아직 없을 수 있음(표시 누락 수준). 258의 Spelunking 소금·규사·유황 광맥 종류 변경은 Spelunking 쪽이라 HUD 광맥 읽기 영향 근거 없음. 코드 수정·배포 안 함(근거 불충분).
 - 사용자 확인: 게임을 한 번 켠 뒤 HUD 설정 › 문제 해결 › '게임 업데이트 호환' 줄이 새 빌드에서 '정상'인지(오류면 다음 점검/작업 때 UE4SS.log 확인).
+
+## SOLO-TALENT-066 · Claude · 독립 싱글 도구 0.3.8 (2026-11-22 21:45, 사용자 요청)
+- 요청: "이카루스 싱글도구에 캐릭터 포인트 조절기능 추가". Codex 소유 source/solo-items에 Claude가 작업(사용자 지시, Codex 부재). RELEASE.md 절차 준수.
+- 방식: 레벨당 포인트는 커브 에셋(C_Player*Growth)이라 JSON으로 못 바꿈. 대신 Talents/D_PlayerTalentModifiers.json(스토리·대사냥 보상 재능 포인트를 더하는 표)에 조건 없는 행 'IcarusSoloTools_TalentBonus' +0~60 추가 → 기존 998 데이터 PAK에 포함(게임 종료 시에만). 청사진·레벨 포인트 변경 없음.
+- UI: 새 탭 '재능 포인트'(없음/+10/+30, 슬라이더 0~60), 앱 설정은 9번째. README·툴팁: 줄이거나 끄기 전 게임에서 재능 초기화.
+- 검증: 오프라인 self-test에 재능 행 시험 추가. Windows Actions(.github/workflows/solo-build.yml)에서 빌드+self/layout/library/details/image/connection 통과, 이전 0.3.7 패키지의 repak.exe 해시 검증 재사용. 인게임 효과(조건 없는 행이 실제로 더해지는지)는 미검증 — 게임에서 재능 화면 포인트 확인 필요.
+- 게시: source 981040a, package 4b2b1ea, manifest 4ef7fd5 (codex/solo-items, Actions 45023288779). ZIP/9파일 SHA256 재검증 일치. PC 앱은 자동 업데이트(게임 꺼진 때 교체).
