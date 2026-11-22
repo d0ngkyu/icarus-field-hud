@@ -1,0 +1,52 @@
+name: Build solo tools
+# Builds the standalone single-player tool (source/solo-items) on Windows, runs its offline checks,
+# and packages it. Publishing (standalone/releases + manifest) stays a separate, reviewed commit.
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Branch or commit with source/solo-items
+        required: true
+        default: codex/solo-items
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: source/solo-items
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+      - name: Reuse the verified repak from the last published package
+        run: |
+          $m = Get-Content ../../standalone/manifest.json -Raw | ConvertFrom-Json
+          $zip = "../../standalone/releases/$($m.version)/package.zip"
+          Expand-Archive $zip -DestinationPath prev -Force
+          New-Item -ItemType Directory -Force tools | Out-Null
+          foreach ($f in $m.files | Where-Object { $_.path -like 'tools/*' }) {
+            $h = (Get-FileHash "prev/$($f.path)" -Algorithm SHA256).Hash.ToLowerInvariant()
+            if ($h -ne $f.sha256) { throw "hash mismatch $($f.path)" }
+            Copy-Item "prev/$($f.path)" $f.path -Force
+          }
+      - name: Build
+        run: ./Build.ps1
+      - name: Offline checks
+        run: |
+          foreach ($t in '--self-test','--layout-test','--library-test','--details-test','--image-test','--connection-test') {
+            $p = Start-Process bin/IcarusSoloItems.exe -ArgumentList $t -Wait -PassThru
+            if ($p.ExitCode -ne 0) { if (Test-Path bin/error.txt) { Get-Content bin/error.txt }; throw "$t failed" }
+            Write-Output "PASS $t"
+          }
+          Get-Content bin/self-test.txt
+      - name: Package
+        run: ./Package.ps1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: solo-package
+          path: |
+            source/solo-items/release/package.zip
+            source/solo-items/release/manifest-draft.json
