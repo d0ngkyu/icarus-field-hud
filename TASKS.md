@@ -1171,3 +1171,5 @@ A/B/C 모두 종료 프로토콜, 업데이트 실패 표시, 개인 월드 격�
 - UI: 새 탭 '재능 포인트'(없음/+10/+30, 슬라이더 0~60), 앱 설정은 9번째. README·툴팁: 줄이거나 끄기 전 게임에서 재능 초기화.
 - 검증: 오프라인 self-test에 재능 행 시험 추가. Windows Actions(.github/workflows/solo-build.yml)에서 빌드+self/layout/library/details/image/connection 통과, 이전 0.3.7 패키지의 repak.exe 해시 검증 재사용. 인게임 효과(조건 없는 행이 실제로 더해지는지)는 미검증 — 게임에서 재능 화면 포인트 확인 필요.
 - 게시: source 981040a, package 4b2b1ea, manifest 4ef7fd5 (codex/solo-items, Actions 45023288779). ZIP/9파일 SHA256 재검증 일치. PC 앱은 자동 업데이트(게임 꺼진 때 교체).
+- 21:50 0.3.9: 다시 적용 시 자기 PAK(998)를 '다른 모드와 겹침'으로 막던 버그 수정(mods 경로 슬래시 정규화). source 002af6a, 게시 b32c2bd (Actions 45024209844). 0.3.7 이전부터 있던 버그.
+- 22:00 0.4.0 (사용자 추가 요청): 체력 최대 10배(1/3/10배), 새 탭 '동물 번식' — AI/D_Tames.json GestationPeriodSeconds(임신)·TameDurationInSeconds(새끼 성장=길들이기) 10~100%, 기본값 의존 행 포함. self-test 추가, Windows CI 빌드·검사 통과. source ea03d40, package fbf2d43, manifest 342621d (Actions 45024432476), ZIP/9파일 재검증. 인게임 효과 미검증(재능 행 포함).
