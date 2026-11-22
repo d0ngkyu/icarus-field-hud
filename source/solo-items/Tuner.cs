@@ -11,9 +11,12 @@ using System.Threading.Tasks;
 
 public sealed class TuneValues {
     public int Health=100, Stamina=100, Oxygen=100, Food=100, Water=100, Weight=100, Durability=100, Speed=100;
-    public bool IsDefault {get{return Health==100&&Stamina==100&&Oxygen==100&&Food==100&&Water==100&&Weight==100&&Durability==100&&Speed==100;}}
+    // extra character talent points, added to whatever the game already grants (0 = none)
+    public int Talent=0;
+    public const int MaxTalent=60;
+    public bool IsDefault {get{return Health==100&&Stamina==100&&Oxygen==100&&Food==100&&Water==100&&Weight==100&&Durability==100&&Speed==100&&Talent==0;}}
     public void Validate(){
-        if(Health<100||Health>300||Weight<100||Weight>500||Durability<100||Durability>500||Speed<100||Speed>200||new[]{Stamina,Oxygen,Food,Water}.Any(x=>x<0||x>100)) throw new Exception("설정 범위를 확인해 주세요.");
+        if(Health<100||Health>300||Weight<100||Weight>500||Durability<100||Durability>500||Speed<100||Speed>200||Talent<0||Talent>MaxTalent||new[]{Stamina,Oxygen,Food,Water}.Any(x=>x<0||x>100)) throw new Exception("설정 범위를 확인해 주세요.");
     }
 }
 public sealed class TuneRecord {
@@ -23,7 +26,8 @@ public sealed class TuneRecord {
 public static class Tuner {
     public static readonly string StateDir=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"IcarusSoloTools");
     public const string ModName="998-IcarusSoloTools_P.pak";
-    public const string Stats="Stats/D_CharacterStartingStats.json", Actions="Tools/D_StaminaActionCosts.json", Durable="Traits/D_Durable.json";
+    public const string Stats="Stats/D_CharacterStartingStats.json", Actions="Tools/D_StaminaActionCosts.json", Durable="Traits/D_Durable.json", Talents="Talents/D_PlayerTalentModifiers.json";
+    public const string TalentRow="IcarusSoloTools_TalentBonus";
     public const string Mount="../../../Icarus/Content/data/";
     static readonly Encoding Utf8=new UTF8Encoding(false);
     public static JavaScriptSerializer Json(){return new JavaScriptSerializer{MaxJsonLength=16000000};}
@@ -59,7 +63,8 @@ public static class Tuner {
         decimal v=Convert.ToDecimal(d[key]);if(v<0)throw new Exception("게임 수치가 예상과 다릅니다.");
         d[key]=(int)Math.Round(v*percent/100m,MidpointRounding.AwayFromZero);
     }
-    public static Dictionary<string,string> Transform(string stats,string actions,string durable,string items,TuneValues v){
+    public static Dictionary<string,string> Transform(string stats,string actions,string durable,string items,TuneValues v){return Transform(stats,actions,durable,items,null,v);}
+    public static Dictionary<string,string> Transform(string stats,string actions,string durable,string items,string talents,TuneValues v){
         v.Validate();var result=new Dictionary<string,string>();
         var s=Obj(Json().DeserializeObject(stats));var row=Rows(s).Single(x=>(string)x["Name"]=="Base_Stats");var values=Obj(row["StatsGranted"]);
         foreach(var pair in new[]{new KeyValuePair<string,int>("BaseMaximumHealth_+",v.Health),new KeyValuePair<string,int>("BaseWeightCapacity_+",v.Weight),new KeyValuePair<string,int>("SprintMovementSpeedCoefficient_%",v.Speed),new KeyValuePair<string,int>("BaseOxygenConsumptionPerHour_+",v.Oxygen),new KeyValuePair<string,int>("BaseFoodConsumptionPerHour_+",v.Food),new KeyValuePair<string,int>("BaseWaterConsumptionPerHour_+",v.Water)})
@@ -80,6 +85,15 @@ public static class Tuner {
             foreach(var r in Rows(d))if(gear.Contains((string)r["Name"])){if(!r.ContainsKey("Max_Durability"))r["Max_Durability"]=def["Max_Durability"];Scale(r,"Max_Durability",v.Durability,true);changed++;}
             if(changed==0)throw new Exception("장비 내구도 데이터를 찾지 못했습니다.");result[Durable]=Json().Serialize(d);
         }
+        if(v.Talent>0){
+            // The game sums TalentPointModifier over rows whose RequiredFlags the account has; a row with no flags always counts.
+            if(talents==null)throw new Exception("재능 포인트 데이터를 읽지 못했습니다.");
+            var t=Obj(Json().DeserializeObject(talents));var rows=((IEnumerable)t["Rows"]).Cast<object>().ToList();
+            if(rows.Count==0||!Obj(rows[0]).ContainsKey("TalentPointModifier"))throw new Exception("재능 포인트 데이터가 바뀌었습니다.");
+            if(rows.Select(Obj).Any(r=>(string)r["Name"]==TalentRow))throw new Exception("재능 포인트 데이터에 이미 같은 항목이 있습니다.");
+            rows.Add(new Dictionary<string,object>{{"Name",TalentRow},{"TalentPointModifier",v.Talent},{"RequiredFlags",new object[0]}});
+            t["Rows"]=rows;result[Talents]=Json().Serialize(t);
+        }
         return result;
     }
     static void Owned(string target,TuneRecord record,string game){if(File.Exists(target)&&(record==null||!string.Equals(record.Game,game,StringComparison.OrdinalIgnoreCase)||Hash(target)!=record.ModHash))throw new Exception("기존 조절 파일이 변경되어 덮어쓰지 않았습니다.");}
@@ -91,7 +105,7 @@ public static class Tuner {
             if(!File.Exists(data))throw new Exception("Icarus 게임 폴더를 확인해 주세요.");
             var old=ReadRecord(game);Owned(target,old,game);string dataHash=Hash(data);
             string stage=Path.Combine(StateDir,"build",Guid.NewGuid().ToString("N"));Directory.CreateDirectory(stage);
-            var tables=Transform(ReadTable(repak,data,Stats),ReadTable(repak,data,Actions),ReadTable(repak,data,Durable),ReadTable(repak,data,"Items/D_ItemsStatic.json"),values);
+            var tables=Transform(ReadTable(repak,data,Stats),ReadTable(repak,data,Actions),ReadTable(repak,data,Durable),ReadTable(repak,data,"Items/D_ItemsStatic.json"),values.Talent>0?ReadTable(repak,data,Talents):null,values);
             if(Directory.Exists(mods))foreach(var pak in Directory.GetFiles(mods,"*.pak",SearchOption.AllDirectories)){
                 if(string.Equals(Path.GetFullPath(pak),target,StringComparison.OrdinalIgnoreCase))continue;
                 string listing=Run(repak,"list --strip-prefix "+Q(MountOf(repak,pak))+" "+Q(pak));

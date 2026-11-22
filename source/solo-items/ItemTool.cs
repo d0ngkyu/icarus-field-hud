@@ -199,7 +199,21 @@ public partial class ItemTool : Form {
         foreach(int n in new[]{0,1001}) {bool rejected=false;try{Request("Fiber",n);}catch{rejected=true;}if(!rejected)throw new Exception("Range failed");}
         if(!Request("Fiber",1000).EndsWith("|Fiber|1000"))throw new Exception("Maximum quantity failed");
         bool invalid=false;try{Request("../bad",1);}catch{invalid=true;}if(!invalid)throw new Exception("ID failed");
-        File.WriteAllText(Path.Combine(Base,"self-test.txt"),"PASS: catalog, request protocol, quantity limits, invalid identifier",Utf8);
+        TalentTest();
+        File.WriteAllText(Path.Combine(Base,"self-test.txt"),"PASS: catalog, request protocol, quantity limits, invalid identifier, talent bonus row",Utf8);
+    }
+    static void TalentTest(){
+        string keys="";foreach(var k in new[]{"BaseMaximumHealth_+","BaseWeightCapacity_+","SprintMovementSpeedCoefficient_%","BaseOxygenConsumptionPerHour_+","BaseFoodConsumptionPerHour_+","BaseWaterConsumptionPerHour_+"})keys+=(keys==""?"":",")+"\"(Value=\\\""+k+"\\\")\":100";
+        string stats="{\"Rows\":[{\"Name\":\"Base_Stats\",\"StatsGranted\":{"+keys+"}}]}";
+        string talents="{\"RowStruct\":\"/Script/Icarus.PlayerTalentModifier\",\"Defaults\":{\"TalentPointModifier\":0,\"RequiredFlags\":[]},\"Rows\":[{\"Name\":\"Ely_SQ\",\"TalentPointModifier\":2,\"RequiredFlags\":[{\"DataTableName\":\"D_AccountFlags\",\"RowName\":\"GrantedTalent_ELY_SQ\"}]}]}";
+        var none=Tuner.Transform(stats,null,null,null,talents,new TuneValues());if(none.Count!=0)throw new Exception("Talent default should change nothing");
+        var r=Tuner.Transform(stats,null,null,null,talents,new TuneValues{Talent=30});
+        if(r.Count!=1||!r.ContainsKey(Tuner.Talents))throw new Exception("Talent only should write one table");
+        var rows=((System.Collections.IEnumerable)((Dictionary<string,object>)Tuner.Json().DeserializeObject(r[Tuner.Talents]))["Rows"]).Cast<Dictionary<string,object>>().ToList();
+        if(rows.Count!=2||(string)rows[0]["Name"]!="Ely_SQ"||Convert.ToInt32(rows[0]["TalentPointModifier"])!=2)throw new Exception("Existing talent rows must stay");
+        var b=rows[1];if((string)b["Name"]!=Tuner.TalentRow||Convert.ToInt32(b["TalentPointModifier"])!=30||((System.Collections.ICollection)b["RequiredFlags"]).Count!=0)throw new Exception("Talent bonus row");
+        foreach(int n in new[]{-1,TuneValues.MaxTalent+1}){bool bad=false;try{new TuneValues{Talent=n}.Validate();}catch{bad=true;}if(!bad)throw new Exception("Talent range");}
+        var old=Tuner.Json().Deserialize<TuneValues>("{\"Health\":200}");if(old.Talent!=0)throw new Exception("Old settings must load with no bonus");
     }
     [STAThread] public static int Main(string[] args) {
         try {
