@@ -59,10 +59,10 @@ public partial class ItemTool {
             case 6:SettingRow("달리기 속도","Speed",100,200,new[]{100,150,200},new[]{"기본","1.5배","2배"},112);break;
             case 8:SettingRow("임신 기간 (원래 시간의 %)","Gestation",10,100,new[]{100,50,10},new[]{"기본","절반","10분의 1"},105);SettingRow("새끼가 자라는 시간 (원래 시간의 %)","Growth",10,100,new[]{100,50,10},new[]{"기본","절반","10분의 1"},204);
                 PanelLabel("길들인 동물에만 해당합니다. 야생 새끼를 길들이는 시간도 같이 줄어요.\n이미 진행 중인 임신·성장은 게임을 다시 켠 뒤부터 바뀐 값이 적용될 수 있습니다.",26,318,910,56,11,false).ForeColor=muted;break;
-            case 7:SettingRow("추가 재능 포인트","Talent",0,TuneValues.MaxTalent,new[]{0,10,30},new[]{"없음","+10","+30"},112);break;
+            case 7:SettingRow("재능 포인트 더하기 · 빼기","Talent",TuneValues.MinTalent,TuneValues.MaxTalent,new[]{-10,0,30},new[]{"-10","기본","+30"},112);break;
         }
         if(index!=3&&index!=8){
-            string tip=index==7?"게임이 주는 재능 포인트에 더해집니다. 레벨·청사진 포인트는 그대로예요.\n줄이거나 끄기 전에는 게임에서 재능을 먼저 초기화하세요.":index==5?"기존 장비의 현재 내구도를 채우는 수리는 아닙니다.\n최대 내구도가 늘며, 장비에 따라 수리가 필요할 수 있습니다.":index==4?"아이템 하나하나의 무게는 그대로입니다.\n내 캐릭터가 들 수 있는 무게 한도가 늘어납니다.":index==6?"걷기 속도는 그대로, 달리기 속도만 바꿉니다.":"‘기본’ 버튼을 누르면 원래 값으로 돌아갑니다.\n다른 탭에서 고른 설정도 함께 적용됩니다.";
+            string tip=index==7?"게임이 주는 재능 포인트에서 더하거나 뺍니다(-30 ~ +60). 솔로·청사진 포인트와 레벨은 그대로예요.\n줄이기 전에는 게임에서 재능을 먼저 초기화하세요.":index==5?"기존 장비의 현재 내구도를 채우는 수리는 아닙니다.\n최대 내구도가 늘며, 장비에 따라 수리가 필요할 수 있습니다.":index==4?"아이템 하나하나의 무게는 그대로입니다.\n내 캐릭터가 들 수 있는 무게 한도가 늘어납니다.":index==6?"걷기 속도는 그대로, 달리기 속도만 바꿉니다.":"‘기본’ 버튼을 누르면 원래 값으로 돌아갑니다.\n다른 탭에서 고른 설정도 함께 적용됩니다.";
             PanelLabel(tip,26,272,910,70,12,false).ForeColor=muted;
         }
         PanelButton("모두 기본값",26,418,155,()=>{tuning=new TuneValues();dirty=true;ShowTab(activeTab);message.Text="기본값을 선택했습니다. ‘설정 적용’을 누르면 복원됩니다.";});
@@ -77,7 +77,7 @@ public partial class ItemTool {
         var slider=new TrackBar{Minimum=min,Maximum=max,Value=value,TickStyle=TickStyle.None,SmallChange=key=="Talent"?1:10,LargeChange=key=="Talent"?5:25,BackColor=panel,AccessibleName=text};slider.SetBounds(20,y+(compact?38:69),535,40);tuningPanel.Controls.Add(slider);
         var choices=new List<Button>();
         Action show=()=>{
-            current.Text=key=="Talent"?(slider.Value==0?"+0":"+"+slider.Value):slider.Value==0?"OFF":slider.Value+"%";
+            current.Text=key=="Talent"?(slider.Value>0?"+"+slider.Value:slider.Value.ToString()):slider.Value==0?"OFF":slider.Value+"%";
             for(int j=0;j<choices.Count;j++){
                 bool chosen=slider.Value==presets[j];choices[j].BackColor=chosen?Color.FromArgb(61,52,39):Color.FromArgb(34,44,55);choices[j].ForeColor=chosen?gold:ForeColor;choices[j].FlatAppearance.BorderSize=chosen?1:0;choices[j].FlatAppearance.BorderColor=gold;
             }

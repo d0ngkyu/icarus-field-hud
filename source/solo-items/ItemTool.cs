@@ -215,7 +215,8 @@ public partial class ItemTool : Form {
         var rows=((System.Collections.IEnumerable)((Dictionary<string,object>)Tuner.Json().DeserializeObject(r[Tuner.Talents]))["Rows"]).Cast<Dictionary<string,object>>().ToList();
         if(rows.Count!=2||(string)rows[0]["Name"]!="Ely_SQ"||Convert.ToInt32(rows[0]["TalentPointModifier"])!=2)throw new Exception("Existing talent rows must stay");
         var b=rows[1];if((string)b["Name"]!=Tuner.TalentRow||Convert.ToInt32(b["TalentPointModifier"])!=30||((System.Collections.ICollection)b["RequiredFlags"]).Count!=0)throw new Exception("Talent bonus row");
-        foreach(int n in new[]{-1,TuneValues.MaxTalent+1}){bool bad=false;try{new TuneValues{Talent=n}.Validate();}catch{bad=true;}if(!bad)throw new Exception("Talent range");}
+        foreach(int n in new[]{TuneValues.MinTalent-1,TuneValues.MaxTalent+1}){bool bad=false;try{new TuneValues{Talent=n}.Validate();}catch{bad=true;}if(!bad)throw new Exception("Talent range");}
+        var neg=Tuner.Transform(stats,null,null,null,talents,new TuneValues{Talent=-10});if(!neg[Tuner.Talents].Contains("-10"))throw new Exception("Negative talent row");
         var old=Tuner.Json().Deserialize<TuneValues>("{\"Health\":200}");if(old.Talent!=0)throw new Exception("Old settings must load with no bonus");
     }
     static void AnimalTest(){

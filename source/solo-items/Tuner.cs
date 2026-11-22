@@ -15,10 +15,10 @@ public sealed class TuneValues {
     public int Talent=0;
     // tamed animals: percent of the game's pregnancy time and juvenile growing (taming) time; 100 = unchanged
     public int Gestation=100, Growth=100;
-    public const int MaxTalent=60;
+    public const int MaxTalent=60, MinTalent=-30;
     public bool IsDefault {get{return Health==100&&Stamina==100&&Oxygen==100&&Food==100&&Water==100&&Weight==100&&Durability==100&&Speed==100&&Talent==0&&Gestation==100&&Growth==100;}}
     public void Validate(){
-        if(Health<100||Health>1000||Gestation<10||Gestation>100||Growth<10||Growth>100||Weight<100||Weight>500||Durability<100||Durability>500||Speed<100||Speed>200||Talent<0||Talent>MaxTalent||new[]{Stamina,Oxygen,Food,Water}.Any(x=>x<0||x>100)) throw new Exception("설정 범위를 확인해 주세요.");
+        if(Health<100||Health>1000||Gestation<10||Gestation>100||Growth<10||Growth>100||Weight<100||Weight>500||Durability<100||Durability>500||Speed<100||Speed>200||Talent<MinTalent||Talent>MaxTalent||new[]{Stamina,Oxygen,Food,Water}.Any(x=>x<0||x>100)) throw new Exception("설정 범위를 확인해 주세요.");
     }
 }
 public sealed class TuneRecord {
@@ -89,7 +89,7 @@ public static class Tuner {
             foreach(var r in Rows(d))if(gear.Contains((string)r["Name"])){if(!r.ContainsKey("Max_Durability"))r["Max_Durability"]=def["Max_Durability"];Scale(r,"Max_Durability",v.Durability,true);changed++;}
             if(changed==0)throw new Exception("장비 내구도 데이터를 찾지 못했습니다.");result[Durable]=Json().Serialize(d);
         }
-        if(v.Talent>0){
+        if(v.Talent!=0){
             // The game sums TalentPointModifier over rows whose RequiredFlags the account has; a row with no flags always counts.
             if(talents==null)throw new Exception("재능 포인트 데이터를 읽지 못했습니다.");
             var t=Obj(Json().DeserializeObject(talents));var rows=((IEnumerable)t["Rows"]).Cast<object>().ToList();
@@ -120,7 +120,7 @@ public static class Tuner {
             if(!File.Exists(data))throw new Exception("Icarus 게임 폴더를 확인해 주세요.");
             var old=ReadRecord(game);Owned(target,old,game);string dataHash=Hash(data);
             string stage=Path.Combine(StateDir,"build",Guid.NewGuid().ToString("N"));Directory.CreateDirectory(stage);
-            var tables=Transform(ReadTable(repak,data,Stats),ReadTable(repak,data,Actions),ReadTable(repak,data,Durable),ReadTable(repak,data,"Items/D_ItemsStatic.json"),values.Talent>0?ReadTable(repak,data,Talents):null,values.Gestation!=100||values.Growth!=100?ReadTable(repak,data,Tames):null,values);
+            var tables=Transform(ReadTable(repak,data,Stats),ReadTable(repak,data,Actions),ReadTable(repak,data,Durable),ReadTable(repak,data,"Items/D_ItemsStatic.json"),values.Talent!=0?ReadTable(repak,data,Talents):null,values.Gestation!=100||values.Growth!=100?ReadTable(repak,data,Tames):null,values);
             if(Directory.Exists(mods))foreach(var pak in Directory.GetFiles(mods,"*.pak",SearchOption.AllDirectories)){
                 // our own PAK is the one being replaced, never a conflict (compare normalized paths)
                 if(string.Equals(Path.GetFullPath(pak),Path.GetFullPath(target),StringComparison.OrdinalIgnoreCase))continue;
