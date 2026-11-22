@@ -101,13 +101,14 @@ public static class Tuner {
         values.Validate();game=Path.GetFullPath(game);if(guard==null)guard=Stopped;
         Directory.CreateDirectory(StateDir);
         using(var writeLock=new FileStream(Path.Combine(StateDir,"tuning.lock"),FileMode.OpenOrCreate,FileAccess.ReadWrite,FileShare.None)){
-            guard();string data=Path.Combine(game,"Icarus/Content/Data/data.pak"),mods=Path.Combine(game,"Icarus/Content/Paks/mods"),target=Path.Combine(mods,ModName),recordPath=RecordPath(game);
+            guard();string data=Path.Combine(game,"Icarus/Content/Data/data.pak"),mods=Path.GetFullPath(Path.Combine(game,"Icarus","Content","Paks","mods")),target=Path.Combine(mods,ModName),recordPath=RecordPath(game);
             if(!File.Exists(data))throw new Exception("Icarus 게임 폴더를 확인해 주세요.");
             var old=ReadRecord(game);Owned(target,old,game);string dataHash=Hash(data);
             string stage=Path.Combine(StateDir,"build",Guid.NewGuid().ToString("N"));Directory.CreateDirectory(stage);
             var tables=Transform(ReadTable(repak,data,Stats),ReadTable(repak,data,Actions),ReadTable(repak,data,Durable),ReadTable(repak,data,"Items/D_ItemsStatic.json"),values.Talent>0?ReadTable(repak,data,Talents):null,values);
             if(Directory.Exists(mods))foreach(var pak in Directory.GetFiles(mods,"*.pak",SearchOption.AllDirectories)){
-                if(string.Equals(Path.GetFullPath(pak),target,StringComparison.OrdinalIgnoreCase))continue;
+                // our own PAK is the one being replaced, never a conflict (compare normalized paths)
+                if(string.Equals(Path.GetFullPath(pak),Path.GetFullPath(target),StringComparison.OrdinalIgnoreCase))continue;
                 string listing=Run(repak,"list --strip-prefix "+Q(MountOf(repak,pak))+" "+Q(pak));
                 if(tables.Keys.Any(k=>listing.IndexOf(k,StringComparison.OrdinalIgnoreCase)>=0))throw new Exception("다른 모드와 설정이 겹칩니다: "+Path.GetFileName(pak));
             }
