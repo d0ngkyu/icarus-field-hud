@@ -8,8 +8,12 @@ on:
         description: Branch or commit with source/solo-items
         required: true
         default: codex/solo-items
+      publish_to:
+        description: Branch to publish to (empty = build and check only). Follows source/solo-items/RELEASE.md.
+        required: false
+        default: ''
 permissions:
-  contents: read
+  contents: write
 jobs:
   build:
     runs-on: windows-latest
@@ -50,3 +54,34 @@ jobs:
           path: |
             source/solo-items/release/package.zip
             source/solo-items/release/manifest-draft.json
+      - name: Publish (package commit, then manifest commit)
+        if: ${{ inputs.publish_to != '' }}
+        env:
+          TARGET: ${{ inputs.publish_to }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          git config user.name d0ngkyu; git config user.email d0ngkyu@users.noreply.github.com
+          $draft = Get-Content release/manifest-draft.json -Raw | ConvertFrom-Json
+          $v = $draft.version
+          $dir = "../../standalone/releases/$v"
+          if (Test-Path $dir) { throw "version $v already published" }
+          git fetch origin $env:TARGET
+          git merge-base --is-ancestor "origin/$env:TARGET" HEAD
+          if ($LASTEXITCODE -ne 0) { throw "source does not contain $env:TARGET" }
+          New-Item -ItemType Directory -Force $dir | Out-Null
+          Copy-Item release/package.zip "$dir/package.zip"
+          git add "$dir/package.zip"
+          git commit -q -m "build(solo): package $v (Actions $env:GITHUB_RUN_ID)"
+          $sha = git rev-parse HEAD
+          git push -q origin "HEAD:refs/heads/$env:TARGET"
+          $draft.packageUrl = "https://raw.githubusercontent.com/$env:GITHUB_REPOSITORY/$sha/standalone/releases/$v/package.zip"
+          Start-Sleep 20
+          $tmp = Join-Path $env:RUNNER_TEMP check.zip
+          Invoke-WebRequest $draft.packageUrl -OutFile $tmp
+          $h = (Get-FileHash $tmp -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($h -ne $draft.sha256 -or (Get-Item $tmp).Length -ne $draft.size) { throw "remote package mismatch" }
+          [IO.File]::WriteAllText((Resolve-Path ../../standalone/manifest.json), ($draft | ConvertTo-Json -Depth 5), (New-Object Text.UTF8Encoding($false)))
+          git add ../../standalone/manifest.json
+          git commit -q -m "release(solo): publish $v"
+          git push -q origin "HEAD:refs/heads/$env:TARGET"
+          Write-Output "published $v package $sha"
