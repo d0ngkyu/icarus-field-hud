@@ -199,8 +199,8 @@ public partial class ItemTool : Form {
         foreach(int n in new[]{0,1001}) {bool rejected=false;try{Request("Fiber",n);}catch{rejected=true;}if(!rejected)throw new Exception("Range failed");}
         if(!Request("Fiber",1000).EndsWith("|Fiber|1000"))throw new Exception("Maximum quantity failed");
         bool invalid=false;try{Request("../bad",1);}catch{invalid=true;}if(!invalid)throw new Exception("ID failed");
-        TalentTest();
-        File.WriteAllText(Path.Combine(Base,"self-test.txt"),"PASS: catalog, request protocol, quantity limits, invalid identifier, talent bonus row",Utf8);
+        TalentTest();AnimalTest();
+        File.WriteAllText(Path.Combine(Base,"self-test.txt"),"PASS: catalog, request protocol, quantity limits, invalid identifier, talent bonus row, animal times, health 10x",Utf8);
     }
     static void TalentTest(){
         string keys="";foreach(var k in new[]{"BaseMaximumHealth_+","BaseWeightCapacity_+","SprintMovementSpeedCoefficient_%","BaseOxygenConsumptionPerHour_+","BaseFoodConsumptionPerHour_+","BaseWaterConsumptionPerHour_+"})keys+=(keys==""?"":",")+"\"(Value=\\\""+k+"\\\")\":100";
@@ -214,6 +214,21 @@ public partial class ItemTool : Form {
         var b=rows[1];if((string)b["Name"]!=Tuner.TalentRow||Convert.ToInt32(b["TalentPointModifier"])!=30||((System.Collections.ICollection)b["RequiredFlags"]).Count!=0)throw new Exception("Talent bonus row");
         foreach(int n in new[]{-1,TuneValues.MaxTalent+1}){bool bad=false;try{new TuneValues{Talent=n}.Validate();}catch{bad=true;}if(!bad)throw new Exception("Talent range");}
         var old=Tuner.Json().Deserialize<TuneValues>("{\"Health\":200}");if(old.Talent!=0)throw new Exception("Old settings must load with no bonus");
+    }
+    static void AnimalTest(){
+        string keys="";foreach(var k in new[]{"BaseMaximumHealth_+","BaseWeightCapacity_+","SprintMovementSpeedCoefficient_%","BaseOxygenConsumptionPerHour_+","BaseFoodConsumptionPerHour_+","BaseWaterConsumptionPerHour_+"})keys+=(keys==""?"":",")+"\"(Value=\\\""+k+"\\\")\":100";
+        string stats="{\"Rows\":[{\"Name\":\"Base_Stats\",\"StatsGranted\":{"+keys+"}}]}";
+        string tames="{\"Defaults\":{\"TameDurationInSeconds\":300,\"GestationPeriodSeconds\":1500},\"Rows\":[{\"Name\":\"Moa\",\"TameDurationInSeconds\":900,\"GestationPeriodSeconds\":3000},{\"Name\":\"Dog\"}]}";
+        var r=Tuner.Transform(stats,null,null,null,null,tames,new TuneValues{Gestation=10,Growth=50});
+        if(r.Count!=1||!r.ContainsKey(Tuner.Tames))throw new Exception("Animal only should write one table");
+        var d=(Dictionary<string,object>)Tuner.Json().DeserializeObject(r[Tuner.Tames]);
+        var rows=((System.Collections.IEnumerable)d["Rows"]).Cast<Dictionary<string,object>>().ToDictionary(x=>(string)x["Name"]);
+        Func<string,string,int> g=(n,k)=>Convert.ToInt32(rows[n][k]);var def=(Dictionary<string,object>)d["Defaults"];
+        if(g("Moa","GestationPeriodSeconds")!=300||g("Moa","TameDurationInSeconds")!=450)throw new Exception("Moa times");
+        if(g("Dog","GestationPeriodSeconds")!=150||g("Dog","TameDurationInSeconds")!=150)throw new Exception("Default-only row times");
+        if(Convert.ToInt32(def["GestationPeriodSeconds"])!=150)throw new Exception("Defaults scaled");
+        var h=Tuner.Transform(stats,null,null,null,null,null,new TuneValues{Health=1000});if(!h.ContainsKey(Tuner.Stats))throw new Exception("Health 10x");
+        foreach(var bad in new[]{new TuneValues{Health=1001},new TuneValues{Gestation=9},new TuneValues{Growth=101}}){bool x=false;try{bad.Validate();}catch{x=true;}if(!x)throw new Exception("Animal/health range");}
     }
     [STAThread] public static int Main(string[] args) {
         try {

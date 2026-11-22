@@ -13,10 +13,12 @@ public sealed class TuneValues {
     public int Health=100, Stamina=100, Oxygen=100, Food=100, Water=100, Weight=100, Durability=100, Speed=100;
     // extra character talent points, added to whatever the game already grants (0 = none)
     public int Talent=0;
+    // tamed animals: percent of the game's pregnancy time and juvenile growing (taming) time; 100 = unchanged
+    public int Gestation=100, Growth=100;
     public const int MaxTalent=60;
-    public bool IsDefault {get{return Health==100&&Stamina==100&&Oxygen==100&&Food==100&&Water==100&&Weight==100&&Durability==100&&Speed==100&&Talent==0;}}
+    public bool IsDefault {get{return Health==100&&Stamina==100&&Oxygen==100&&Food==100&&Water==100&&Weight==100&&Durability==100&&Speed==100&&Talent==0&&Gestation==100&&Growth==100;}}
     public void Validate(){
-        if(Health<100||Health>300||Weight<100||Weight>500||Durability<100||Durability>500||Speed<100||Speed>200||Talent<0||Talent>MaxTalent||new[]{Stamina,Oxygen,Food,Water}.Any(x=>x<0||x>100)) throw new Exception("설정 범위를 확인해 주세요.");
+        if(Health<100||Health>1000||Gestation<10||Gestation>100||Growth<10||Growth>100||Weight<100||Weight>500||Durability<100||Durability>500||Speed<100||Speed>200||Talent<0||Talent>MaxTalent||new[]{Stamina,Oxygen,Food,Water}.Any(x=>x<0||x>100)) throw new Exception("설정 범위를 확인해 주세요.");
     }
 }
 public sealed class TuneRecord {
@@ -28,6 +30,7 @@ public static class Tuner {
     public const string ModName="998-IcarusSoloTools_P.pak";
     public const string Stats="Stats/D_CharacterStartingStats.json", Actions="Tools/D_StaminaActionCosts.json", Durable="Traits/D_Durable.json", Talents="Talents/D_PlayerTalentModifiers.json";
     public const string TalentRow="IcarusSoloTools_TalentBonus";
+    public const string Tames="AI/D_Tames.json";
     public const string Mount="../../../Icarus/Content/data/";
     static readonly Encoding Utf8=new UTF8Encoding(false);
     public static JavaScriptSerializer Json(){return new JavaScriptSerializer{MaxJsonLength=16000000};}
@@ -63,8 +66,9 @@ public static class Tuner {
         decimal v=Convert.ToDecimal(d[key]);if(v<0)throw new Exception("게임 수치가 예상과 다릅니다.");
         d[key]=(int)Math.Round(v*percent/100m,MidpointRounding.AwayFromZero);
     }
-    public static Dictionary<string,string> Transform(string stats,string actions,string durable,string items,TuneValues v){return Transform(stats,actions,durable,items,null,v);}
-    public static Dictionary<string,string> Transform(string stats,string actions,string durable,string items,string talents,TuneValues v){
+    public static Dictionary<string,string> Transform(string stats,string actions,string durable,string items,TuneValues v){return Transform(stats,actions,durable,items,null,null,v);}
+    public static Dictionary<string,string> Transform(string stats,string actions,string durable,string items,string talents,TuneValues v){return Transform(stats,actions,durable,items,talents,null,v);}
+    public static Dictionary<string,string> Transform(string stats,string actions,string durable,string items,string talents,string tames,TuneValues v){
         v.Validate();var result=new Dictionary<string,string>();
         var s=Obj(Json().DeserializeObject(stats));var row=Rows(s).Single(x=>(string)x["Name"]=="Base_Stats");var values=Obj(row["StatsGranted"]);
         foreach(var pair in new[]{new KeyValuePair<string,int>("BaseMaximumHealth_+",v.Health),new KeyValuePair<string,int>("BaseWeightCapacity_+",v.Weight),new KeyValuePair<string,int>("SprintMovementSpeedCoefficient_%",v.Speed),new KeyValuePair<string,int>("BaseOxygenConsumptionPerHour_+",v.Oxygen),new KeyValuePair<string,int>("BaseFoodConsumptionPerHour_+",v.Food),new KeyValuePair<string,int>("BaseWaterConsumptionPerHour_+",v.Water)})
@@ -94,6 +98,17 @@ public static class Tuner {
             rows.Add(new Dictionary<string,object>{{"Name",TalentRow},{"TalentPointModifier",v.Talent},{"RequiredFlags",new object[0]}});
             t["Rows"]=rows;result[Talents]=Json().Serialize(t);
         }
+        if(v.Gestation!=100||v.Growth!=100){
+            // rows without their own value use the table default, so write the scaled default into those rows
+            if(tames==null)throw new Exception("동물 데이터를 읽지 못했습니다.");
+            var d=Obj(Json().DeserializeObject(tames));var def=Obj(d["Defaults"]);int changed=0;
+            foreach(var pair in new[]{new KeyValuePair<string,int>("GestationPeriodSeconds",v.Gestation),new KeyValuePair<string,int>("TameDurationInSeconds",v.Growth)}){
+                if(pair.Value==100)continue;if(!def.ContainsKey(pair.Key))throw new Exception("동물 데이터가 바뀌었습니다: "+pair.Key);
+                foreach(var r in Rows(d)){if(!r.ContainsKey(pair.Key))r[pair.Key]=def[pair.Key];Scale(r,pair.Key,pair.Value,true);if(Convert.ToDecimal(r[pair.Key])<1)r[pair.Key]=1;changed++;}
+                Scale(def,pair.Key,pair.Value,true);
+            }
+            if(changed==0)throw new Exception("동물 데이터를 찾지 못했습니다.");result[Tames]=Json().Serialize(d);
+        }
         return result;
     }
     static void Owned(string target,TuneRecord record,string game){if(File.Exists(target)&&(record==null||!string.Equals(record.Game,game,StringComparison.OrdinalIgnoreCase)||Hash(target)!=record.ModHash))throw new Exception("기존 조절 파일이 변경되어 덮어쓰지 않았습니다.");}
@@ -105,7 +120,7 @@ public static class Tuner {
             if(!File.Exists(data))throw new Exception("Icarus 게임 폴더를 확인해 주세요.");
             var old=ReadRecord(game);Owned(target,old,game);string dataHash=Hash(data);
             string stage=Path.Combine(StateDir,"build",Guid.NewGuid().ToString("N"));Directory.CreateDirectory(stage);
-            var tables=Transform(ReadTable(repak,data,Stats),ReadTable(repak,data,Actions),ReadTable(repak,data,Durable),ReadTable(repak,data,"Items/D_ItemsStatic.json"),values.Talent>0?ReadTable(repak,data,Talents):null,values);
+            var tables=Transform(ReadTable(repak,data,Stats),ReadTable(repak,data,Actions),ReadTable(repak,data,Durable),ReadTable(repak,data,"Items/D_ItemsStatic.json"),values.Talent>0?ReadTable(repak,data,Talents):null,values.Gestation!=100||values.Growth!=100?ReadTable(repak,data,Tames):null,values);
             if(Directory.Exists(mods))foreach(var pak in Directory.GetFiles(mods,"*.pak",SearchOption.AllDirectories)){
                 // our own PAK is the one being replaced, never a conflict (compare normalized paths)
                 if(string.Equals(Path.GetFullPath(pak),Path.GetFullPath(target),StringComparison.OrdinalIgnoreCase))continue;

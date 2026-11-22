@@ -24,8 +24,8 @@ public partial class ItemTool {
         try{if(File.Exists(configPath))config=Tuner.Json().Deserialize<SuiteConfig>(File.ReadAllText(configPath));if(!string.IsNullOrWhiteSpace(config.Game))game.Text=config.Game;var record=Tuner.ReadRecord(game.Text);if(record!=null&&record.Values!=null){record.Values.Validate();tuning=record.Values;}}
         catch(Exception ex){message.Text="저장된 설정을 읽지 못했습니다: "+ex.Message;}
         game.TextChanged+=(o,e)=>{try{SaveConfig();var record=Tuner.ReadRecord(game.Text);tuning=record!=null&&record.Values!=null?record.Values:new TuneValues();dirty=false;if(activeTab>0)ShowTab(activeTab);}catch(Exception ex){message.Text=ex.Message;}};
-        var names=new[]{"아이템","체력","스태미나","생존","무게","내구도","달리기","포인트","설정"};
-        for(int i=0;i<names.Length;i++){int n=i;var b=ActionButton(names[i],28+i*110,112,104,()=>ShowTab(n));b.Height=32;tabs.Add(b);}
+        var names=new[]{"아이템","체력","스태미나","생존","무게","내구도","달리기","포인트","동물","설정"};
+        for(int i=0;i<names.Length;i++){int n=i;var b=ActionButton(names[i],28+i*100,112,94,()=>ShowTab(n));b.Height=32;tabs.Add(b);}
         tuningPanel.BackColor=panel;tuningPanel.BorderStyle=BorderStyle.FixedSingle;Add(tuningPanel,28,155,984,477);tuningPanel.Visible=false;
         tabs[0].BackColor=gold;tabs[0].ForeColor=Color.FromArgb(25,29,32);
         updateTimer.Interval=15*60*1000;updateTimer.Tick+=async(o,e)=>await CheckUpdates(false);if(!imagePreviewMode)updateTimer.Start();
@@ -45,20 +45,22 @@ public partial class ItemTool {
         activeTab=index;foreach(var c in itemControls)c.Visible=index==0;
         for(int i=0;i<tabs.Count;i++){tabs[i].BackColor=i==index?gold:Color.FromArgb(34,44,55);tabs[i].ForeColor=i==index?Color.FromArgb(25,29,32):ForeColor;}
         UpdateDesign();tuningPanel.Visible=index!=0;if(index==0)return;ClearPanel();
-        string[] titles={"","얼마나 튼튼하게 할까요?","스태미나를 얼마나 쓸까요?","산소 · 배고픔 · 목마름","얼마나 많이 들고 갈까요?","장비를 얼마나 오래 쓸까요?","얼마나 빠르게 달릴까요?","재능 포인트를 더 받을까요?","앱 설정"};
-        PanelLabel(index==8?"자동 업데이트":"내 플레이에 맞게 고르세요",26,22,900,39,18,true);
-        if(index==8){ShowAppSettings();LayoutNewPanel();return;}
+        string[] titles={"","얼마나 튼튼하게 할까요?","스태미나를 얼마나 쓸까요?","산소 · 배고픔 · 목마름","얼마나 많이 들고 갈까요?","장비를 얼마나 오래 쓸까요?","얼마나 빠르게 달릴까요?","재능 포인트를 더 받을까요?","동물 번식을 얼마나 빠르게?","앱 설정"};
+        PanelLabel(index==9?"자동 업데이트":"내 플레이에 맞게 고르세요",26,22,900,39,18,true);
+        if(index==9){ShowAppSettings();LayoutNewPanel();return;}
         PanelLabel("버튼으로 고르고, 아래의 ‘설정 적용’을 누르세요. 게임을 새로 실행하면 적용됩니다.",26,66,925,28,10,false).ForeColor=muted;
         switch(index){
-            case 1:SettingRow("기본 최대 체력","Health",100,300,new[]{100,200,300},new[]{"기본","2배","3배"},112);break;
+            case 1:SettingRow("기본 최대 체력","Health",100,1000,new[]{100,300,1000},new[]{"기본","3배","10배"},112);break;
             case 2:SettingRow("달리기 · 점프 · 도구 사용량","Stamina",0,100,new[]{100,50,0},new[]{"기본","절반만","소모 없음"},112);break;
             case 3:SettingRow("산소 소모","Oxygen",0,100,new[]{100,50,0},new[]{"기본","절반만","소모 없음"},105);SettingRow("배고픔 진행","Food",0,100,new[]{100,50,0},new[]{"기본","절반만","소모 없음"},204);SettingRow("목마름 진행","Water",0,100,new[]{100,50,0},new[]{"기본","절반만","소모 없음"},303);break;
             case 4:SettingRow("가방에 들 수 있는 무게","Weight",100,500,new[]{100,200,500},new[]{"기본","2배","5배"},112);break;
             case 5:SettingRow("도구 · 무기 · 방어구 최대 내구도","Durability",100,500,new[]{100,200,500},new[]{"기본","2배","5배"},112);break;
             case 6:SettingRow("달리기 속도","Speed",100,200,new[]{100,150,200},new[]{"기본","1.5배","2배"},112);break;
+            case 8:SettingRow("임신 기간 (원래 시간의 %)","Gestation",10,100,new[]{100,50,10},new[]{"기본","절반","10분의 1"},105);SettingRow("새끼가 자라는 시간 (원래 시간의 %)","Growth",10,100,new[]{100,50,10},new[]{"기본","절반","10분의 1"},204);
+                PanelLabel("길들인 동물에만 해당합니다. 야생 새끼를 길들이는 시간도 같이 줄어요.\n이미 진행 중인 임신·성장은 게임을 다시 켠 뒤부터 바뀐 값이 적용될 수 있습니다.",26,318,910,56,11,false).ForeColor=muted;break;
             case 7:SettingRow("추가 재능 포인트","Talent",0,TuneValues.MaxTalent,new[]{0,10,30},new[]{"없음","+10","+30"},112);break;
         }
-        if(index!=3){
+        if(index!=3&&index!=8){
             string tip=index==7?"게임이 주는 재능 포인트에 더해집니다. 레벨·청사진 포인트는 그대로예요.\n줄이거나 끄기 전에는 게임에서 재능을 먼저 초기화하세요.":index==5?"기존 장비의 현재 내구도를 채우는 수리는 아닙니다.\n최대 내구도가 늘며, 장비에 따라 수리가 필요할 수 있습니다.":index==4?"아이템 하나하나의 무게는 그대로입니다.\n내 캐릭터가 들 수 있는 무게 한도가 늘어납니다.":index==6?"걷기 속도는 그대로, 달리기 속도만 바꿉니다.":"‘기본’ 버튼을 누르면 원래 값으로 돌아갑니다.\n다른 탭에서 고른 설정도 함께 적용됩니다.";
             PanelLabel(tip,26,272,910,70,12,false).ForeColor=muted;
         }
@@ -68,7 +70,7 @@ public partial class ItemTool {
     }
     void SettingRow(string text,string key,int min,int max,int[] presets,string[] labels,int y){
         var field=typeof(TuneValues).GetField(key);int value=(int)field.GetValue(tuning);
-        bool compact=activeTab==3;
+        bool compact=activeTab==3||activeTab==8;
         PanelLabel(text,26,y,600,30,12,true);
         var current=PanelLabel("",730,y-5,224,compact?36:55,compact?19:30,true);current.TextAlign=ContentAlignment.MiddleRight;current.ForeColor=gold;current.Font=new Font("Bahnschrift",compact?20:30,FontStyle.Bold);
         var slider=new TrackBar{Minimum=min,Maximum=max,Value=value,TickStyle=TickStyle.None,SmallChange=key=="Talent"?1:10,LargeChange=key=="Talent"?5:25,BackColor=panel,AccessibleName=text};slider.SetBounds(20,y+(compact?38:69),535,40);tuningPanel.Controls.Add(slider);
