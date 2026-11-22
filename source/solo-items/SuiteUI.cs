@@ -59,9 +59,10 @@ public partial class ItemTool {
             case 6:SettingRow("달리기 속도","Speed",100,200,new[]{100,150,200},new[]{"기본","1.5배","2배"},112);break;
             case 8:SettingRow("임신 기간 (원래 시간의 %)","Gestation",10,100,new[]{100,50,10},new[]{"기본","절반","10분의 1"},105);SettingRow("새끼가 자라는 시간 (원래 시간의 %)","Growth",10,100,new[]{100,50,10},new[]{"기본","절반","10분의 1"},204);
                 PanelLabel("길들인 동물에만 해당합니다. 야생 새끼를 길들이는 시간도 같이 줄어요.\n이미 진행 중인 임신·성장은 게임을 다시 켠 뒤부터 바뀐 값이 적용될 수 있습니다.",26,318,910,56,11,false).ForeColor=muted;break;
-            case 7:SettingRow("재능 포인트 더하기 · 빼기","Talent",TuneValues.MinTalent,TuneValues.MaxTalent,new[]{-10,0,30},new[]{"-10","기본","+30"},112);break;
+            case 7:SettingRow("재능 포인트 더하기 · 빼기","Talent",TuneValues.MinTalent,TuneValues.MaxTalent,new[]{-10,0,30},new[]{"-10","기본","+30"},105);SoloRow(222);
+                PanelLabel("재능 포인트는 -30 ~ +60. 줄이기 전에는 게임에서 재능을 먼저 초기화하세요.\n솔로 포인트는 숫자를 고를 수 없고, 레벨당 재능 포인트와 같은 속도로 쌓이게만 바꿀 수 있습니다.",26,318,910,56,11,false).ForeColor=muted;break;
         }
-        if(index!=3&&index!=8){
+        if(index!=3&&index!=8&&index!=7){
             string tip=index==7?"게임이 주는 재능 포인트에서 더하거나 뺍니다(-30 ~ +60). 솔로·청사진 포인트와 레벨은 그대로예요.\n줄이기 전에는 게임에서 재능을 먼저 초기화하세요.":index==5?"기존 장비의 현재 내구도를 채우는 수리는 아닙니다.\n최대 내구도가 늘며, 장비에 따라 수리가 필요할 수 있습니다.":index==4?"아이템 하나하나의 무게는 그대로입니다.\n내 캐릭터가 들 수 있는 무게 한도가 늘어납니다.":index==6?"걷기 속도는 그대로, 달리기 속도만 바꿉니다.":"‘기본’ 버튼을 누르면 원래 값으로 돌아갑니다.\n다른 탭에서 고른 설정도 함께 적용됩니다.";
             PanelLabel(tip,26,272,910,70,12,false).ForeColor=muted;
         }
@@ -69,9 +70,18 @@ public partial class ItemTool {
         PanelButton("설정 적용",730,413,224,async()=>await ApplyTuning(),true).Height=44;
         PanelLabel("싱글 전용 · 멀티플레이 전에는 모두 기본값으로 복원",202,427,510,26,9,false).ForeColor=muted;LayoutNewPanel();
     }
+    void SoloRow(int y){
+        PanelLabel("솔로 포인트",26,y,600,30,12,true);
+        var current=PanelLabel("",600,y-5,354,36,12,true);current.TextAlign=ContentAlignment.MiddleRight;current.ForeColor=gold;
+        var choices=new List<Button>();
+        Action show=()=>{current.Text=tuning.Solo==1?"재능 포인트만큼":"게임 기본";for(int j=0;j<choices.Count;j++){bool chosen=tuning.Solo==j;choices[j].BackColor=chosen?Color.FromArgb(61,52,39):Color.FromArgb(34,44,55);choices[j].ForeColor=chosen?gold:ForeColor;choices[j].FlatAppearance.BorderSize=chosen?1:0;choices[j].FlatAppearance.BorderColor=gold;}};
+        var labels=new[]{"게임 기본","재능 포인트만큼"};
+        for(int i=0;i<2;i++){int v=i;var b=PanelButton(labels[i],26+i*262,y+36,250,()=>{tuning.Solo=v;dirty=true;show();UpdateDesign();});b.Height=44;b.Font=Ui(11,true);choices.Add(b);}
+        show();
+    }
     void SettingRow(string text,string key,int min,int max,int[] presets,string[] labels,int y){
         var field=typeof(TuneValues).GetField(key);int value=(int)field.GetValue(tuning);
-        bool compact=activeTab==3||activeTab==8;
+        bool compact=activeTab==3||activeTab==8||activeTab==7;
         PanelLabel(text,26,y,600,30,12,true);
         var current=PanelLabel("",730,y-5,224,compact?36:55,compact?19:30,true);current.TextAlign=ContentAlignment.MiddleRight;current.ForeColor=gold;current.Font=new Font("Bahnschrift",compact?20:30,FontStyle.Bold);
         var slider=new TrackBar{Minimum=min,Maximum=max,Value=value,TickStyle=TickStyle.None,SmallChange=key=="Talent"?1:10,LargeChange=key=="Talent"?5:25,BackColor=panel,AccessibleName=text};slider.SetBounds(20,y+(compact?38:69),535,40);tuningPanel.Controls.Add(slider);

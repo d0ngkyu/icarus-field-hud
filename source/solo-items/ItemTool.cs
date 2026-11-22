@@ -202,8 +202,8 @@ public partial class ItemTool : Form {
         foreach(int n in new[]{0,1001}) {bool rejected=false;try{Request("Fiber",n);}catch{rejected=true;}if(!rejected)throw new Exception("Range failed");}
         if(!Request("Fiber",1000).EndsWith("|Fiber|1000"))throw new Exception("Maximum quantity failed");
         bool invalid=false;try{Request("../bad",1);}catch{invalid=true;}if(!invalid)throw new Exception("ID failed");
-        TalentTest();AnimalTest();TeleportTest();
-        File.WriteAllText(Path.Combine(Base,"self-test.txt"),"PASS: catalog, request protocol, quantity limits, invalid identifier, talent bonus row, animal times, health 10x, teleport requests",Utf8);
+        TalentTest();AnimalTest();TeleportTest();SoloTest();
+        File.WriteAllText(Path.Combine(Base,"self-test.txt"),"PASS: catalog, request protocol, quantity limits, invalid identifier, talent bonus row, animal times, health 10x, teleport requests, solo curve",Utf8);
     }
     static void TalentTest(){
         string keys="";foreach(var k in new[]{"BaseMaximumHealth_+","BaseWeightCapacity_+","SprintMovementSpeedCoefficient_%","BaseOxygenConsumptionPerHour_+","BaseFoodConsumptionPerHour_+","BaseWaterConsumptionPerHour_+"})keys+=(keys==""?"":",")+"\"(Value=\\\""+k+"\\\")\":100";
@@ -218,6 +218,17 @@ public partial class ItemTool : Form {
         foreach(int n in new[]{TuneValues.MinTalent-1,TuneValues.MaxTalent+1}){bool bad=false;try{new TuneValues{Talent=n}.Validate();}catch{bad=true;}if(!bad)throw new Exception("Talent range");}
         var neg=Tuner.Transform(stats,null,null,null,talents,new TuneValues{Talent=-10});if(!neg[Tuner.Talents].Contains("-10"))throw new Exception("Negative talent row");
         var old=Tuner.Json().Deserialize<TuneValues>("{\"Health\":200}");if(old.Talent!=0)throw new Exception("Old settings must load with no bonus");
+    }
+    static void SoloTest(){
+        string keys="";foreach(var k in new[]{"BaseMaximumHealth_+","BaseWeightCapacity_+","SprintMovementSpeedCoefficient_%","BaseOxygenConsumptionPerHour_+","BaseFoodConsumptionPerHour_+","BaseWaterConsumptionPerHour_+"})keys+=(keys==""?"":",")+"\"(Value=\\\""+k+"\\\")\":100";
+        string stats="{\"Rows\":[{\"Name\":\"Base_Stats\",\"StatsGranted\":{"+keys+"}}]}";
+        string growth="{\"Rows\":[{\"Name\":\"Player\",\"TalentPointsPerLevel\":\"CurveFloat'/Game/Data/Character/C_PlayerTalentGrowth.C_PlayerTalentGrowth'\",\"SoloPointsPerLevel\":\"CurveFloat'/Game/Data/Character/C_SoloTalentGrowth.C_SoloTalentGrowth'\",\"MaxLevel\":1000},{\"Name\":\"AI\",\"MaxLevel\":120}]}";
+        var r=Tuner.Transform(stats,null,null,null,null,null,growth,new TuneValues{Solo=1});
+        if(r.Count!=1||!r.ContainsKey(Tuner.Growth))throw new Exception("Solo only should write one table");
+        var rows=((System.Collections.IEnumerable)((Dictionary<string,object>)Tuner.Json().DeserializeObject(r[Tuner.Growth]))["Rows"]).Cast<Dictionary<string,object>>().ToList();
+        if(!((string)rows[0]["SoloPointsPerLevel"]).Contains("C_PlayerTalentGrowth")||Convert.ToInt32(rows[0]["MaxLevel"])!=1000||rows.Count!=2)throw new Exception("Solo curve swap");
+        if(Tuner.Transform(stats,null,null,null,null,null,growth,new TuneValues()).Count!=0)throw new Exception("Solo default changes nothing");
+        bool bad=false;try{new TuneValues{Solo=2}.Validate();}catch{bad=true;}if(!bad)throw new Exception("Solo range");
     }
     static void AnimalTest(){
         string keys="";foreach(var k in new[]{"BaseMaximumHealth_+","BaseWeightCapacity_+","SprintMovementSpeedCoefficient_%","BaseOxygenConsumptionPerHour_+","BaseFoodConsumptionPerHour_+","BaseWaterConsumptionPerHour_+"})keys+=(keys==""?"":",")+"\"(Value=\\\""+k+"\\\")\":100";
