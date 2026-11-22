@@ -24,7 +24,7 @@ public partial class ItemTool {
         try{if(File.Exists(configPath))config=Tuner.Json().Deserialize<SuiteConfig>(File.ReadAllText(configPath));if(!string.IsNullOrWhiteSpace(config.Game))game.Text=config.Game;var record=Tuner.ReadRecord(game.Text);if(record!=null&&record.Values!=null){record.Values.Validate();tuning=record.Values;}}
         catch(Exception ex){message.Text="저장된 설정을 읽지 못했습니다: "+ex.Message;}
         game.TextChanged+=(o,e)=>{try{SaveConfig();var record=Tuner.ReadRecord(game.Text);tuning=record!=null&&record.Values!=null?record.Values:new TuneValues();dirty=false;if(activeTab>0)ShowTab(activeTab);}catch(Exception ex){message.Text=ex.Message;}};
-        var names=new[]{"아이템","체력","스태미나","생존","무게","내구도","달리기","포인트","동물","설정"};
+        var names=new[]{"아이템","체력","스태미나","생존","무게","내구도","달리기","포인트","동물","이동","설정"};
         for(int i=0;i<names.Length;i++){int n=i;var b=ActionButton(names[i],28+i*100,112,94,()=>ShowTab(n));b.Height=32;tabs.Add(b);}
         tuningPanel.BackColor=panel;tuningPanel.BorderStyle=BorderStyle.FixedSingle;Add(tuningPanel,28,155,984,477);tuningPanel.Visible=false;
         tabs[0].BackColor=gold;tabs[0].ForeColor=Color.FromArgb(25,29,32);
@@ -45,9 +45,10 @@ public partial class ItemTool {
         activeTab=index;foreach(var c in itemControls)c.Visible=index==0;
         for(int i=0;i<tabs.Count;i++){tabs[i].BackColor=i==index?gold:Color.FromArgb(34,44,55);tabs[i].ForeColor=i==index?Color.FromArgb(25,29,32):ForeColor;}
         UpdateDesign();tuningPanel.Visible=index!=0;if(index==0)return;ClearPanel();
-        string[] titles={"","얼마나 튼튼하게 할까요?","스태미나를 얼마나 쓸까요?","산소 · 배고픔 · 목마름","얼마나 많이 들고 갈까요?","장비를 얼마나 오래 쓸까요?","얼마나 빠르게 달릴까요?","재능 포인트를 더 받을까요?","동물 번식을 얼마나 빠르게?","앱 설정"};
-        PanelLabel(index==9?"자동 업데이트":"내 플레이에 맞게 고르세요",26,22,900,39,18,true);
-        if(index==9){ShowAppSettings();LayoutNewPanel();return;}
+        string[] titles={"","얼마나 튼튼하게 할까요?","스태미나를 얼마나 쓸까요?","산소 · 배고픔 · 목마름","얼마나 많이 들고 갈까요?","장비를 얼마나 오래 쓸까요?","얼마나 빠르게 달릴까요?","재능 포인트를 더 받을까요?","동물 번식을 얼마나 빠르게?","어디로 갈까요?","앱 설정"};
+        PanelLabel(index==10?"자동 업데이트":index==9?"텔레포트":"내 플레이에 맞게 고르세요",26,22,900,39,18,true);
+        if(index==10){ShowAppSettings();LayoutNewPanel();return;}
+        if(index==9){ShowTeleport();LayoutNewPanel();return;}
         PanelLabel("버튼으로 고르고, 아래의 ‘설정 적용’을 누르세요. 게임을 새로 실행하면 적용됩니다.",26,66,925,28,10,false).ForeColor=muted;
         switch(index){
             case 1:SettingRow("기본 최대 체력","Health",100,1000,new[]{100,300,1000},new[]{"기본","3배","10배"},112);break;

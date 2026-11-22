@@ -182,10 +182,13 @@ public partial class ItemTool : Form {
         list.EndUpdate();
     }
     void ReadStatus() {
+        ReadHere();
         if(lastId=="") return;
         try {
             var p=File.ReadAllText(Path.Combine(ModPath(game.Text),"status.txt"),Utf8).Split('|');
             if(p.Length<4 || p[0]!=lastId) return;
+            if(p[1]=="SENT"&&(p[3]=="TELEPORT"||p[3]=="HERE")) {if(p[3]=="TELEPORT")message.Text="이동했습니다. 위험하면 ‘이동 전 위치로’를 누르세요.";lastId="";return;}
+            if(p[1]=="ERROR"&&activeTab==9) {message.Text="이동하지 못했습니다: "+p[3];lastId="";hereId="";return;}
             if(p[1]=="SENT") {message.Text="생성 함수 "+p[2]+"회 호출 완료. 실제 지급 수량은 게임 가방에서 확인하세요.";lastId="";}
             if(p[1]=="ERROR") {message.Text="처리 중단 (호출 "+p[2]+"회): "+p[3];lastId="";}
             if(p[1]=="CANCELLED") {message.Text="중지 완료 · 생성 함수 "+p[2]+"회 호출. 실제 수량은 가방에서 확인하세요.";lastId="";}
@@ -199,8 +202,8 @@ public partial class ItemTool : Form {
         foreach(int n in new[]{0,1001}) {bool rejected=false;try{Request("Fiber",n);}catch{rejected=true;}if(!rejected)throw new Exception("Range failed");}
         if(!Request("Fiber",1000).EndsWith("|Fiber|1000"))throw new Exception("Maximum quantity failed");
         bool invalid=false;try{Request("../bad",1);}catch{invalid=true;}if(!invalid)throw new Exception("ID failed");
-        TalentTest();AnimalTest();
-        File.WriteAllText(Path.Combine(Base,"self-test.txt"),"PASS: catalog, request protocol, quantity limits, invalid identifier, talent bonus row, animal times, health 10x",Utf8);
+        TalentTest();AnimalTest();TeleportTest();
+        File.WriteAllText(Path.Combine(Base,"self-test.txt"),"PASS: catalog, request protocol, quantity limits, invalid identifier, talent bonus row, animal times, health 10x, teleport requests",Utf8);
     }
     static void TalentTest(){
         string keys="";foreach(var k in new[]{"BaseMaximumHealth_+","BaseWeightCapacity_+","SprintMovementSpeedCoefficient_%","BaseOxygenConsumptionPerHour_+","BaseFoodConsumptionPerHour_+","BaseWaterConsumptionPerHour_+"})keys+=(keys==""?"":",")+"\"(Value=\\\""+k+"\\\")\":100";

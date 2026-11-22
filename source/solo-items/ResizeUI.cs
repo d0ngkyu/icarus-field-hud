@@ -66,7 +66,7 @@ public partial class ItemTool {
             form.tuning.Health=200;form.dirty=true;
             foreach(var size in new[]{new Size(860,580),new Size(980,650),new Size(1500,900),new Size(980,650)}){
                 form.ClientSize=size;
-                for(int tab=0;tab<10;tab++){
+                for(int tab=0;tab<11;tab++){
                     form.ShowTab(tab);
                     foreach(var c in form.layoutSpecs.Keys){
                         if(c.IsDisposed)continue;

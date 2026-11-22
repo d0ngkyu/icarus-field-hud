@@ -25,9 +25,9 @@ public partial class ItemTool {
         var logo=new PictureBox{Image=Icon.ToBitmap(),SizeMode=PictureBoxSizeMode.Zoom,BackColor=Color.Transparent};Add(logo,26,28,64,64);
         TextLabel("ICARUS",24,108,160,32).Font=new Font("Bahnschrift",21,FontStyle.Bold);
         var sub=TextLabel("나만의 싱글 도구",26,143,150,27);sub.Font=Ui(10);sub.ForeColor=muted;
-        string[] names={"아이템 보급","체력","스태미나","산소 · 음식 · 물","가방 무게","장비 내구도","달리기","재능 포인트","동물 번식","앱 설정"};
+        string[] names={"아이템 보급","체력","스태미나","산소 · 음식 · 물","가방 무게","장비 내구도","달리기","재능 포인트","동물 번식","텔레포트","앱 설정"};
         for(int i=0;i<tabs.Count;i++){
-            var b=tabs[i];b.Text=names[i];b.SetBounds(16,i==9?660:196+i*46,168,42);b.Font=Ui(11,true);b.TextAlign=ContentAlignment.MiddleLeft;b.Padding=new Padding(14,0,0,0);b.FlatAppearance.MouseOverBackColor=Color.FromArgb(43,49,57);b.TabIndex=i;
+            var b=tabs[i];b.Text=names[i];b.SetBounds(16,i==10?662:196+i*46,168,42);b.Font=Ui(11,true);b.TextAlign=ContentAlignment.MiddleLeft;b.Padding=new Padding(14,0,0,0);b.FlatAppearance.MouseOverBackColor=Color.FromArgb(43,49,57);b.TabIndex=i;
         }
         var edition=TextLabel("PERSONAL EDITION",26,724,160,22);edition.Font=new Font("Bahnschrift",9);edition.ForeColor=muted;
         var version=TextLabel("v"+Updater.CurrentVersion,26,748,160,22);version.Font=new Font("Bahnschrift",11);version.ForeColor=gold;
@@ -41,13 +41,13 @@ public partial class ItemTool {
     }
     void UpdateDesign(){
         if(!designReady)return;
-        string[] titles={"필요한 아이템을, 간편하게","나에게 맞는 체력","가볍게 움직이세요","여유로운 생존","가방을 더 넉넉하게","오래 쓰는 장비","원하는 속도로","재능 포인트 더 받기","빠른 번식과 성장","앱 설정"};
-        string[] subtitles={"찾고 → 수량을 고르고 → 바로 받기","기본 최대 체력을 조절합니다.","달리기 · 점프 · 도구의 스태미나 소모량을 조절합니다.","산소와 음식, 물의 소모량을 각각 고릅니다.","캐릭터가 들 수 있는 무게 한도를 조절합니다.","도구 · 무기 · 방어구의 최대 내구도를 조절합니다.","달리기 속도를 조절합니다.","캐릭터 재능 포인트를 원하는 만큼 더합니다.","길들인 동물의 임신 기간과 새끼가 자라는 시간을 줄입니다.","업데이트와 게임 연결을 한곳에서 관리합니다."};
+        string[] titles={"필요한 아이템을, 간편하게","나에게 맞는 체력","가볍게 움직이세요","여유로운 생존","가방을 더 넉넉하게","오래 쓰는 장비","원하는 속도로","재능 포인트 더 받기","빠른 번식과 성장","원하는 곳으로 순간 이동","앱 설정"};
+        string[] subtitles={"찾고 → 수량을 고르고 → 바로 받기","기본 최대 체력을 조절합니다.","달리기 · 점프 · 도구의 스태미나 소모량을 조절합니다.","산소와 음식, 물의 소모량을 각각 고릅니다.","캐릭터가 들 수 있는 무게 한도를 조절합니다.","도구 · 무기 · 방어구의 최대 내구도를 조절합니다.","달리기 속도를 조절합니다.","캐릭터 재능 포인트를 원하는 만큼 더합니다.","길들인 동물의 임신 기간과 새끼가 자라는 시간을 줄입니다.","장소를 저장해 두고, 게임을 켠 채로 바로 이동합니다.","업데이트와 게임 연결을 한곳에서 관리합니다."};
         pageTitle.Text=titles[activeTab];pageSubtitle.Text=subtitles[activeTab];
         saveState.Text=dirty?"●  적용 전 변경 있음":"싱글플레이 전용";saveState.ForeColor=dirty?gold:Color.FromArgb(137,191,174);
-        foreach(var c in connectionControls)c.Visible=activeTab==9;
-        workflow.Visible=activeTab!=9;
-        workflow.Text=activeTab==0?"01   아이템 선택     →     02   수량 선택     →     03   가방으로 바로 받기\n처음 사용한다면 왼쪽 ‘앱 설정’에서 아이템 모드를 설치하세요.":"값을 고른 다음 ‘설정 적용’을 누르세요.\n게임을 종료한 상태에서 적용하고, 다시 실행하면 반영됩니다.";
+        foreach(var c in connectionControls)c.Visible=activeTab==10;
+        workflow.Visible=activeTab!=10;
+        workflow.Text=activeTab==9?"게임을 켠 채로 누르면 바로 이동합니다. 싱글 월드에서만 동작합니다.\n낭떠러지·물속 등 위험한 곳은 ‘이동 전 위치로’로 바로 돌아오세요.":activeTab==0?"01   아이템 선택     →     02   수량 선택     →     03   가방으로 바로 받기\n처음 사용한다면 왼쪽 ‘앱 설정’에서 아이템 모드를 설치하세요.":"값을 고른 다음 ‘설정 적용’을 누르세요.\n게임을 종료한 상태에서 적용하고, 다시 실행하면 반영됩니다.";
         for(int i=0;i<tabs.Count;i++){tabs[i].BackColor=i==activeTab?Color.FromArgb(57,49,37):Color.FromArgb(18,24,32);tabs[i].ForeColor=i==activeTab?gold:muted;}
         Invalidate();
     }

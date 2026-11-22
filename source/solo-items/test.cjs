@@ -18,8 +18,9 @@ function run(tail){
  debug.getinfo=function() return {source='@mock/Scripts/main.lua'} end
  allowedMock={Fiber=true,Stone=true}; received={}; rejectStone=false
  dofile=function() return allowedMock end
- local pc={GetAddress=function() return identity end,GetFullName=function() return "Player"..identity end,IsValid=function() return valid end, IsLocalController=function() return true end, HasAuthority=function() return authority end,
+ local pc;pc={GetAddress=function() return identity end,GetFullName=function() return "Player"..identity end,IsValid=function() return valid end, IsLocalController=function() return true end, HasAuthority=function() return authority end,
  AddItemToInventory=function(self,item) assert(allowedMock[item.RowName]);calls=calls+1;received[item.RowName]=(received[item.RowName] or 0)+1 end}
+ PC=pc
  package.preload.UEHelpers=function() return {GetPlayerController=function() return pc end,GetPlayer=function() return pc end} end
  StaticFindObject=function() nativeCalls=nativeCalls+1; return {IsValid=function() return true end,IsStandalone=function() return standalone end,GetGameMode=function() return {IsValid=function() return modeValid end,GetNumPlayers=function() return players end,GetNumSpectators=function() return spectators end} end,IsValidName=function(self,name) return not (rejectStone and name=='Stone') end} end
  FName=function(x) return x end
@@ -94,4 +95,17 @@ test('automatic pickup keeps every safety check: multiplayer and expired request
  run(`standalone=false;authority=true;players=2;files['request.txt']='${id}|1000|Fiber|3';autoLoop();assert(calls==0 and files['status.txt']:find('|ERROR|',1,true))`);
  run(`files['request.txt']='${id}|800|Fiber|3';autoLoop();assert(calls==0 and files['status.txt']:find('|ERROR|',1,true))`);
  run(`files['request.txt']='${id}|1000|Fiber|30';autoLoop();assert(calls==25);autoLoop();assert(calls==25,'busy while batching');drain();assert(calls==30)`);
+});
+
+const tp=`pos={X=1000,Y=2000,Z=300};teleported=nil;pc.K2_GetActorLocation=function() return pos end;pc.K2_GetActorRotation=function() return {Yaw=90} end;pc.K2_TeleportTo=function(self,l,r) teleported={l,r};pos={X=l.X,Y=l.Y,Z=l.Z};return true end;pc.GetFullName=function() return '/Game/Maps/Terrain_016/Terrain_016.Terrain_016:PersistentLevel.BP_IcarusPlayerCharacterSurvival_C_1' end;`;
+test('teleport: save here, go to a saved spot on the same map, and back',()=>run(`${tp.replace('pc.','PCX.').replace(/pc\./g,'PCX.')}`.replace(/PCX\./g,'PC.')+`
+ files['teleport.txt']='${id}|1000|HERE';autoLoop();assert(files['here.txt']=='${id}|Terrain_016|1000|2000|300' and not files['teleport.txt'])
+ files['teleport.txt']='${id}|1000|GO|Terrain_016|-5000|7000|100';autoLoop();assert(teleported[1].X==-5000 and teleported[1].Z==250 and teleported[2].Yaw==90)
+ assert(files['teleport-back.txt']=='Terrain_016|1000|2000|300' and files['status.txt']:find('|SENT|0|TELEPORT',1,true))
+ files['teleport.txt']='${id}|1000|BACK';autoLoop();assert(teleported[1].X==1000 and teleported[1].Y==2000)
+ assert(calls==0,'teleport never creates items')`));
+test('teleport refuses other maps, multiplayer, old requests and wild coordinates',()=>{
+ for(const [setup,req] of [['','GO|Terrain_017|0|0|0'],['standalone=false;authority=true;players=2','GO|Terrain_016|0|0|0'],['','GO|Terrain_016|9000000|0|0'],['','BACK'],['','GO|Terrain_016|1|x|0']])
+  run(tp.replace(/pc\./g,'PC.')+setup+`;files['teleport.txt']='${id}|1000|${req}';autoLoop();assert(teleported==nil and files['status.txt']:find('|ERROR|',1,true))`);
+ run(tp.replace(/pc\./g,'PC.')+`files['teleport.txt']='${id}|900|GO|Terrain_016|0|0|0';autoLoop();assert(teleported==nil)`);
 });

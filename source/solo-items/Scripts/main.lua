@@ -9,6 +9,9 @@ local request = root .. 'request.txt'
 local processing = root .. 'processing.txt'
 local status = root .. 'status.txt'
 local cancel = root .. 'cancel.txt'
+local teleport = root .. 'teleport.txt'
+local teleportBack = root .. 'teleport-back.txt'
+local here = root .. 'here.txt'
 local MAX_QUANTITY, BATCH_SIZE = 1000, 25
 local busy = false
 -- File-only liveness: no UObject lookup or game-thread work in this loop.
@@ -57,6 +60,7 @@ end
 -- A request made before this game start must never execute on a later keypress.
 os.remove(request)
 os.remove(processing)
+os.remove(teleport)
 writeStatus('-', 'READY', 0, 'F11')
 local function process()
     local f = io.open(request, 'r')
@@ -162,6 +166,72 @@ local function run()
     end)
     if not ok then busy = false; writeStatus('-', 'ERROR', 0, err) end
 end
+-- Teleport (single-player tool only): id|time|HERE  /  id|time|GO|world|x|y|z  /  id|time|BACK
+local MAP_LIMIT = 700000
+local function worldOf(player)
+    local name = player:GetFullName() or ''
+    return name:match('(Terrain_%d+)') or name:match('/Game/Maps/([%w_]+)') or '?'
+end
+local function writeLine(path, text)
+    local f = io.open(path .. '.tmp', 'w')
+    if f then f:write(text); f:close(); os.remove(path); os.rename(path .. '.tmp', path) end
+end
+local function readLine(path, limit)
+    local f = io.open(path, 'r'); if not f then return nil end
+    local t = f:read(limit or 512); f:close(); return t
+end
+local function processTeleport()
+    local text = readLine(teleport, 512)
+    os.remove(teleport)
+    if not text then busy = false; return end
+    local id, timestamp, cmd, rest = text:match('^([a-f0-9]+)|(%d+)|(%u+)|?(.-)%s*$')
+    local ok, err = pcall(function()
+        assert(id and #id == 32, 'Invalid request')
+        local age = os.time() - tonumber(timestamp)
+        assert(age >= -5 and age <= 60, 'Request expired; try again')
+        local pc, player = H.GetPlayerController(), H.GetPlayer()
+        assert(pc and pc:IsValid() and player and player:IsValid(), 'Enter a single-player world first')
+        local mode = soloMode(pc, player)
+        assert(mode == 'SINGLE' or mode == 'HOST', 'Single-player host required')
+        local world = worldOf(player)
+        local loc = player:K2_GetActorLocation()
+        assert(loc and loc.X, 'Position unavailable')
+        local function at(x, y, z) return string.format('%s|%d|%d|%d', world, math.floor(x + 0.5), math.floor(y + 0.5), math.floor(z + 0.5)) end
+        if cmd == 'HERE' then
+            writeLine(here, id .. '|' .. at(loc.X, loc.Y, loc.Z))
+            writeStatus(id, 'SENT', 0, 'HERE'); return
+        end
+        local target
+        if cmd == 'GO' then
+            local w, x, y, z = rest:match('^([%w_]+)|(%-?%d+)|(%-?%d+)|(%-?%d+)$')
+            target = {w = w, x = tonumber(x), y = tonumber(y), z = tonumber(z)}
+        elseif cmd == 'BACK' then
+            local w, x, y, z = (readLine(teleportBack, 128) or ''):match('^([%w_]+)|(%-?%d+)|(%-?%d+)|(%-?%d+)')
+            assert(w, 'No previous position yet')
+            target = {w = w, x = tonumber(x), y = tonumber(y), z = tonumber(z)}
+        else error('Unknown command') end
+        assert(target.w and target.x and target.y and target.z, 'Invalid position')
+        assert(target.w == world, 'That place is on another map (' .. tostring(target.w) .. ')')
+        assert(math.abs(target.x) <= MAP_LIMIT and math.abs(target.y) <= MAP_LIMIT and math.abs(target.z) <= 200000, 'Position outside the map')
+        writeLine(teleportBack, at(loc.X, loc.Y, loc.Z))
+        local rot = player:K2_GetActorRotation()
+        -- arrive a little above the spot so the character does not start inside the ground
+        local moved = player:K2_TeleportTo({X = target.x, Y = target.y, Z = target.z + 150}, {Pitch = 0, Yaw = rot and rot.Yaw or 0, Roll = 0})
+        assert(moved ~= false, 'The game refused the move (blocked spot)')
+        writeStatus(id, 'SENT', 0, 'TELEPORT')
+    end)
+    if not ok then writeStatus(id or '-', 'ERROR', 0, err) end
+    busy = false
+end
+local function runTeleport()
+    if busy then return end
+    busy = true
+    local ok, err = pcall(function() ExecuteInGameThread(function()
+        local success, why = pcall(processTeleport)
+        if not success then writeStatus('-', 'ERROR', 0, why); busy = false end
+    end) end)
+    if not ok then busy = false; writeStatus('-', 'ERROR', 0, err) end
+end
 -- F11 still works (and also checks single-world readiness without a request).
 RegisterKeyBind(Key.F11, run)
 -- Automatic pickup: a file check every second; game work happens only when a request file exists.
@@ -173,6 +243,10 @@ local function pending()
     return true
 end
 if type(LoopAsync) == 'function' then
-    LoopAsync(1000, function() if pending() then pcall(run) end; return false end)
+    LoopAsync(1000, function()
+        if pending() then pcall(run)
+        elseif not busy then local f = io.open(teleport, 'r'); if f then f:close(); pcall(runTeleport) end end
+        return false
+    end)
 end
 print('[IcarusSoloItems] Ready: requests are picked up automatically (F11 also works); 20 kinds / 1000 total, 25 calls per batch.\n')
