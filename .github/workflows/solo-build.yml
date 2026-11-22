@@ -25,6 +25,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.ref }}
+          fetch-depth: 0
       - name: Reuse the verified repak from the last published package
         run: |
           $m = Get-Content ../../standalone/manifest.json -Raw | ConvertFrom-Json
