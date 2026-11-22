@@ -14,13 +14,13 @@ public sealed class ConnectionState {
         var p=(heartbeat??"").Split('|');long time,session;
         if(p.Length!=4||p[0]!="1"||p[3]!="LOADED"||!long.TryParse(p[1],out time)||!long.TryParse(p[2],out session))return s;
         if(time>now+2||now-time>10||session<processStart-2||session>time)return s;
-        s.Online=true;s.Badge="ONLINE";s.Detail="모드 연결됨 · 싱글 월드에서 F11로 사용 준비 확인";
+        s.Online=true;s.Badge="ONLINE";s.Detail="모드 연결됨 · 싱글 월드에서 요청하면 바로 지급";
         var q=(probe??"").Split('|');long checkedAt,checkedSession;
         if(q.Length==4&&q[0]=="1"&&long.TryParse(q[1],out checkedAt)&&long.TryParse(q[2],out checkedSession)&&checkedSession==session&&checkedAt<=now+2&&now-checkedAt<=10){
             if(q[3]=="HOST")s.Detail="방금 1인 호스트 확인 · 아이템 요청 가능";
             else if(q[3]=="SINGLE")s.Detail="방금 싱글 월드 확인 · 아이템 요청 가능";
             else if(q[3]=="MULTI")s.Detail="멀티플레이 확인 · 아이템 생성 사용 불가";
-            else s.Detail="월드 준비 전 · 싱글 월드 입장 후 F11";
+            else s.Detail="월드 준비 전 · 싱글 월드에 들어가면 사용 가능";
         }
         return s;
     }

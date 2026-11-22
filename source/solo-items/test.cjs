@@ -23,7 +23,7 @@ function run(tail){
  package.preload.UEHelpers=function() return {GetPlayerController=function() return pc end,GetPlayer=function() return pc end} end
  StaticFindObject=function() nativeCalls=nativeCalls+1; return {IsValid=function() return true end,IsStandalone=function() return standalone end,GetGameMode=function() return {IsValid=function() return modeValid end,GetNumPlayers=function() return players end,GetNumSpectators=function() return spectators end} end,IsValidName=function(self,name) return not (rejectStone and name=='Stone') end} end
  FName=function(x) return x end
- LoopAsync=function(ms,f) assert(ms==3000);heartbeatLoop=f end
+ LoopAsync=function(ms,f) assert(ms==3000 or ms==1000);if ms==3000 then heartbeatLoop=f else autoLoop=f end end
  Key={F11=122}
  RegisterKeyBind=function(k,f) key=f end
  ExecuteInGameThread=function(f) f() end
@@ -84,4 +84,14 @@ test('catalog only contains unique valid template identifiers',()=>{
  assert.equal(new Set(items.map(i=>i.id)).size,items.length);
  assert(items.every(i=>/^[A-Za-z0-9_]+$/.test(i.id)&&i.name));
  assert(!items.some(i=>i.id==='Charcoal_From_Wood'));
+});
+
+test('a request is delivered automatically without F11, once, and an idle loop does no game work',()=>run(`
+ local before=nativeCalls;autoLoop();assert(calls==0 and nativeCalls==before,'idle loop must not touch game objects')
+ files['request.txt']='${id}|1000|Fiber|3';autoLoop();assert(calls==3 and files['status.txt']:find('|SENT|3|',1,true) and not files['request.txt'])
+ autoLoop();assert(calls==3,'no duplicate')`));
+test('automatic pickup keeps every safety check: multiplayer and expired requests are refused',()=>{
+ run(`standalone=false;authority=true;players=2;files['request.txt']='${id}|1000|Fiber|3';autoLoop();assert(calls==0 and files['status.txt']:find('|ERROR|',1,true))`);
+ run(`files['request.txt']='${id}|800|Fiber|3';autoLoop();assert(calls==0 and files['status.txt']:find('|ERROR|',1,true))`);
+ run(`files['request.txt']='${id}|1000|Fiber|30';autoLoop();assert(calls==25);autoLoop();assert(calls==25,'busy while batching');drain();assert(calls==30)`);
 });

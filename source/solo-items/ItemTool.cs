@@ -148,12 +148,12 @@ public partial class ItemTool : Form {
         TextLabel("1–1,000개",878,375,110,24).ForeColor=muted;
         amount.Minimum=1;amount.Maximum=1000;amount.Value=1;amount.Font=new Font("Segoe UI",18,FontStyle.Bold);amount.BackColor=Color.FromArgb(32,42,53);amount.ForeColor=ForeColor;amount.BorderStyle=BorderStyle.FixedSingle;Add(amount,702,410,286,42);
         int bx=702;foreach(int n in new[]{1,100,500,1000}){int value=n;var b=ActionButton(n.ToString(),bx,464,64,()=>amount.Value=value);b.Height=30;bx+=74;}
-        prepare=ActionButton("생성 요청 준비   →",702,516,286,()=>{
+        prepare=ActionButton("가방으로 바로 받기   →",702,516,286,()=>{
             if(list.SelectedItems.Count!=1) throw new Exception("목록에서 아이템을 선택하세요.");
             QueueRequest(Request((string)list.SelectedItems[0].Tag,(int)amount.Value));
         });
         prepare.Height=46;prepare.BackColor=gold;prepare.ForeColor=Color.FromArgb(25,29,32);prepare.Font=new Font("맑은 고딕",12,FontStyle.Bold);prepare.FlatAppearance.MouseOverBackColor=Color.FromArgb(239,206,157);prepare.Enabled=false;
-        var hint=TextLabel("게임으로 돌아가  F11  을 누르세요.",702,575,286,24);hint.ForeColor=muted;hint.TextAlign=ContentAlignment.MiddleCenter;
+        var hint=TextLabel("게임 화면 전환 없이 1~2초 안에 들어옵니다.",702,575,286,24);hint.ForeColor=muted;hint.TextAlign=ContentAlignment.MiddleCenter;
         var cancel=ActionButton("요청 중지 / 취소",702,600,286,()=>{
             string target=ModPath(game.Text);
             string pending=Path.Combine(target,"request.txt"),running=Path.Combine(target,"processing.txt");

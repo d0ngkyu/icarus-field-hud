@@ -1,4 +1,5 @@
--- Explicit F11 requests only. Never scans the world or runs a background UObject loop.
+-- Runs only when the app leaves a request (picked up automatically within ~1 s) or on F11.
+-- Never scans the world; the background loops touch files only, game objects only while a request runs.
 local H = require('UEHelpers')
 local src = debug.getinfo(1, 'S').source:gsub('^@', '')
 local dir = src:match('^(.*[/\\])')
@@ -149,7 +150,7 @@ local function process()
     end)
     if not ok then finish('ERROR', err) end
 end
-RegisterKeyBind(Key.F11, function()
+local function run()
     if busy then return end
     busy = true
     local ok, err = pcall(function()
@@ -160,5 +161,18 @@ RegisterKeyBind(Key.F11, function()
         end)
     end)
     if not ok then busy = false; writeStatus('-', 'ERROR', 0, err) end
-end)
-print('[IcarusSoloItems] Ready: single items or sets (20 kinds / 1000 total), 25 calls per batch.\n')
+end
+-- F11 still works (and also checks single-world readiness without a request).
+RegisterKeyBind(Key.F11, run)
+-- Automatic pickup: a file check every second; game work happens only when a request file exists.
+local function pending()
+    if busy then return false end
+    local f = io.open(request, 'r')
+    if not f then return false end
+    f:close()
+    return true
+end
+if type(LoopAsync) == 'function' then
+    LoopAsync(1000, function() if pending() then pcall(run) end; return false end)
+end
+print('[IcarusSoloItems] Ready: requests are picked up automatically (F11 also works); 20 kinds / 1000 total, 25 calls per batch.\n')

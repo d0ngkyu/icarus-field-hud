@@ -42,9 +42,9 @@ public partial class ItemTool {
         string target=ModPath(game.Text);
         if(!File.Exists(Path.Combine(target,"enabled.txt")))throw new Exception("게임 종료 후 먼저 모드를 설치하세요.");
         string p=Path.Combine(target,"request.txt");
-        if(File.Exists(p)||File.Exists(Path.Combine(target,"processing.txt")))throw new Exception("대기 중인 요청이 있습니다. F11로 실행하거나 요청을 취소하세요.");
+        if(File.Exists(p)||File.Exists(Path.Combine(target,"processing.txt")))throw new Exception("앞 요청을 처리하는 중입니다. 잠시 뒤 다시 누르거나 요청을 취소하세요.");
         File.WriteAllText(p+".tmp",request,Utf8);File.Move(p+".tmp",p);lastId=request.Split('|')[0];
-        message.Text="요청 준비 완료. 2분 이내 게임으로 돌아가 F11을 누르세요.";
+        message.Text="보내는 중… 싱글 월드에 들어가 있으면 1~2초 안에 가방으로 들어옵니다.";
     }
     void ShowCraftSets(){
         if(working)return;working=true;
@@ -67,9 +67,9 @@ public partial class ItemTool {
                 line.Controls.Add(new Label{Text="몇 세트?",AutoSize=true,Margin=new Padding(0,5,12,0)});
                 var copies=new NumericUpDown{Minimum=1,Maximum=1,Value=1,Width=70,BackColor=panel,ForeColor=ForeColor,AccessibleName="세트 수"};line.Controls.Add(copies);
                 var total=new Label{AutoSize=true,Margin=new Padding(18,5,0,0),ForeColor=gold};line.Controls.Add(total);layout.Controls.Add(line);
-                layout.Controls.Add(new Label{Text="완성품 대신 위 재료를 지급합니다. 청사진과 작업대는 별도 필요합니다.\n보유 재료는 차감하지 않습니다. 기본 레시피 기준이며 재능 할인은 미반영입니다.\n요청 준비 후 게임에서 F11 · 취소해도 이미 처리한 재료는 남습니다.",Dock=DockStyle.Fill,Font=Ui(9),ForeColor=muted});
+                layout.Controls.Add(new Label{Text="완성품 대신 위 재료를 지급합니다. 청사진과 작업대는 별도 필요합니다.\n보유 재료는 차감하지 않습니다. 기본 레시피 기준이며 재능 할인은 미반영입니다.\n요청하면 바로 가방으로 · 취소해도 이미 처리한 재료는 남습니다.",Dock=DockStyle.Fill,Font=Ui(9),ForeColor=muted});
                 var buttons=new FlowLayoutPanel{Dock=DockStyle.Fill,FlowDirection=FlowDirection.RightToLeft};
-                var ready=new Button{Text="세트 요청 준비",Width=180,Height=38,FlatStyle=FlatStyle.Flat,BackColor=gold,ForeColor=Color.FromArgb(25,29,32),Enabled=!imagePreviewMode};
+                var ready=new Button{Text="세트 바로 받기",Width=180,Height=38,FlatStyle=FlatStyle.Flat,BackColor=gold,ForeColor=Color.FromArgb(25,29,32),Enabled=!imagePreviewMode};
                 var close=new Button{Text="닫기",Width=90,Height=38,FlatStyle=FlatStyle.Flat,BackColor=panel,ForeColor=ForeColor,DialogResult=DialogResult.Cancel};buttons.Controls.Add(ready);buttons.Controls.Add(close);layout.Controls.Add(buttons);dialog.CancelButton=close;
                 bool updating=false;
                 Action refresh=()=>{var set=choice.SelectedItem as CraftSet;if(set==null)return;rows.BeginUpdate();rows.Items.Clear();foreach(var entry in set.items){var item=catalog.First(i=>i.id==entry.id);var row=new ListViewItem(new[]{item.name,((int)copies.Value*entry.count).ToString("N0")+"개"});row.Tag=entry.id;rows.Items.Add(row);}rows.EndUpdate();description.Text=set.description;total.Text=set.items.Length+"종 · 총 "+(set.total*(int)copies.Value).ToString("N0")+"개 / 1,000";};
