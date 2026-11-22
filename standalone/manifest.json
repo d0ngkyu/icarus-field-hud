@@ -1,53 +1,53 @@
 {
-  "size": 4189579,
-  "sha256": "5d760f5d798d4a67ac301c4308ccf27355268708a5a3b4ba3a7843c893e9ca4b",
-  "packageUrl": "https://raw.githubusercontent.com/d0ngkyu/icarus-field-hud/dee4694be00c1b58a507bbe28741123f2b53a528/standalone/releases/0.4.1/package.zip",
+  "packageUrl": "https://raw.githubusercontent.com/d0ngkyu/icarus-field-hud/d1b4de2455e1de8912aa47f8c310fe332f3a5bb5/standalone/releases/0.4.2/package.zip",
+  "sha256": "2491cc15dcda2f0627d233bb1a822024dd283ee3f117448993e356cdb0d395f6",
+  "version": "0.4.2",
+  "size": 4193680,
   "files": [
     {
-      "size": 3136512,
+      "sha256": "7f0e89f8fbfcc39a483bced54663e6ec97372e941f30f8906ebfd8e946b7ec17",
       "path": "IcarusSoloItems.exe",
-      "sha256": "95235ea012ce0215464fe75a6ee4e3253f6fae0f3e728a3b40ae7d7481282c5b"
+      "size": 3143168
     },
     {
-      "size": 187392,
+      "sha256": "d96a4c3be608bce3e25c0d5539bf4dc09f82b7bb6a3617678f11e571fe4da5d0",
       "path": "DesktopLauncher.exe",
-      "sha256": "e597d5eff171812e0ec0b1012d96c2f5657cbc1eb070b7fb3fca9c7ad4a642f2"
+      "size": 187392
     },
     {
-      "size": 458685,
+      "sha256": "936e27db7f8aaf19ed8cb693caedcbb88eb05d473eb05bd23c7908c9592a76c5",
       "path": "catalog.json",
-      "sha256": "936e27db7f8aaf19ed8cb693caedcbb88eb05d473eb05bd23c7908c9592a76c5"
+      "size": 458685
     },
     {
-      "size": 8735,
+      "sha256": "d7ffa3f4f6e770da53e9eb5c28c794d63c55633119be89e28c63f77ffa2b4f44",
       "path": "README.md",
-      "sha256": "2d4229534c470afa48be64d60f60f67ab2c7407e31d429c8a6b832d3c87ab408"
+      "size": 9001
     },
     {
-      "size": 9616,
+      "sha256": "9e8ae39adf474a40b277d268c7c347c6804fee0600022575f86a3b1a2f2b9559",
       "path": "Scripts/main.lua",
-      "sha256": "cc01d95be710b0d9e36868eae844607dbeded37a18147a0367e7bfd0c101d082"
+      "size": 13538
     },
     {
-      "size": 94779,
+      "sha256": "17b6ec004b26ceba8f966ee89ccdaa5a29381d2e47abd55555b8f73ab748b40c",
       "path": "Scripts/catalog.lua",
-      "sha256": "17b6ec004b26ceba8f966ee89ccdaa5a29381d2e47abd55555b8f73ab748b40c"
+      "size": 94779
     },
     {
-      "size": 4541952,
+      "sha256": "fcd538e5994b9bb833622d425ae346f4e0692f02d4b0025114a559f9b6286022",
       "path": "tools/repak.exe",
-      "sha256": "fcd538e5994b9bb833622d425ae346f4e0692f02d4b0025114a559f9b6286022"
+      "size": 4541952
     },
     {
-      "size": 1095,
+      "sha256": "a5d6edefbaef9f29630341b86722c4039844b7b520d79b1a3bfd6b87cab62db6",
       "path": "tools/LICENSE-MIT",
-      "sha256": "a5d6edefbaef9f29630341b86722c4039844b7b520d79b1a3bfd6b87cab62db6"
+      "size": 1095
     },
     {
-      "size": 9899,
+      "sha256": "20fe7b00e904ed690e3b9fd6073784d3fc428141dbd10b81c01fd143d0797f58",
       "path": "tools/LICENSE-APACHE",
-      "sha256": "20fe7b00e904ed690e3b9fd6073784d3fc428141dbd10b81c01fd143d0797f58"
+      "size": 9899
     }
-  ],
-  "version": "0.4.1"
+  ]
 }
