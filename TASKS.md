@@ -1173,3 +1173,4 @@ A/B/C 모두 종료 프로토콜, 업데이트 실패 표시, 개인 월드 격�
 - 게시: source 981040a, package 4b2b1ea, manifest 4ef7fd5 (codex/solo-items, Actions 45023288779). ZIP/9파일 SHA256 재검증 일치. PC 앱은 자동 업데이트(게임 꺼진 때 교체).
 - 21:50 0.3.9: 다시 적용 시 자기 PAK(998)를 '다른 모드와 겹침'으로 막던 버그 수정(mods 경로 슬래시 정규화). source 002af6a, 게시 b32c2bd (Actions 45024209844). 0.3.7 이전부터 있던 버그.
 - 22:00 0.4.0 (사용자 추가 요청): 체력 최대 10배(1/3/10배), 새 탭 '동물 번식' — AI/D_Tames.json GestationPeriodSeconds(임신)·TameDurationInSeconds(새끼 성장=길들이기) 10~100%, 기본값 의존 행 포함. self-test 추가, Windows CI 빌드·검사 통과. source ea03d40, package fbf2d43, manifest 342621d (Actions 45024432476), ZIP/9파일 재검증. 인게임 효과 미검증(재능 행 포함).
+- 22:10 0.4.1 (사용자 요청: 화면 전환·F11 없이 바로 지급): 모드가 1초마다 request 파일만 확인(대기 중 게임 객체 접근 없음), 있으면 F11과 같은 검증 경로로 지급. F11 유지, 버튼 "가방으로 바로 받기". Lua 모의 23/23. source e54a3f4, package dee4694, manifest 2910a09 (Actions 45024781099). 게임 모드 Lua 갱신은 게임 종료 상태에서 앱 시작 시 → 한 번 게임 껐다 켜야 함. 실게임 미검증.
