@@ -216,8 +216,19 @@ local function processTeleport()
         writeLine(teleportBack, at(loc.X, loc.Y, loc.Z))
         local rot = player:K2_GetActorRotation()
         -- arrive a little above the spot so the character does not start inside the ground
-        local moved = player:K2_TeleportTo({X = target.x, Y = target.y, Z = target.z + 150}, {Pitch = 0, Yaw = rot and rot.Yaw or 0, Roll = 0})
-        assert(moved ~= false, 'The game refused the move (blocked spot)')
+        local yaw = rot and rot.Yaw or 0
+        -- TeleportTo refuses spots its collision test thinks are blocked (often a saved spot right at
+        -- ground level). Try a little higher, then place the character directly without that test.
+        local moved = false
+        for _, lift in ipairs({150, 400}) do
+            if player:K2_TeleportTo({X = target.x, Y = target.y, Z = target.z + lift}, {Pitch = 0, Yaw = yaw, Roll = 0}) ~= false then moved = true; break end
+        end
+        if not moved then
+            pcall(function() player:K2_SetActorLocation({X = target.x, Y = target.y, Z = target.z + 150}, false, {}, true) end)
+            local now = player:K2_GetActorLocation()
+            moved = now and math.abs(now.X - target.x) < 300 and math.abs(now.Y - target.y) < 300
+        end
+        assert(moved, 'The game refused the move (blocked spot)')
         writeStatus(id, 'SENT', 0, 'TELEPORT')
     end)
     if not ok then writeStatus(id or '-', 'ERROR', 0, err) end

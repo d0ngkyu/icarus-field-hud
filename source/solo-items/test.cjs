@@ -109,3 +109,10 @@ test('teleport refuses other maps, multiplayer, old requests and wild coordinate
   run(tp.replace(/pc\./g,'PC.')+setup+`;files['teleport.txt']='${id}|1000|${req}';autoLoop();assert(teleported==nil and files['status.txt']:find('|ERROR|',1,true))`);
  run(tp.replace(/pc\./g,'PC.')+`files['teleport.txt']='${id}|900|GO|Terrain_016|0|0|0';autoLoop();assert(teleported==nil)`);
 });
+
+test('teleport falls back when TeleportTo refuses the spot',()=>{
+ run(tp.replace(/pc\./g,'PC.')+`tries=0;PC.K2_TeleportTo=function(self,l) tries=tries+1;return false end;PC.K2_SetActorLocation=function(self,l,sweep,hit,tele) assert(sweep==false and tele==true);pos={X=l.X,Y=l.Y,Z=l.Z};return true end
+  files['teleport.txt']='${id}|1000|GO|Terrain_016|-5000|7000|100';autoLoop();assert(tries==2 and pos.X==-5000 and files['status.txt']:find('|SENT|0|TELEPORT',1,true))`);
+ run(tp.replace(/pc\./g,'PC.')+`PC.K2_TeleportTo=function() return false end;PC.K2_SetActorLocation=function() return false end
+  files['teleport.txt']='${id}|1000|GO|Terrain_016|-5000|7000|100';autoLoop();assert(files['status.txt']:find('|ERROR|',1,true) and pos.X==1000)`);
+});
