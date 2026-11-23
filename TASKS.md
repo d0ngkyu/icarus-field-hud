@@ -1177,3 +1177,4 @@ A/B/C 모두 종료 프로토콜, 업데이트 실패 표시, 개인 월드 격�
 - 22:20 0.4.2 (사용자 요청: 텔레포트, 싱글 도구에만 — HUD에는 넣지 않음, 남이 실수로 누를 수 있어서): 탭 "텔레포트" 지금 위치 저장/저장 장소로 이동/이동 전 위치로. 모드가 teleport.txt를 1초 주기로 확인, 싱글·같은 지도·지도 범위·60초 이내 검사 후 K2_TeleportTo(+1.5m). Lua 모의 25/25, C# self/layout. source e172a2e, package d1b4de2, manifest 3a195d4 (Actions 45025445337). 게임 모드 갱신은 게임 종료 후 앱 실행 필요. 실게임 미검증.
 - 22:30 0.4.3: 재능 포인트 빼기 허용(-30~+60). 솔로 포인트는 D_CharacterGrowth.SoloPointsPerLevel=C_SoloTalentGrowth 곡선 에셋이라 데이터 모드 불가 — 실시간(UE4SS) 조사 필요(PC·게임 필요). Actions 45025620946.
 - 22:20 0.4.4 (사용자 승인): 솔로 포인트 "게임 기본/재능 포인트만큼" — D_CharacterGrowth Player.SoloPointsPerLevel을 C_PlayerTalentGrowth로 교체. 솔로 포인트는 보너스 표·공개 속성 없음(오브젝트 덤프 확인), 임의 수치 불가. Actions 45026059233. 실게임 미검증.
+- 11-24 02:05 0.4.5: 사용자 실게임에서 텔레포트 "blocked spot"(K2_TeleportTo=false). 4m 위 재시도 → K2_SetActorLocation(teleport) 대체 후 위치 확인. Lua 26/26. Actions 45222992453.
