@@ -1178,3 +1178,11 @@ A/B/C 모두 종료 프로토콜, 업데이트 실패 표시, 개인 월드 격�
 - 22:30 0.4.3: 재능 포인트 빼기 허용(-30~+60). 솔로 포인트는 D_CharacterGrowth.SoloPointsPerLevel=C_SoloTalentGrowth 곡선 에셋이라 데이터 모드 불가 — 실시간(UE4SS) 조사 필요(PC·게임 필요). Actions 45025620946.
 - 22:20 0.4.4 (사용자 승인): 솔로 포인트 "게임 기본/재능 포인트만큼" — D_CharacterGrowth Player.SoloPointsPerLevel을 C_PlayerTalentGrowth로 교체. 솔로 포인트는 보너스 표·공개 속성 없음(오브젝트 덤프 확인), 임의 수치 불가. Actions 45026059233. 실게임 미검증.
 - 11-24 02:05 0.4.5: 사용자 실게임에서 텔레포트 "blocked spot"(K2_TeleportTo=false). 4m 위 재시도 → K2_SetActorLocation(teleport) 대체 후 위치 확인. Lua 26/26. Actions 45222992453.
+
+## PATCH-CHECK-2026-11-27 · Claude (예약 점검, 클라우드·PC 접근 없음)
+- 패치: Week 260 'Workshop Dehumidifier' 정식 2026-11-26 23:32 UTC(한국 11-27 08:32), 빌드 V3.0.38.160489 / Steam build 26861028(11-23 실험 브랜치 선공개). 11-20~27 핫픽스 없음. 근거(제3자 사본, Steam 직접 아님): https://patchbot.io/games/icarus/articles/2403-week-260-update-workshop-dehumidifier , https://steampeaks.com/app/1149460/icarus/patches
+- 주요: 워크숍 '히드라진 제습기'(범위 내 동굴벌레 스폰·동굴병 차단, 수면 시 불로 인정), 네일건 건축물 수리·업그레이드, 배치 시 아이템 복제 버그 수정, T2 갑옷 거치대 열기/닫기 제거. 개발 목록: 곰 탈것 애니메이션·음향·지도/퀘스트 아이콘, 거북(Turtle→Tortoise) 펫, 여우 크기·스킨, PenPals 도감, 펫 반다나/목걸이, 고양이·개·늑대·여우 인벤토리, 안장 재질, 야생동물 상인 퀘스트(SQ_Wildlife)·Animal Tracker, 유리/체인 건축물·페인트 도구. 버전명 'Dangerous Horizons'.
+- 대조: 새 지도/동굴/DLC 공개 없음(동굴은 제습기 아이템뿐). 엑조틱·메타 스폰·광맥·오일/효소 간헐천·그래픽 설정·엔진/UE4SS 변경 언급 없음 → map_observation.lua/main.lua 지도 읽기, optimizer.js 영향 근거 없음.
+- 위험 판단: 동물 탭만 낮음~중간. animals.lua는 UMG_StatDisplayMount, UMG_MountInterface_V, UMG_TameParent_C, UMG_PersistentMountInfo_C, UMG_TalentView_Mount_C 등 탈것 정보 창을 읽는데, 이번에 펫 인벤토리·안장·곰 탈것 작업이 들어가 해당 UI 구조가 바뀌었을 가능성 있음(패치 노트에 정보 창 변경 명시는 없음). 새 아이템(제습기·히드라진·유리/체인 건축물)은 HUD 목록/아이콘 누락 수준. 다음 주 Week 261(5주년, 매머드 새 표현형·번식)은 동물/유전 모델 영향 가능성 높아 다음 점검 때 우선 확인.
+- 한 일: 기록만. 코드 수정·배포 안 함(실제 깨짐 근거 없음).
+- 사용자 확인: 게임을 한 번 켠 뒤 HUD 설정 › 문제 해결 › '게임 업데이트 호환' 줄이 새 빌드에서 '정상'인지, 탈것 정보 창을 열었을 때 동물 탭에 능력치가 나오는지.
