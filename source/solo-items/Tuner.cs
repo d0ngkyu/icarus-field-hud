@@ -17,10 +17,12 @@ public sealed class TuneValues {
     public int Gestation=100, Growth=100;
     // solo points: 0 = game default, 1 = earn them at the talent-point rate (curve swap)
     public int Solo=0;
+    // cap on the sum of a bred animal's genetic values (game default 60)
+    public int Genetics=60;
     public const int MaxTalent=60, MinTalent=-30;
-    public bool IsDefault {get{return Health==100&&Stamina==100&&Oxygen==100&&Food==100&&Water==100&&Weight==100&&Durability==100&&Speed==100&&Talent==0&&Gestation==100&&Growth==100&&Solo==0;}}
+    public bool IsDefault {get{return Health==100&&Stamina==100&&Oxygen==100&&Food==100&&Water==100&&Weight==100&&Durability==100&&Speed==100&&Talent==0&&Gestation==100&&Growth==100&&Solo==0&&Genetics==60;}}
     public void Validate(){
-        if(Health<100||Health>1000||Solo<0||Solo>1||Gestation<10||Gestation>100||Growth<10||Growth>100||Weight<100||Weight>500||Durability<100||Durability>500||Speed<100||Speed>200||Talent<MinTalent||Talent>MaxTalent||new[]{Stamina,Oxygen,Food,Water}.Any(x=>x<0||x>100)) throw new Exception("설정 범위를 확인해 주세요.");
+        if(Health<100||Health>1000||Solo<0||Solo>1||Genetics<60||Genetics>120||Gestation<10||Gestation>100||Growth<10||Growth>100||Weight<100||Weight>500||Durability<100||Durability>500||Speed<100||Speed>200||Talent<MinTalent||Talent>MaxTalent||new[]{Stamina,Oxygen,Food,Water}.Any(x=>x<0||x>100)) throw new Exception("설정 범위를 확인해 주세요.");
     }
 }
 public sealed class TuneRecord {
@@ -32,7 +34,7 @@ public static class Tuner {
     public const string ModName="998-IcarusSoloTools_P.pak";
     public const string Stats="Stats/D_CharacterStartingStats.json", Actions="Tools/D_StaminaActionCosts.json", Durable="Traits/D_Durable.json", Talents="Talents/D_PlayerTalentModifiers.json";
     public const string TalentRow="IcarusSoloTools_TalentBonus";
-    public const string Tames="AI/D_Tames.json", Growth="Character/D_CharacterGrowth.json";
+    public const string Tames="AI/D_Tames.json", Growth="Character/D_CharacterGrowth.json", Gameplay="Config/D_GameplayConfig.json";
     public const string Mount="../../../Icarus/Content/data/";
     static readonly Encoding Utf8=new UTF8Encoding(false);
     public static JavaScriptSerializer Json(){return new JavaScriptSerializer{MaxJsonLength=16000000};}
@@ -71,7 +73,8 @@ public static class Tuner {
     public static Dictionary<string,string> Transform(string stats,string actions,string durable,string items,TuneValues v){return Transform(stats,actions,durable,items,null,null,v);}
     public static Dictionary<string,string> Transform(string stats,string actions,string durable,string items,string talents,TuneValues v){return Transform(stats,actions,durable,items,talents,null,v);}
     public static Dictionary<string,string> Transform(string stats,string actions,string durable,string items,string talents,string tames,TuneValues v){return Transform(stats,actions,durable,items,talents,tames,null,v);}
-    public static Dictionary<string,string> Transform(string stats,string actions,string durable,string items,string talents,string tames,string growth,TuneValues v){
+    public static Dictionary<string,string> Transform(string stats,string actions,string durable,string items,string talents,string tames,string growth,TuneValues v){return Transform(stats,actions,durable,items,talents,tames,growth,null,v);}
+    public static Dictionary<string,string> Transform(string stats,string actions,string durable,string items,string talents,string tames,string growth,string gameplay,TuneValues v){
         v.Validate();var result=new Dictionary<string,string>();
         var s=Obj(Json().DeserializeObject(stats));var row=Rows(s).Single(x=>(string)x["Name"]=="Base_Stats");var values=Obj(row["StatsGranted"]);
         foreach(var pair in new[]{new KeyValuePair<string,int>("BaseMaximumHealth_+",v.Health),new KeyValuePair<string,int>("BaseWeightCapacity_+",v.Weight),new KeyValuePair<string,int>("SprintMovementSpeedCoefficient_%",v.Speed),new KeyValuePair<string,int>("BaseOxygenConsumptionPerHour_+",v.Oxygen),new KeyValuePair<string,int>("BaseFoodConsumptionPerHour_+",v.Food),new KeyValuePair<string,int>("BaseWaterConsumptionPerHour_+",v.Water)})
@@ -118,6 +121,12 @@ public static class Tuner {
             if(player==null||!player.ContainsKey("TalentPointsPerLevel")||!player.ContainsKey("SoloPointsPerLevel"))throw new Exception("성장 데이터가 바뀌었습니다.");
             player["SoloPointsPerLevel"]=player["TalentPointsPerLevel"];result[Growth]=Json().Serialize(gr);
         }
+        if(v.Genetics!=60){
+            if(gameplay==null)throw new Exception("게임 설정 데이터를 읽지 못했습니다.");
+            var gp=Obj(Json().DeserializeObject(gameplay));var cap=Rows(gp).SingleOrDefault(x=>(string)x["Name"]=="MaxGeneticCombination");
+            if(cap==null)throw new Exception("유전 능력치 상한 항목이 바뀌었습니다.");
+            cap["FloatValue"]=v.Genetics;result[Gameplay]=Json().Serialize(gp);
+        }
         return result;
     }
     static void Owned(string target,TuneRecord record,string game){if(File.Exists(target)&&(record==null||!string.Equals(record.Game,game,StringComparison.OrdinalIgnoreCase)||Hash(target)!=record.ModHash))throw new Exception("기존 조절 파일이 변경되어 덮어쓰지 않았습니다.");}
@@ -129,7 +138,7 @@ public static class Tuner {
             if(!File.Exists(data))throw new Exception("Icarus 게임 폴더를 확인해 주세요.");
             var old=ReadRecord(game);Owned(target,old,game);string dataHash=Hash(data);
             string stage=Path.Combine(StateDir,"build",Guid.NewGuid().ToString("N"));Directory.CreateDirectory(stage);
-            var tables=Transform(ReadTable(repak,data,Stats),ReadTable(repak,data,Actions),ReadTable(repak,data,Durable),ReadTable(repak,data,"Items/D_ItemsStatic.json"),values.Talent!=0?ReadTable(repak,data,Talents):null,values.Gestation!=100||values.Growth!=100?ReadTable(repak,data,Tames):null,values.Solo==1?ReadTable(repak,data,Growth):null,values);
+            var tables=Transform(ReadTable(repak,data,Stats),ReadTable(repak,data,Actions),ReadTable(repak,data,Durable),ReadTable(repak,data,"Items/D_ItemsStatic.json"),values.Talent!=0?ReadTable(repak,data,Talents):null,values.Gestation!=100||values.Growth!=100?ReadTable(repak,data,Tames):null,values.Solo==1?ReadTable(repak,data,Growth):null,values.Genetics!=60?ReadTable(repak,data,Gameplay):null,values);
             if(Directory.Exists(mods))foreach(var pak in Directory.GetFiles(mods,"*.pak",SearchOption.AllDirectories)){
                 // our own PAK is the one being replaced, never a conflict (compare normalized paths)
                 if(string.Equals(Path.GetFullPath(pak),Path.GetFullPath(target),StringComparison.OrdinalIgnoreCase))continue;

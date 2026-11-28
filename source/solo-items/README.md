@@ -1,4 +1,6 @@
-# 아이카루스 싱글 도구 0.4.5
+# 아이카루스 싱글 도구 0.4.6
+
+0.4.6: ‘동물 번식’ 탭에 유전 능력치 합계 상한(60~120, `Config/D_GameplayConfig.json` MaxGeneticCombination).
 
 0.4.5: 텔레포트가 ‘blocked spot’으로 거부되면 4m 위로 다시 시도하고, 그래도 안 되면 충돌 검사 없이 직접 옮깁니다.
 

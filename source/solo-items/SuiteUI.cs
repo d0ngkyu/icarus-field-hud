@@ -57,8 +57,8 @@ public partial class ItemTool {
             case 4:SettingRow("가방에 들 수 있는 무게","Weight",100,500,new[]{100,200,500},new[]{"기본","2배","5배"},112);break;
             case 5:SettingRow("도구 · 무기 · 방어구 최대 내구도","Durability",100,500,new[]{100,200,500},new[]{"기본","2배","5배"},112);break;
             case 6:SettingRow("달리기 속도","Speed",100,200,new[]{100,150,200},new[]{"기본","1.5배","2배"},112);break;
-            case 8:SettingRow("임신 기간 (원래 시간의 %)","Gestation",10,100,new[]{100,50,10},new[]{"기본","절반","10분의 1"},105);SettingRow("새끼가 자라는 시간 (원래 시간의 %)","Growth",10,100,new[]{100,50,10},new[]{"기본","절반","10분의 1"},204);
-                PanelLabel("길들인 동물에만 해당합니다. 야생 새끼를 길들이는 시간도 같이 줄어요.\n이미 진행 중인 임신·성장은 게임을 다시 켠 뒤부터 바뀐 값이 적용될 수 있습니다.",26,318,910,56,11,false).ForeColor=muted;break;
+            case 8:SettingRow("임신 기간 (원래 시간의 %)","Gestation",10,100,new[]{100,50,10},new[]{"기본","절반","10분의 1"},96);SettingRow("새끼가 자라는 시간 (원래 시간의 %)","Growth",10,100,new[]{100,50,10},new[]{"기본","절반","10분의 1"},180);SettingRow("유전 능력치 합계 상한","Genetics",60,120,new[]{60,90,120},new[]{"기본 60","90","120"},264);
+                PanelLabel("길들인 동물에만 해당합니다. 새끼가 자라는 시간을 줄이면 야생 새끼 길들이기도 빨라져요. 유전 상한은 새로 태어나는 새끼부터.\n진행 중인 임신·성장은 게임을 다시 켠 뒤부터 적용될 수 있습니다.",26,350,910,56,10,false).ForeColor=muted;break;
             case 7:SettingRow("재능 포인트 더하기 · 빼기","Talent",TuneValues.MinTalent,TuneValues.MaxTalent,new[]{-10,0,30},new[]{"-10","기본","+30"},105);SoloRow(222);
                 PanelLabel("재능 포인트는 -30 ~ +60. 줄이기 전에는 게임에서 재능을 먼저 초기화하세요.\n솔로 포인트는 숫자를 고를 수 없고, 레벨당 재능 포인트와 같은 속도로 쌓이게만 바꿀 수 있습니다.",26,318,910,56,11,false).ForeColor=muted;break;
         }
@@ -84,10 +84,10 @@ public partial class ItemTool {
         bool compact=activeTab==3||activeTab==8||activeTab==7;
         PanelLabel(text,26,y,600,30,12,true);
         var current=PanelLabel("",730,y-5,224,compact?36:55,compact?19:30,true);current.TextAlign=ContentAlignment.MiddleRight;current.ForeColor=gold;current.Font=new Font("Bahnschrift",compact?20:30,FontStyle.Bold);
-        var slider=new TrackBar{Minimum=min,Maximum=max,Value=value,TickStyle=TickStyle.None,SmallChange=key=="Talent"?1:10,LargeChange=key=="Talent"?5:25,BackColor=panel,AccessibleName=text};slider.SetBounds(20,y+(compact?38:69),535,40);tuningPanel.Controls.Add(slider);
+        var slider=new TrackBar{Minimum=min,Maximum=max,Value=value,TickStyle=TickStyle.None,SmallChange=key=="Talent"||key=="Genetics"?1:10,LargeChange=key=="Talent"?5:25,BackColor=panel,AccessibleName=text};slider.SetBounds(20,y+(compact?38:69),535,40);tuningPanel.Controls.Add(slider);
         var choices=new List<Button>();
         Action show=()=>{
-            current.Text=key=="Talent"?(slider.Value>0?"+"+slider.Value:slider.Value.ToString()):slider.Value==0?"OFF":slider.Value+"%";
+            current.Text=key=="Genetics"?slider.Value.ToString():key=="Talent"?(slider.Value>0?"+"+slider.Value:slider.Value.ToString()):slider.Value==0?"OFF":slider.Value+"%";
             for(int j=0;j<choices.Count;j++){
                 bool chosen=slider.Value==presets[j];choices[j].BackColor=chosen?Color.FromArgb(61,52,39):Color.FromArgb(34,44,55);choices[j].ForeColor=chosen?gold:ForeColor;choices[j].FlatAppearance.BorderSize=chosen?1:0;choices[j].FlatAppearance.BorderColor=gold;
             }
